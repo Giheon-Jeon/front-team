@@ -12,7 +12,11 @@ COPY . .
 RUN npm run build
 
 # 2) 서빙 스테이지 — 정적 파일 + /api/v1 리버스 프록시
-FROM nginx:1.27-alpine AS runtime
+FROM nginxinc/nginx-unprivileged:1.31-alpine AS runtime
+
+USER root
+RUN apk update && apk upgrade && rm -rf /var/cache/apk/*
+USER 101
 
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
