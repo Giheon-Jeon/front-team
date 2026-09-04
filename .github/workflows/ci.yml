@@ -13,6 +13,9 @@ name: CI
 
 on:
   workflow_dispatch:
+  # 드라이런 전용 트리거 — 이 브랜치에 push하면 자동 실행된다. 본 PR에는 포함하지 않는다.
+  push:
+    branches: [ci-dryrun-v350]
   # push:
   #   branches: [main]
   # pull_request:
@@ -34,7 +37,7 @@ jobs:
     # TODO: frontend-v1.0.0 태그 생성 전까지는 branch ref(@jm)로 임시 참조한다.
     # 태깅 완료되면 @frontend-v1.0.0으로 즉시 교체할 것 — branch ref는 나중에
     # 다른 커밋이 push되면 이 워크플로가 가리키는 내용이 바뀌는 리스크가 있다.
-    uses: MSG-CTF/jm_devsecops/.github/workflows/frontend-ci.yml@jm
+    uses: Giheon-Jeon/jm_devsecops/.github/workflows/reusable-frontend-ci.yml@feat/reusable-frontend-ci
     with:
       working-directory: .
       dockerfile-path: ./Dockerfile
