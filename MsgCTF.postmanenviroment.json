@@ -31,6 +31,24 @@
       "value": "",
       "type": "default",
       "enabled": true
+    },
+    {
+      "key": "challenge_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "koth_challenge_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "quarantine_code",
+      "value": "",
+      "type": "default",
+      "enabled": true
     }
   ],
   "_postman_variable_scope": "environment"
