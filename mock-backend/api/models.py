@@ -239,3 +239,47 @@ class AdminSetting(models.Model):
     lock_seconds = models.IntegerField(default=30)
     updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.CharField(max_length=100, blank=True, default="")
+
+
+class AdminEvent(models.Model):
+    """관리자 조작 이벤트 로그(README 8절 GET /admin/events, GET /admin/dashboard
+    "최근 이벤트 로그" - Figma node 384:396). 실제 이벤트 버스가 없는 목서버라
+    각 관리자 액션 처리 시점에 직접 한 행씩 남긴다.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    type = models.CharField(max_length=50)
+    severity = models.CharField(max_length=20, default="INFO")
+    message = models.CharField(max_length=255)
+    team_name = models.CharField(max_length=100, blank=True, default="")
+    challenge_title = models.CharField(max_length=200, blank=True, default="")
+    actor = models.CharField(max_length=100, blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+
+class TeamSnapshot(models.Model):
+    """롤백 지점(README 8절 GET .../snapshots, POST .../rollback).
+    보드 상태에 영향을 주는 관리자 조작(밴, clear 칸, 위치 이동, 주사위 지급) 직전에
+    자동으로 한 장씩 남긴다. 팀당 최근 20개만 보관한다.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    team = models.ForeignKey(Team, related_name="snapshots", on_delete=models.CASCADE)
+    label = models.CharField(max_length=200)
+    position = models.IntegerField()
+    dice_rolls_left = models.IntegerField()
+    is_quarantined = models.BooleanField()
+    consumed_cell_indexes = models.JSONField()
+    opened_challenge_log = models.JSONField()
+    chance_cards = models.JSONField()
+    jeopardy_score = models.IntegerField()
+    koth_score = models.IntegerField()
+    mileage = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.CharField(max_length=100, blank=True, default="")
+
+    class Meta:
+        ordering = ["-created_at"]
