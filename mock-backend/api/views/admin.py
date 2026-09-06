@@ -3,7 +3,16 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from ..exceptions import ApiError
-from ..models import Instance, MileageHistory, PaymentHistory, PaymentToken, Team
+from ..models import (
+    AdminSetting,
+    Challenge,
+    ContestTimer,
+    Instance,
+    MileageHistory,
+    PaymentHistory,
+    PaymentToken,
+    Team,
+)
 from ..permissions import require_admin
 from ..response import success
 
@@ -262,14 +271,16 @@ class AdminTeamBanView(APIView):
 
         team.is_banned = True
         team.ban_reason = request.data.get("ban_reason", "")
+        team.banned_at = timezone.now()
+        team.banned_by = request.user.nickname
         team.save()
         return success(
             {
                 "team_id": str(team.id),
                 "is_banned": True,
                 "ban_reason": team.ban_reason,
-                "banned_at": timezone.now(),
-                "banned_by": request.user.nickname,
+                "banned_at": team.banned_at,
+                "banned_by": team.banned_by,
             }
         )
 
@@ -453,3 +464,290 @@ class AdminChallengeDockerImageView(APIView):
             },
             status=201,
         )
+
+
+class AdminDashboardView(APIView):
+    """GET /admin/dashboard(README 8절, 백엔드: 논의) - 집계 전용."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        require_admin(request)
+        from .. import models as m
+
+        teams_qs = Team.objects.all()
+        payments_qs = PaymentHistory.objects.all()
+        contest = ContestTimer.objects.order_by("-id").first()
+        contest_data = None
+        if contest is not None:
+            now = timezone.now()
+            status_value = (
+                "BEFORE" if now < contest.start_time else "RUNNING" if now < contest.end_time else "ENDED"
+            )
+            remaining = max(0, int((contest.end_time - now).total_seconds())) if status_value == "RUNNING" else 0
+            contest_data = {
+                "status": status_value,
+                "start_time": contest.start_time,
+                "end_time": contest.end_time,
+                "remaining_seconds": remaining,
+            }
+
+        instances_qs = Instance.objects.all()
+        purchase_count = payments_qs.count()
+        refund_count = payments_qs.filter(is_refunded=True).count()
+        net_spent = sum(p.amount for p in payments_qs.filter(is_refunded=False))
+
+        return success(
+            {
+                "teams": {
+                    "total_count": teams_qs.count(),
+                    "banned_count": teams_qs.filter(is_banned=True).count(),
+                    "total_mileage": sum(t.mileage for t in teams_qs),
+                },
+                "payment": {
+                    "purchase_count": purchase_count,
+                    "refund_count": refund_count,
+                    "net_spent": net_spent,
+                },
+                "contest": contest_data,
+                "instances": {
+                    "running": instances_qs.filter(status="RUNNING").count(),
+                    "failed": instances_qs.filter(status="FAILED").count(),
+                    "total": instances_qs.count(),
+                },
+                "challenges": {
+                    "total": Challenge.objects.count(),
+                    "published": Challenge.objects.filter(is_published=True).count(),
+                    "solved_total": m.Solve.objects.count(),
+                },
+                "collected_at": timezone.now(),
+            }
+        )
+
+
+class AdminTeamDetailView(APIView):
+    """GET /admin/teams/{id}(README 8절, 백엔드: 진행 중)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, team_id):
+        require_admin(request)
+        try:
+            team = Team.objects.get(id=team_id)
+        except Team.DoesNotExist:
+            raise ApiError("TEAM_NOT_FOUND", "팀을 찾을 수 없습니다", status=404)
+
+        try:
+            history_limit = min(50, max(1, int(request.query_params.get("history_limit", 10))))
+        except ValueError:
+            raise ApiError("INVALID_REQUEST", "history_limit은 숫자여야 합니다", status=400)
+
+        recent_mileage = MileageHistory.objects.filter(team=team).order_by("-created_at")[:history_limit]
+        purchases = PaymentHistory.objects.filter(team=team)
+
+        return success(
+            {
+                "team_id": str(team.id),
+                "team_name": team.team_name,
+                "team_score": team.team_score,
+                "mileage": team.mileage,
+                "position": team.position,
+                "is_banned": team.is_banned,
+                "ban_reason": team.ban_reason,
+                "banned_at": team.banned_at,
+                "banned_by": team.banned_by,
+                "members": [
+                    {
+                        "user_id": str(member.id),
+                        "login_id": member.login_id,
+                        "nickname": member.nickname,
+                        "role": member.role,
+                        "is_leader": member.is_leader,
+                    }
+                    for member in team.members.all()
+                ],
+                "member_count": team.members.count(),
+                "mileage_summary": {
+                    "total_earned": sum(h.amount for h in MileageHistory.objects.filter(team=team, amount__gt=0)),
+                    "total_spent": sum(h.amount for h in MileageHistory.objects.filter(team=team, amount__lt=0)),
+                    "purchase_count": purchases.count(),
+                    "refund_count": purchases.filter(is_refunded=True).count(),
+                },
+                "recent_mileage_history": [
+                    {
+                        "history_id": str(h.id),
+                        "type": h.type,
+                        "amount": h.amount,
+                        "reason": h.reason,
+                        "processed_by": "",
+                        "created_at": h.created_at,
+                    }
+                    for h in recent_mileage
+                ],
+            }
+        )
+
+
+class AdminChallengesView(APIView):
+    """GET /admin/challenges(README 8절, 백엔드: 논의)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        require_admin(request)
+        from .. import models as m
+
+        page, size = _paginate(request)
+        qs = Challenge.objects.all()
+
+        category = request.query_params.get("category")
+        if category:
+            qs = qs.filter(category=category)
+        is_published = request.query_params.get("is_published")
+        if is_published in ("true", "false"):
+            qs = qs.filter(is_published=(is_published == "true"))
+
+        sort = request.query_params.get("sort", "running")
+        if sort == "title":
+            qs = qs.order_by("title")
+        elif sort == "score":
+            qs = qs.order_by("-score")
+        # "running"(기본)은 인스턴스 집계 후 파이썬에서 정렬한다(아래).
+
+        total_count = qs.count()
+        challenges = list(qs)
+
+        def summarize(challenge):
+            instances = Instance.objects.filter(challenge=challenge)
+            return {
+                "challenge_id": str(challenge.id),
+                "title": challenge.title,
+                "category": challenge.category,
+                "difficulty": challenge.difficulty,
+                "score": challenge.score,
+                "is_published": challenge.is_published,
+                "solved_team_count": m.Solve.objects.filter(challenge=challenge).values("team_id").distinct().count(),
+                "running_instance_count": instances.filter(status="RUNNING").count(),
+                "failed_instance_count": instances.filter(status="FAILED").count(),
+            }
+
+        summarized = [summarize(c) for c in challenges]
+        if sort == "running":
+            summarized.sort(key=lambda item: item["running_instance_count"], reverse=True)
+
+        start = (page - 1) * size
+        return success(
+            {
+                "challenges": summarized[start : start + size],
+                "total_count": total_count,
+                "page": page,
+                "size": size,
+            }
+        )
+
+
+class AdminChallengeVisibilityView(APIView):
+    """PATCH /admin/challenges/{id}/visibility(README 8절, 백엔드: 논의)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, challenge_id):
+        require_admin(request)
+        try:
+            challenge = Challenge.objects.get(id=challenge_id)
+        except Challenge.DoesNotExist:
+            raise ApiError("CHALLENGE_NOT_FOUND", "문제를 찾을 수 없습니다", status=404)
+
+        is_published = request.data.get("is_published")
+        if not isinstance(is_published, bool):
+            raise ApiError("INVALID_REQUEST", "is_published는 boolean이어야 합니다", status=400)
+
+        previous = challenge.is_published
+        challenge.is_published = is_published
+        challenge.save()
+
+        return success(
+            {
+                "challenge_id": str(challenge.id),
+                "title": challenge.title,
+                "previous_is_published": previous,
+                "is_published": challenge.is_published,
+                "affected_team_count": 0,
+                "changed_at": timezone.now(),
+                "changed_by": request.user.nickname,
+            }
+        )
+
+
+def _settings_dict(setting):
+    return {
+        "contest": _contest_settings_dict(),
+        "board": {
+            "dice_rolls_per_reset": setting.dice_rolls_per_reset,
+            "dice_reset_interval_minutes": setting.dice_reset_interval_minutes,
+            "solve_deadline_minutes": setting.solve_deadline_minutes,
+        },
+        "flag": {
+            "max_attempts": setting.max_attempts,
+            "lock_seconds": setting.lock_seconds,
+        },
+        "updated_at": setting.updated_at,
+        "updated_by": setting.updated_by,
+    }
+
+
+def _contest_settings_dict():
+    contest = ContestTimer.objects.order_by("-id").first()
+    if contest is None:
+        return None
+    return {
+        "status": None,
+        "started_at": contest.start_time,
+        "ends_at": contest.end_time,
+    }
+
+
+class AdminSettingsView(APIView):
+    """GET/PATCH /admin/settings(README 8절, 백엔드: 논의). 대회당 1행 싱글턴."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        require_admin(request)
+        setting, _ = AdminSetting.objects.get_or_create(id=1)
+        return success(_settings_dict(setting))
+
+    def patch(self, request):
+        require_admin(request)
+        setting, _ = AdminSetting.objects.get_or_create(id=1)
+
+        board = request.data.get("board") or {}
+        flag = request.data.get("flag") or {}
+
+        def in_range(value, low, high):
+            return isinstance(value, int) and low <= value <= high
+
+        if "dice_rolls_per_reset" in board:
+            if not in_range(board["dice_rolls_per_reset"], 1, 20):
+                raise ApiError("INVALID_REQUEST", "dice_rolls_per_reset은 1~20이어야 합니다", status=400)
+            setting.dice_rolls_per_reset = board["dice_rolls_per_reset"]
+        if "dice_reset_interval_minutes" in board:
+            if not in_range(board["dice_reset_interval_minutes"], 1, 1440):
+                raise ApiError("INVALID_REQUEST", "dice_reset_interval_minutes는 1~1440이어야 합니다", status=400)
+            setting.dice_reset_interval_minutes = board["dice_reset_interval_minutes"]
+        if "solve_deadline_minutes" in board:
+            if not in_range(board["solve_deadline_minutes"], 1, 180):
+                raise ApiError("INVALID_REQUEST", "solve_deadline_minutes는 1~180이어야 합니다", status=400)
+            setting.solve_deadline_minutes = board["solve_deadline_minutes"]
+        if "max_attempts" in flag:
+            if not in_range(flag["max_attempts"], 1, 10):
+                raise ApiError("INVALID_REQUEST", "max_attempts는 1~10이어야 합니다", status=400)
+            setting.max_attempts = flag["max_attempts"]
+        if "lock_seconds" in flag:
+            if not in_range(flag["lock_seconds"], 1, 3600):
+                raise ApiError("INVALID_REQUEST", "lock_seconds는 1~3600이어야 합니다", status=400)
+            setting.lock_seconds = flag["lock_seconds"]
+
+        setting.updated_by = request.user.nickname
+        setting.save()
+        return success(_settings_dict(setting))

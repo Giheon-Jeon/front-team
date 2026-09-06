@@ -47,7 +47,15 @@ urlpatterns = [
     # 7. 타이머
     path("timer", timer.TimerView.as_view()),
     # 8. 관리자
+    path("admin/dashboard", admin.AdminDashboardView.as_view()),
     path("admin/teams", admin.AdminTeamsView.as_view()),
+    path("admin/teams/<uuid:team_id>", admin.AdminTeamDetailView.as_view()),
+    path("admin/challenges", admin.AdminChallengesView.as_view()),
+    path(
+        "admin/challenges/<uuid:challenge_id>/visibility",
+        admin.AdminChallengeVisibilityView.as_view(),
+    ),
+    path("admin/settings", admin.AdminSettingsView.as_view()),
     path("admin/instances", admin.AdminInstancesView.as_view()),
     path("admin/instances/<uuid:instance_id>/reset", admin.AdminInstanceResetView.as_view()),
     path("admin/instances/<uuid:instance_id>", admin.AdminInstanceDeleteView.as_view()),
