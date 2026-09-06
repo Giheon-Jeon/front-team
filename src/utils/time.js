@@ -7,6 +7,14 @@ export function toKst(isoUtc, options = {}) {
   });
 }
 
+// 문제 제출 마감은 개방 시각부터 15분. 표시용 KST 변환과 분리해서 계산한다.
+export function getChallengeDeadline(openedAt) {
+  if (typeof openedAt !== "string" || !openedAt.trim()) return null;
+  const openedTimestamp = Date.parse(openedAt);
+  if (!Number.isFinite(openedTimestamp)) return null;
+  return new Date(openedTimestamp + 15 * 60 * 1000).toISOString();
+}
+
 // 인스턴스 TTL 잔여 시간(초)을 "H:MM:SS" / "MM:SS" 문자열로 표시.
 // remaining_seconds는 RUNNING 상태일 때만 유효하므로 null/undefined면 "--:--".
 export function formatRemaining(remainingSeconds) {

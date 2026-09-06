@@ -5,6 +5,7 @@ import ChallengeDescriptionPanel from "./ChallengeDescriptionPanel.jsx";
 import InstancePanel from "./InstancePanel.jsx";
 import InstanceControls from "./InstanceControls.jsx";
 import FlagSubmitPanel from "./FlagSubmitPanel.jsx";
+import { formatRemaining, getChallengeDeadline, toKst } from "../../../utils/time.js";
 
 // Figma node 95:360 "ChallengeDetailPage" (1920x1080).
 // bg-1920x1080.png = 뒤 배경(Background 193:16)만 담은 프레임 없는 그림이고,
@@ -17,6 +18,7 @@ export default function ChallengeDetailScreen({
   pageError,
   instanceError,
   challenge,
+  submission,
   instance,
   flagValue,
   onFlagChange,
@@ -92,8 +94,19 @@ export default function ChallengeDetailScreen({
             onChange={onFlagChange}
             onSubmit={onSubmitFlag}
             disabled={submitDisabled}
-            inputDisabled={actionPending || challenge.solved}
+            inputDisabled={actionPending || submission.blocked}
           />
+
+          <div className="absolute left-[61.77%] top-[69.9%] w-[28%] font-kode-mono text-[0.75cqw] leading-tight text-auth-text">
+            {challenge.accessStatus === "OPENED" && <span>OPENED (진행 중) </span>}
+            {submission.isCleared && <span>CLEARED (완료) </span>}
+            {submission.remainingSeconds != null && (
+              <span title={`개방: ${toKst(challenge.openedAt)} / 마감: ${toKst(getChallengeDeadline(challenge.openedAt))} (KST)`}>
+                제출 남은 시간 {formatRemaining(submission.remainingSeconds)}
+                {submission.expired && " (제출 시간 만료)"}
+              </span>
+            )}
+          </div>
 
           {(instanceError || feedback) && (
             <div

@@ -1,4 +1,5 @@
 import { isSuccess } from "../../../utils/response.js";
+import { getChallengeDeadline } from "../../../utils/time.js";
 
 export const BOARD_CELL_COUNT = 36;
 
@@ -86,7 +87,7 @@ export function adaptMyBoard(data) {
       ? {
           challengeId: data.active_challenge.challenge_id,
           openedAt: data.active_challenge.opened_at,
-          solveDeadlineAt: data.active_challenge.solve_deadline_at,
+          solveDeadlineAt: getChallengeDeadline(data.active_challenge.opened_at),
           remainingSeconds: data.active_challenge.remaining_seconds,
         }
       : null,

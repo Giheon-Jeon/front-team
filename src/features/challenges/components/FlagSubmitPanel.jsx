@@ -10,6 +10,7 @@ export default function FlagSubmitPanel({
 }) {
   const handleSubmit = (event) => {
     event.preventDefault();
+    if (disabled) return;
     onSubmit();
   };
 
