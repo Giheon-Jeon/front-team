@@ -23,20 +23,20 @@ export default function AppRoutes() {
     <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/board" element={<BoardPage />} />
-      <Route path="/challenges" element={<OpenChallengesPage />} />
+      <Route path={ROUTES.board} element={<BoardPage />} />
+      <Route path={ROUTES.openChallenges} element={<OpenChallengesPage />} />
       <Route path="/challenges/:challengeId" element={<ChallengeDetailPage />} />
-      <Route path="/leaderboard" element={<LeaderboardPage />} />
-      <Route path="/mypage" element={<MyPage />} />
+      <Route path={ROUTES.leaderboard} element={<LeaderboardPage />} />
+      <Route path={ROUTES.mypage} element={<MyPage />} />
       <Route path="/timer" element={<TimerPage />} />
-      <Route path="/koth" element={<KothPage />} />
+      <Route path={ROUTES.koth} element={<KothPage />} />
       <Route path={ROUTES.rules} element={<RulesPage />} />
-      <Route path="/admin" element={<AdminDashboardPage />} />
-      <Route path="/admin/teams" element={<AdminTeamsPage />} />
+      <Route path={ROUTES.adminDashboard} element={<AdminDashboardPage />} />
+      <Route path={ROUTES.adminTeams} element={<AdminTeamsPage />} />
       <Route path="/admin/teams/:teamId" element={<AdminTeamDetailPage />} />
-      <Route path="/admin/challenges" element={<AdminChallengesPage />} />
-      <Route path="/admin/settings" element={<AdminSettingsPage />} />
-      <Route path="/admin/logs" element={<AdminLogsPage />} />
+      <Route path={ROUTES.adminChallenges} element={<AdminChallengesPage />} />
+      <Route path={ROUTES.adminSettings} element={<AdminSettingsPage />} />
+      <Route path={ROUTES.adminLogs} element={<AdminLogsPage />} />
     </Routes>
   );
 }

@@ -5,7 +5,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 
 from ..exceptions import ApiError
-from ..models import BoardCell, ChanceCardCatalog, Challenge
+from ..models import BoardCell, ChanceCardCatalog, Challenge, Solve
 from ..permissions import (
     require_empty_body,
     require_idempotency_key,
@@ -158,7 +158,17 @@ class CellCurrentView(APIView):
     def get(self, request):
         team = require_team(request)
         if cell_type(team.position) != "CHALLENGE":
-            raise ApiError("CELL_NOT_FOUND", "문제 칸이 아닙니다", status=404)
+            # README 2절: CHALLENGE가 아니거나 이미 오픈한 칸이면 에러가 아니라
+            # 200 + challenge_candidates: [] 다. 예전엔 404 CELL_NOT_FOUND를
+            # 던졌는데, 그러면 무인도/찬스/공항 등 칸에 있을 때 보드 전체
+            # 로딩(useBoardController.load)이 깨졌다.
+            return success(
+                {
+                    "cell_index": team.position,
+                    "type": cell_type(team.position),
+                    "challenge_candidates": [],
+                }
+            )
 
         candidates = list(
             Challenge.objects.exclude(
@@ -206,6 +216,14 @@ class CellOpenView(APIView):
         team.active_challenge_opened_at = now
         if team.position not in team.consumed_cell_indexes:
             team.consumed_cell_indexes = [*team.consumed_cell_indexes, team.position]
+        team.opened_challenge_log = [
+            *team.opened_challenge_log,
+            {
+                "cell_index": team.position,
+                "challenge_id": str(challenge.id),
+                "opened_at": now.isoformat(),
+            },
+        ]
         team.save()
 
         return success(
@@ -215,6 +233,53 @@ class CellOpenView(APIView):
                 "opened_at": now,
                 "solve_deadline_at": None,
                 "remaining_seconds": None,
+            }
+        )
+
+
+class OpenedChallengesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        team = require_team(request)
+        solves_by_challenge = {
+            str(s.challenge_id): s
+            for s in Solve.objects.filter(team=team, challenge_id__isnull=False)
+        }
+        challenges_by_id = {
+            str(c.id): c
+            for c in Challenge.objects.filter(
+                id__in=[entry["challenge_id"] for entry in team.opened_challenge_log]
+            )
+        }
+
+        opened = []
+        for entry in team.opened_challenge_log:
+            challenge = challenges_by_id.get(entry["challenge_id"])
+            if challenge is None:
+                continue
+            solve = solves_by_challenge.get(entry["challenge_id"])
+            opened.append(
+                {
+                    "challenge_id": entry["challenge_id"],
+                    "cell_index": entry["cell_index"],
+                    "title": challenge.title,
+                    "category": challenge.category,
+                    "club_name": None,  # 이 목서버는 club을 별도로 모델링 안 함
+                    "score": challenge.score,
+                    "is_solved": solve is not None,
+                    "solved_at": solve.solved_at if solve else None,
+                    "opened_at": entry["opened_at"],
+                }
+            )
+        opened.sort(key=lambda item: item["opened_at"])
+
+        return success(
+            {
+                "opened_challenges": opened,
+                "total_count": len(opened),
+                "solved_count": sum(1 for item in opened if item["is_solved"]),
+                "total_score": sum(item["score"] for item in opened if item["is_solved"]),
             }
         )
 

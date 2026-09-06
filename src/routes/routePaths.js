@@ -1,8 +1,15 @@
 export const ROUTES = {
   board: "/board",
   challengeDetail: (challengeId) => `/challenges/${encodeURIComponent(challengeId)}`,
+  openChallenges: "/challenges",
   leaderboard: "/leaderboard",
   koth: "/koth",
   mypage: "/mypage",
   rules: "/rules",
+  adminDashboard: "/admin",
+  adminTeams: "/admin/teams",
+  adminTeamDetail: (teamId) => `/admin/teams/${encodeURIComponent(teamId)}`,
+  adminChallenges: "/admin/challenges",
+  adminSettings: "/admin/settings",
+  adminLogs: "/admin/logs",
 };

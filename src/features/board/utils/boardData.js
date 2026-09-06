@@ -205,6 +205,24 @@ export function adaptMovementResult(data) {
   };
 }
 
+// GET /board/opened_challenges - 열어둔 칸 -> challenge_id 매핑에 쓴다(이미 연
+// 칸을 다시 클릭했을 때 문제 상세로 재진입하는 용도, README 2절/10절).
+export function adaptOpenedChallenges(data) {
+  return Array.isArray(data?.opened_challenges)
+    ? data.opened_challenges.map((entry) => ({
+        challengeId: entry.challenge_id,
+        cellIndex: entry.cell_index,
+        title: entry.title,
+        category: entry.category,
+        clubName: entry.club_name,
+        score: entry.score,
+        isSolved: entry.is_solved === true,
+        solvedAt: entry.solved_at,
+        openedAt: entry.opened_at,
+      }))
+    : [];
+}
+
 export function mergeOwnedChanceCards(chanceCards, catalog) {
   return chanceCards
     .filter((card) => !card.used && !card.discarded)

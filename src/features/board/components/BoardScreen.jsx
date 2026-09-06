@@ -64,11 +64,15 @@ export default function BoardScreen({
     diceStatus,
     now,
   );
-  const challengeRemainingSeconds = getRemainingSeconds(
-    myBoard?.activeChallenge?.solveDeadlineAt,
-    diceStatus,
-    now,
-  );
+  // active_challenge는 제한시간이 끝나도 서버가 즉시 비우지 않을 수 있어(다음
+  // 액션 전까지 남아있음), diceStatus.timerRunning/blockedReason 쪽을 진행 중
+  // 여부의 기준으로 삼는다 - 그래야 만료 직후 이 패널이 계속 "문제 제한 00:00"에
+  // 멈춰있지 않고 충전 카운트다운(resetInSeconds)으로 자연히 넘어간다.
+  const isChallengeTimerRunning =
+    diceStatus?.timerRunning === true || diceStatus?.blockedReason === "TIMER_RUNNING";
+  const challengeRemainingSeconds = isChallengeTimerRunning
+    ? getRemainingSeconds(myBoard?.activeChallenge?.solveDeadlineAt, diceStatus, now)
+    : null;
   const cells = boardDefinition?.cells ?? [];
   const blockedMessage = awaitingDiscard
     ? "보유한 찬스카드 한 장을 먼저 폐기해주세요."

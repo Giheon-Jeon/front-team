@@ -40,6 +40,17 @@ export default function BoardPage() {
     if (result) setQuarantineDismissed(true);
   };
 
+  // 이미 문제를 오픈해둔 칸을 다시 클릭하면 칸 정보 패널 대신 바로 문제
+  // 상세로 재진입한다(README 2절 opened_challenges 기준).
+  const handleSelectCell = (cellIndex) => {
+    const opened = board.openedChallengesByCell.get(cellIndex);
+    if (opened) {
+      navigate(ROUTES.challengeDetail(opened.challengeId));
+      return;
+    }
+    board.selectCell(cellIndex);
+  };
+
   return (
     <BoardScreen
       boardDefinition={board.boardDefinition}
@@ -85,7 +96,7 @@ export default function BoardPage() {
       onRetryChanceDraw={(eventToken) => board.drawChance(eventToken)}
       onCloseCellEvent={board.closeCellEvent}
       onEscapeQuarantine={handleEscapeQuarantine}
-      onSelectCell={board.selectCell}
+      onSelectCell={handleSelectCell}
       onClearSelectedCell={board.clearSelectedCell}
       onCloseQuarantine={() => setQuarantineDismissed(true)}
     />

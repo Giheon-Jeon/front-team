@@ -3,6 +3,7 @@ import axios from "axios";
 // README.md "공통 규약" 참고. Base URL은 /api/v1, 경로 끝 슬래시 없음.
 export const ACCESS_TOKEN_STORAGE_KEY = "msgctf_access_token";
 export const REFRESH_TOKEN_STORAGE_KEY = "msgctf_refresh_token";
+export const ROLE_STORAGE_KEY = "msgctf_role";
 
 const apiClient = axios.create({
   baseURL: "/api/v1",
@@ -26,6 +27,7 @@ let refreshPromise = null;
 function clearStoredTokens() {
   localStorage.removeItem(ACCESS_TOKEN_STORAGE_KEY);
   localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
+  localStorage.removeItem(ROLE_STORAGE_KEY);
 }
 
 function redirectToLogin() {

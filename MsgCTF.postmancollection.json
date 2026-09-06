@@ -314,7 +314,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"challenge_id\": \"018f3f1e-0300-7a91-a30b-630000000021\"\n}",
+              "raw": "{\n  \"challenge_id\": \"{{challenge_id}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -391,7 +391,16 @@
                 "escape"
               ]
             },
-            "description": ""
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{quarantine_code}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -647,7 +656,7 @@
             "description": "보유한 찬스카드를 사용하지 않고 버린다(팀장만, Idempotency-Key 필요). README 2절 참고.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"card_id\": \"018f3f1e-0500-7a91-a30b-630000000001\"\n}",
+              "raw": "{\n  \"card_id\": \"card_reroll\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -750,7 +759,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"challenge_id\": \"018f3f1e-0300-7a91-a30b-630000000001\"\n}",
+              "raw": "{\n  \"challenge_id\": \"{{challenge_id}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2135,6 +2144,36 @@
               ]
             },
             "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "KOTH 문제 하나 순위",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/koth/leaderboard?koth_challenge_id={{koth_challenge_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "koth",
+                "leaderboard"
+              ],
+              "query": [
+                {
+                  "key": "koth_challenge_id",
+                  "value": "{{koth_challenge_id}}"
+                }
+              ]
+            },
+            "description": "koth_challenge_id는 GET /koth/clubs 응답에서 실제로 조회한 값을 koth_challenge_id 환경변수에 넣어서 쓴다(고정 예시 ID 아님). README 9절 - 2026-09-06 정정: 이 엔드포인트는 삭제되지 않았고 그대로 구현돼 있다."
           },
           "response": []
         },

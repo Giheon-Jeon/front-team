@@ -119,7 +119,10 @@ class Command(BaseCommand):
         return {"alpha": alpha, "bravo": bravo}
 
     def _seed_koth(self, teams):
-        for club_id, name, title, category in KOTH_CLUBS:
+        # open_group을 안 주면 모델 default=1이라 6개 클럽이 전부 1번으로
+        # 겹쳐서(프론트 kothVisualConfig.js는 openGroup 1~6를 6개 슬롯에
+        # 1:1로 매핑) 화면에 1개만 보이는 문제가 있었다. enumerate로 1~6 배정.
+        for index, (club_id, name, title, category) in enumerate(KOTH_CLUBS, start=1):
             KothClub.objects.update_or_create(
                 club_id=club_id,
                 defaults={
@@ -127,6 +130,7 @@ class Command(BaseCommand):
                     "title": title,
                     "category": category,
                     "status": "ACTIVE",
+                    "open_group": index,
                     "current_owner_team": teams["alpha"],
                     "current_score": 50,
                     "opened_at": timezone.now(),

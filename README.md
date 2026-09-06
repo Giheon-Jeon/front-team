@@ -254,6 +254,8 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 
 **제품 요구사항(기능명세 원문)**: ID/PW POST 로그인, 팀 토큰 발급, 인증/검증.
 
+**프론트 구현 상태(2026-09-06)**: 로그인 응답의 `role`을 안 보고 무조건 `/board`로 보내던 버그 수정 - `role`을 저장(`ROLE_STORAGE_KEY`)해뒀다가 `ADMIN`이면 `/admin`, 아니면 `/board`로 분기한다. `routePaths.js`에 없던 관리자 경로들(`adminDashboard`/`adminTeams`/`adminTeamDetail`/`adminChallenges`/`adminSettings`/`adminLogs`)도 추가해 `AppRoutes.jsx`가 문자열 하드코딩 대신 `ROUTES`를 쓰도록 정리(12-5절 규칙).
+
 ---
 
 ## 2. 문제 리스트(보드) 페이지
@@ -313,7 +315,11 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 
 **제품 요구사항(기능명세 원문)**: 문제 목록 조회(보드판), 주사위 굴리는 로직(굴리기 전 chance 카드 선택), 말 이동, 보드칸 선택 시 문제 종류 선택, 현재 보유 chance 카드 목록, 무인도칸, 출발칸, Airport(1칸, 자유 이동), 찬스칸 2개, 클리어칸 처리.
 
-**프론트 구현 상태(2026-08-29, feature/board / PR #7)**: Figma node 3:2, 146:19 기준 정적 UI만. 36칸은 board-grid.png 한 장으로 처리, 무인도 모달은 `/board?preview=quarantine`로 확인. 위 API 연동은 `src/api/board.js`에 함수만 있고 화면 결선은 후속(`TODO(board)`).
+**프론트 구현 상태**: 2026-08-29(PR #7)엔 정적 UI만이었으나, 2026-09-05(PR #29)에 16개 API 전부(주사위 굴림/확정, 찬스카드 7종 사용/2단계 확정/폐기, 룰렛, 무인도 탈출) 결선 완료. 2026-09-06 후속 수정:
+- 이미 오픈한 칸을 다시 클릭하면 칸 정보 패널 대신 `GET /board/opened_challenges` 기준으로 문제 상세로 바로 재진입(`BoardPage.jsx`).
+- 무인도 팝업 닫기 버튼이 뒤의 보드 칸을 같이 클릭 처리하던 버그 수정 - 전체 화면을 덮는 백드롭을 추가해 모달 밖 클릭을 차단(`QuarantinePanel.jsx`).
+- 주사위 충전/문제 제한시간 카운트다운이 00:00에 닿아도 새로고침 전까지 버튼이 안 풀리던 문제 수정 - 클라이언트에서 카운트다운이 0이 되는 순간을 감지해 한 번 재조회(`useBoardController.js`).
+- "진행 중인 문제" 안내를 `active_challenge` 존재 여부가 아니라 `blocked_reason === "TIMER_RUNNING"` 기준으로 판정하도록 수정 - 제한시간이 지나면 문제 타이머 대신 충전 타이머가 뜨도록 함(`BoardEventPanel.jsx`, `BoardScreen.jsx`).
 
 **미해결(Appendix B)**: `chance/catalog` 빈 시드 처리(200 vs 500), 룰렛/무인도 중복 판정을 `reason` 문자열에 칸 번호 넣는 방식(ERD 규약 위반), `opened_challenges.is_solved`를 `solves` vs `team_challenge_accesses.status`로 판정할지(PR #14 구현이 후자라 리더보드와 소스 갈림), `quarantine_attempts_left` deprecated 필드 제거.
 
@@ -527,22 +533,26 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 
 | Method | URL | 설명 |
 |---|---|---|
-| GET | `/koth/clubs` | 동아리 3개 목록, 각 아래 KOTH 문제 2개(총 6) + 공개 상태 |
-| GET | `/koth/clubs/{club_id}` | 동아리별 문제 상세 + 현재 점유 상태 |
+| GET | `/koth/clubs` | 클럽(동아리) 6개 목록, 클럽당 문제 1개(총 6문제) + 공개 상태 |
+| GET | `/koth/clubs/{club_id}` | 클럽 1개 상세(=문제 1개 상세) + 현재 점유 상태 |
+| GET | `/koth/leaderboard` | KOTH 문제 1개의 팀별 순위 |
 | GET | `/koth/me` | 내 팀 KOTH 문제별 점수, 순위 |
 | GET | `/koth/team_token` | 내 팀 KOTH 팀 토큰 조회 |
 
-> **Notion 갱신(2026-08-23)으로 구조가 바뀜**: (1) **6클럽x1문제 -> 3동아리x2문제**. `clubs[].challenges[]` 배열로 문제가 중첩됨. (2) **`GET /koth/leaderboard` 삭제** - KOTH 문제별 팀 순위 전용 엔드포인트 없어짐, 전체 순위는 `/ranking`. (3) **KOTH 문제에 `category` 없음**. `status`/`open_group`은 동아리가 아니라 문제 단위. 전부 백엔드 "시작 전".
+> **구조 정정(2026-09-06)**: 이전 버전 문서는 "6클럽x1문제 -> 3동아리x2문제로 바뀌고 `/koth/leaderboard`가 삭제됐다"고 적어뒀었는데, 실제로는 그 반대로 확정됐다 - **최종 구조는 6클럽 x 클럽당 문제 1개(총 6문제)**이고, `GET /koth/leaderboard`도 **삭제되지 않고 그대로 구현돼 있다**. `clubs[].challenges[]`처럼 문제를 클럽 아래에 중첩하지 않는다 - 클럽 객체 자체가 곧 문제 1개다(`koth_challenge_id`/`title`/`category`/`status`/`open_group` 등이 클럽 객체에 바로 있음). 프론트도 이 가정(중첩 `challenges[]` 필요)으로 잘못 구현돼 있던 걸 같이 고쳤다(`src/features/koth/utils/kothChallengeState.js`).
 > `/internal/koth/team_tokens/verify`, `/internal/teams`, `/internal/koth/scores`는 서버-서버 전용(문제 서버 <-> 플랫폼) - 프론트 대상 아님.
 
-- `GET /koth/clubs` (인증 없음) -> `{ clubs: [{club_id, name, challenges: [{koth_challenge_id, title, status, open_group, current_owner_team_id, current_owner_team_name, current_score, opened_at, closed_at}]}], total_count: 3(동아리 수), challenge_count: 6, active_count: 2 }`. `status`: `SCHEDULED`(미개방) / `ACTIVE`(현재 15분 채점 대상) / `CLOSED`(채점 끝). 동시 `ACTIVE`는 2개. `open_group`은 공개 순번(플랫폼 배정). `current_score`는 그 문제 현재 1위 팀의 누적 KOTH 점수(점수 없으면 owner 필드 null). 추가 에러: `500 KOTH_CHALLENGES_LOAD_FAILED`.
-- `GET /koth/clubs/{club_id}` (인증 없음) -> `{ club_id, name, challenges: [...위와 동일 필드...], challenge_count: 2 }`. 문제 없는 동아리는 `challenges: []` + 200(404 아님). 추가 에러: `400 INVALID_CLUB_ID` / `404 CLUB_NOT_FOUND`.
-- `GET /koth/me` (Bearer) -> `{ team_id, team_name, total_koth_score, challenges: [{koth_challenge_id, club_id, title, status, earned_score, rank, solved_at, opened_at, closed_at}](항상 6개), total_count: 6, active_count: 2 }`. `rank`는 그 문제 안 `earned_score` 기준(점수 없으면 null). `earned_score`는 누적, `solved_at`은 첫 양수 점수 시각 고정. 전체 팀 순위는 여기서 안 줌 - 5절 `/ranking`.
+- `GET /koth/clubs` (인증 없음) -> `{ clubs: [{club_id, name, koth_challenge_id, title, category, status, open_group, current_owner_team_id, current_owner_team_name, current_score, opened_at, closed_at}], total_count: 6, active_count }`. `status`: `SCHEDULED`(미개방) / `ACTIVE`(현재 15분 채점 대상) / `CLOSED`(채점 끝). `open_group`은 공개 순번(플랫폼 배정, 1~6 - 라운드 3개 x 2문제 구성). `current_score`는 그 문제 현재 1위 팀의 누적 KOTH 점수(점수 없으면 owner 필드 null). 추가 에러: `500 KOTH_CHALLENGES_LOAD_FAILED`.
+- `GET /koth/clubs/{club_id}` (인증 없음) -> 위와 동일한 필드의 클럽(=문제) 객체 1개(중첩 없음). 추가 에러: `400 INVALID_CLUB_ID` / `404 CLUB_NOT_FOUND`.
+- `GET /koth/leaderboard` (인증 없음) - Query `koth_challenge_id`(필수) -> `{ koth_challenge_id, title, status, leaderboard: [{rank, team_id, team_name, earned_score, solved_at}], total_count, updated_at }`. `earned_score` 내림차순, 동점이면 `solved_at` 오름차순. 전체(제오파디+KOTH 합산) 순위는 5절 `/ranking`을 쓰고, 이건 KOTH 문제 1개 안에서의 순위다. 추가 에러: `400 KOTH_CHALLENGE_ID_REQUIRED` / `400 INVALID_KOTH_CHALLENGE_ID`.
+- `GET /koth/me` (Bearer) -> `{ team_id, team_name, total_koth_score, challenges: [{koth_challenge_id, club_id, title, status, earned_score, rank, solved_at, opened_at, closed_at}](항상 6개), total_count: 6, active_count }`. `rank`는 그 문제 안 `earned_score` 기준(점수 없으면 null). `earned_score`는 누적, `solved_at`은 첫 양수 점수 시각 고정. 전체 팀 순위는 여기서 안 줌 - 5절 `/ranking`.
 - `GET /koth/team_token` (Bearer) -> `{ team_id, team_name, team_token, issued_at }`. 로그인 JWT와 무관, 팀당 하나, DB엔 해시 저장. 참가자가 외부 KOTH 문제 서버에 직접 입력. 추가 에러: `404 USER_HAS_NO_TEAM`.
 
 **제품 요구사항(기능명세 원문)**: 동아리별 KOTH 문제 목록, 다음 문제 개방 남은 시간, 스코어링 방식(누적합산)은 일반 문제와 다름.
 
-**미해결(Appendix B)**: "다음 문제 개방 남은 시간" 필드 여전히 없음(`open_group`은 순번이지 시각 아님), `solves[].koth_challenge_id`와 KOTH API의 `koth_challenge_id` 동일 값 공간(Notion은 동일하다고 명시), KOTH가 8개 분야 enum을 쓸지(ERD, KOTH 페이지는 아직 구 6개 상태).
+**프론트 구현 상태(2026-09-06)**: 위 구조 정정에 맞춰 `KothPage`/`useKothData`/`kothChallengeState.js` 수정 완료(6문제 전부 정상 표시 확인). 보드로 돌아가기 버튼 연결/점수, 공개상태 30초 자동 재조회 확인. **실제 문제 접속 기능(접속 URL 제공 방식)은 아직 없음** - 화면에도 "문제 접속 경로는 아직 프론트 route와 API에 제공되지 않았습니다"로 안내 중이며, 백엔드와 방식 협의가 먼저 필요하다.
+
+**미해결(Appendix B)**: "다음 문제 개방 남은 시간" 필드 여전히 없음(`open_group`은 순번이지 시각 아님), `solves[].koth_challenge_id`와 KOTH API의 `koth_challenge_id` 동일 값 공간(Notion은 동일하다고 명시), KOTH가 8개 분야 enum을 쓸지(ERD, KOTH 페이지는 아직 구 6개 상태), 문제 접속 URL 제공 방식(백엔드 협의 필요).
 
 ---
 
@@ -552,6 +562,8 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 - 대신 **`GET /board/opened_challenges`(2절)가 이 페이지를 담당**하는 것으로 확정됨 - 열어둔 문제 목록 + `is_solved`/`solved_at` + 집계(`total_count`/`solved_count`/`total_score`)를 준다. "현재 인스턴스 표시"는 `GET /teams/me/instances`(3절), 보드 진행은 `GET /board/me`.
 - 즉 이 페이지 프론트는 `/board/opened_challenges` + `/teams/me/instances` 조합으로 구현하면 되고, 별도 API 그룹을 기다릴 필요 없다.
 - **제품 요구사항(기능명세 원문)**: 현재 인스턴스 표시, 열린 문제 목록, 푼 문제 표시, 클릭 시 문제 상세 페이지로 이동.
+
+**프론트 구현 상태(2026-09-06)**: `OpenChallengesPage`가 계속 "준비 중" 스텁이던 걸 위 방식(`/board/opened_challenges` + `/teams/me/instances`) 그대로 구현했다. Figma 시안이 없어(전용 화면 자체가 없음) 기능 우선으로 구현(`OpenChallengesScreen.jsx`에 TODO로 표시).
 
 ---
 

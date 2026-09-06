@@ -446,7 +446,11 @@ export default function BoardEventPanel({
     );
   }
 
-  if (myBoard.boardCompleted || myBoard.activeChallenge) {
+  // active_challenge 존재 여부가 아니라 blockedReason(=diceStatus.timer_running
+  // 기반)으로 "진행 중인 문제"를 판정한다. active_challenge는 15분 제한시간이
+  // 지나도 다음 액션 전까지 서버가 비우지 않을 수 있어서, 그걸 기준으로 삼으면
+  // 만료 후에도 이 안내가 계속 떠 있게 된다.
+  if (myBoard.boardCompleted || blockedReason === "TIMER_RUNNING") {
     const message = myBoard.boardCompleted
       ? BLOCKED_REASON_MESSAGES.BOARD_COMPLETED
       : BLOCKED_REASON_MESSAGES.TIMER_RUNNING;
