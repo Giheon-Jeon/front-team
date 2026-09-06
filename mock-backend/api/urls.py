@@ -15,6 +15,7 @@ urlpatterns = [
     path("board/dice/roll", board.DiceRollView.as_view()),
     path("board/cell/current", board.CellCurrentView.as_view()),
     path("board/cell/open", board.CellOpenView.as_view()),
+    path("board/opened_challenges", board.OpenedChallengesView.as_view()),
     path("board/airport/move", board.AirportMoveView.as_view()),
     path("board/quarantine/escape", board.QuarantineEscapeView.as_view()),
     path("board/chance/catalog", board.ChanceCatalogView.as_view()),
@@ -26,7 +27,9 @@ urlpatterns = [
     path("challenges/<uuid:challenge_id>", challenges.ChallengeDetailView.as_view()),
     path("challenges/<uuid:challenge_id>/submit", challenges.ChallengeSubmitView.as_view()),
     path("instances", challenges.InstanceCreateView.as_view()),
-    path("teams/me/instance", challenges.MyInstanceView.as_view()),
+    # README 2/3절, Appendix A #16: URL이 /instance -> /instances(복수)로
+    # 확정됐는데 목서버는 singular로 남아있었다.
+    path("teams/me/instances", challenges.MyInstanceView.as_view()),
     path("instances/<uuid:instance_id>/reset", challenges.InstanceResetView.as_view()),
     path("instances/<uuid:instance_id>/extend", challenges.InstanceExtendView.as_view()),
     path("instances/<uuid:instance_id>", challenges.InstanceDeleteView.as_view()),

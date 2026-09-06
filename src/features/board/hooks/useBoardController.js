@@ -12,6 +12,7 @@ import {
   getCurrentCell,
   getDiceStatus,
   getMyBoard,
+  getOpenedChallenges,
   moveAirport,
   openCell,
   rollDice,
@@ -28,8 +29,10 @@ import {
   adaptDiceStatus,
   adaptMovementResult,
   adaptMyBoard,
+  adaptOpenedChallenges,
   adaptRouletteResult,
   getBoardError,
+  getRemainingSeconds,
   mergeOwnedChanceCards,
   unwrapBoardResponse,
 } from "../utils/boardData.js";
@@ -52,6 +55,10 @@ export default function useBoardController() {
   const [diceStatus, setDiceStatus] = useState(null);
   const [currentCell, setCurrentCell] = useState(null);
   const [chanceCatalog, setChanceCatalog] = useState([]);
+  const [openedChallenges, setOpenedChallenges] = useState([]);
+  const [now, setNow] = useState(Date.now());
+  const diceResyncedForRef = useRef(null);
+  const challengeResyncedForRef = useRef(null);
   const [displayPosition, setDisplayPosition] = useState(null);
   const [pendingRoll, setPendingRoll] = useState(null);
   const [pendingChanceChoice, setPendingChanceChoice] = useState(null);
@@ -69,6 +76,17 @@ export default function useBoardController() {
       const boardError = getBoardError(requestError);
       if (boardError.code === "PENDING_CONFIRM") return null;
       throw requestError;
+    }
+  }, []);
+
+  // opened_challenges는 "이미 연 칸 재클릭 -> 문제 상세 재진입" 편의 기능용
+  // 보조 데이터라, 이게 실패한다고 보드 전체 로딩이 막히면 안 된다(실제로 이
+  // 엔드포인트가 아직 없는 백엔드/목서버에서 board 전체가 깨지는 걸 방지).
+  const requestOpenedChallenges = useCallback(async () => {
+    try {
+      return adaptOpenedChallenges(unwrapBoardResponse(await getOpenedChallenges()));
+    } catch {
+      return [];
     }
   }, []);
 
@@ -90,6 +108,7 @@ export default function useBoardController() {
       const nextMyBoard = adaptMyBoard(unwrapBoardResponse(myBoardResponse));
       const nextDiceStatus = adaptDiceStatus(unwrapBoardResponse(diceResponse));
       const nextCatalog = adaptChanceCatalog(unwrapBoardResponse(catalogResponse));
+      const nextOpenedChallenges = await requestOpenedChallenges();
       const nextCurrentCell = await requestCurrentCell();
 
       if (!mountedRef.current) return;
@@ -97,6 +116,7 @@ export default function useBoardController() {
       setMyBoard(nextMyBoard);
       setDiceStatus(nextDiceStatus);
       setChanceCatalog(nextCatalog);
+      setOpenedChallenges(nextOpenedChallenges);
       setCurrentCell(nextCurrentCell);
       setDisplayPosition(nextMyBoard.position);
       setAwaitingDiscard(false);
@@ -107,7 +127,7 @@ export default function useBoardController() {
     } finally {
       if (mountedRef.current) setIsLoading(false);
     }
-  }, [requestCurrentCell]);
+  }, [requestCurrentCell, requestOpenedChallenges]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -135,15 +155,17 @@ export default function useBoardController() {
       ]);
       const nextMyBoard = adaptMyBoard(unwrapBoardResponse(myBoardResponse));
       const nextDiceStatus = adaptDiceStatus(unwrapBoardResponse(diceResponse));
+      const nextOpenedChallenges = await requestOpenedChallenges();
       const nextCurrentCell = includeCurrentCell ? await requestCurrentCell() : null;
 
       if (!mountedRef.current) return;
       setMyBoard(nextMyBoard);
       setDiceStatus(nextDiceStatus);
+      setOpenedChallenges(nextOpenedChallenges);
       if (includeCurrentCell) setCurrentCell(nextCurrentCell);
       if (!preserveDisplayPosition) setDisplayPosition(nextMyBoard.position);
     },
-    [requestCurrentCell],
+    [requestCurrentCell, requestOpenedChallenges],
   );
 
   const runMutation = useCallback(
@@ -493,6 +515,53 @@ export default function useBoardController() {
     pendingRoll,
   ]);
 
+  // 1초마다 틱 - 주사위 충전/문제 제한시간 카운트다운이 서버 재조회 없이도
+  // 0에 닿는 순간을 감지하기 위함이다.
+  useEffect(() => {
+    const tickId = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(tickId);
+  }, []);
+
+  // 충전 카운트다운이 00:00에 닿으면(새로고침 전까지 canRoll이 그대로 false로
+  // 남아있던 문제) 딱 한 번 다시 조회해 서버의 최신 dice 상태를 반영한다.
+  useEffect(() => {
+    const targetIso = diceStatus?.nextDiceResetAt;
+    if (!targetIso) {
+      diceResyncedForRef.current = null;
+      return;
+    }
+    if (diceResyncedForRef.current === targetIso) return;
+
+    const remaining = getRemainingSeconds(targetIso, diceStatus, now);
+    if (remaining === 0) {
+      diceResyncedForRef.current = targetIso;
+      syncProgress({ includeCurrentCell: false, preserveDisplayPosition: true });
+    }
+  }, [diceStatus, now, syncProgress]);
+
+  // 문제 제한시간(solve_deadline_at)이 00:00에 닿았을 때도 동일하게 한 번
+  // 재조회한다 - active_challenge/blockedReason이 서버에서 바로 안 바뀌어
+  // 있을 수 있어도, 이 재조회가 최신 상태(충전 카운트다운으로 전환 등)를 반영한다.
+  useEffect(() => {
+    const targetIso = myBoard?.activeChallenge?.solveDeadlineAt;
+    if (!targetIso) {
+      challengeResyncedForRef.current = null;
+      return;
+    }
+    if (challengeResyncedForRef.current === targetIso) return;
+
+    const remaining = getRemainingSeconds(targetIso, diceStatus, now);
+    if (remaining === 0) {
+      challengeResyncedForRef.current = targetIso;
+      syncProgress({ includeCurrentCell: false, preserveDisplayPosition: true });
+    }
+  }, [myBoard?.activeChallenge?.solveDeadlineAt, diceStatus, now, syncProgress]);
+
+  const openedChallengesByCell = useMemo(
+    () => new Map(openedChallenges.map((entry) => [entry.cellIndex, entry])),
+    [openedChallenges],
+  );
+
   const ownedChanceCards = useMemo(
     () => mergeOwnedChanceCards(myBoard?.chanceCards ?? [], chanceCatalog),
     [chanceCatalog, myBoard?.chanceCards],
@@ -529,6 +598,7 @@ export default function useBoardController() {
     awaitingDiscard,
     ownedChanceCards,
     cellStatesByIndex,
+    openedChallengesByCell,
     selectedCell,
     isLoading,
     isMutating,

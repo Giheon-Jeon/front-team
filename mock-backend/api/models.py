@@ -43,6 +43,9 @@ class Team(models.Model):
     has_passed_start = models.BooleanField(default=False)
     board_completed = models.BooleanField(default=False)
     consumed_cell_indexes = models.JSONField(default=list, blank=True)
+    # GET /board/opened_challenges(README 2절) 재구성용 로그.
+    # [{cell_index, challenge_id, opened_at(iso)}]. CellOpenView.post에서 추가.
+    opened_challenge_log = models.JSONField(default=list, blank=True)
     chance_cards = models.JSONField(default=list, blank=True)  # [{card_id, used}]
     active_challenge = models.ForeignKey(
         "Challenge", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
