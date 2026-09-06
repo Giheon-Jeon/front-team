@@ -4,7 +4,9 @@ import { login } from "../../../api/auth.js";
 import {
   ACCESS_TOKEN_STORAGE_KEY,
   REFRESH_TOKEN_STORAGE_KEY,
+  ROLE_STORAGE_KEY,
 } from "../../../api/client.js";
+import { ROLE } from "../../../constants/enums.js";
 import { isSuccess } from "../../../utils/response.js";
 import { ROUTES } from "../../../routes/routePaths.js";
 import LoginScreen from "../components/LoginScreen.jsx";
@@ -23,6 +25,7 @@ export default function LoginPage() {
       const envelope = response.data;
       const accessToken = envelope?.data?.access_token;
       const refreshToken = envelope?.data?.refresh_token;
+      const role = envelope?.data?.role;
 
       if (!isSuccess(envelope) || !accessToken || !refreshToken) {
         setFeedback({
@@ -34,8 +37,13 @@ export default function LoginPage() {
 
       localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, accessToken);
       localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, refreshToken);
+      if (role) {
+        localStorage.setItem(ROLE_STORAGE_KEY, role);
+      } else {
+        localStorage.removeItem(ROLE_STORAGE_KEY);
+      }
       setFeedback({ type: "success", message: "로그인에 성공했습니다." });
-      navigate(ROUTES.board, { replace: true });
+      navigate(role === ROLE.ADMIN ? ROUTES.adminDashboard : ROUTES.board, { replace: true });
     } catch (error) {
       setFeedback({
         type: "error",
