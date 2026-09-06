@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { getChallengeDeadline } from "../../../utils/time.js";
 import {
   confirmChanceCard,
   confirmDice,
@@ -257,7 +258,7 @@ export default function useBoardController() {
             cellIndex: openResult.cell_index,
             challengeId: openResult.challenge_id,
             openedAt: openResult.opened_at,
-            solveDeadlineAt: openResult.solve_deadline_at,
+            solveDeadlineAt: getChallengeDeadline(openResult.opened_at),
             remainingSeconds: openResult.remaining_seconds,
           };
         },

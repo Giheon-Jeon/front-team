@@ -1,3 +1,5 @@
+import { getChallengeDeadline } from "../../../utils/time.js";
+
 function stringIdentifier(value) {
   return value == null ? "" : String(value);
 }
@@ -9,7 +11,10 @@ export function mapChallengeDetail(data) {
     difficulty: data.difficulty,
     points: data.score,
     solves: data.solved_team_count,
-    solved: data.is_solved,
+    solved: data.is_solved === true,
+    // 응답에 없으면 미제공 상태를 유지한다. 풀이 여부로 개방 상태를 추측하지 않는다.
+    accessStatus: data.status ?? null,
+    openedAt: data.opened_at ?? null,
     description: data.description,
     attachments: Array.isArray(data.files)
       ? data.files.map((file) => ({
@@ -19,6 +24,21 @@ export function mapChallengeDetail(data) {
         sizeLabel: file.file_size == null ? "—" : String(file.file_size),
       }))
       : [],
+  };
+}
+
+export function getChallengeSubmissionState(challenge, now = Date.now()) {
+  const deadline = getChallengeDeadline(challenge?.openedAt);
+  const remainingSeconds = deadline == null
+    ? null
+    : Math.max(0, Math.ceil((Date.parse(deadline) - now) / 1000));
+  const isCleared = challenge?.accessStatus === "CLEARED";
+
+  return {
+    remainingSeconds,
+    isCleared,
+    expired: remainingSeconds === 0,
+    blocked: isCleared || challenge?.solved === true || remainingSeconds === 0,
   };
 }
 

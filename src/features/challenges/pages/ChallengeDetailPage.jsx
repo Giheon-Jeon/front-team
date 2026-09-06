@@ -10,6 +10,7 @@ import { isSuccess } from "../../../utils/response.js";
 import ChallengeDetailScreen from "../components/ChallengeDetailScreen.jsx";
 import useChallengeDetailData from "../hooks/useChallengeDetailData.js";
 import {
+  getChallengeSubmissionState,
   mapChallengeDetail,
   mapChallengeInstance,
 } from "../utils/challengeDetailMapper.js";
@@ -63,9 +64,14 @@ export default function ChallengeDetailPage() {
     () => mapChallengeInstance(challengeDetail.instanceData, now),
     [challengeDetail.instanceData, now],
   );
+  const submission = getChallengeSubmissionState(challenge, now);
 
   const handleSubmitFlag = async () => {
-    if (!flagValue || actionInFlight.current) return;
+    if (
+      !flagValue || actionInFlight.current
+      || challengeDetail.status !== "success"
+      || getChallengeSubmissionState(challenge).blocked
+    ) return;
 
     actionInFlight.current = true;
     setPendingAction("submit-flag");
@@ -144,6 +150,7 @@ export default function ChallengeDetailPage() {
       pageError={challengeDetail.pageError}
       instanceError={challengeDetail.instanceError}
       challenge={challenge}
+      submission={submission}
       instance={instance}
       flagValue={flagValue}
       onFlagChange={setFlagValue}
@@ -156,7 +163,7 @@ export default function ChallengeDetailPage() {
       submitDisabled={
         pendingAction != null
         || flagValue.length === 0
-        || Boolean(challenge?.solved)
+        || submission.blocked
       }
       onRetry={() => challengeDetail.retry()}
       onBack={() => navigate(-1)}
