@@ -14,7 +14,7 @@ function BanControl({ team, isMutating, onBan, onUnban }) {
         type="button"
         disabled={isMutating}
         onClick={() => onUnban(team.team_id)}
-        className="rounded border border-[#4a7a3a] px-2 py-1 text-xs text-[#9fd17a] disabled:opacity-50"
+        className="rounded border border-admin-running px-2 py-1 text-xs text-admin-running disabled:opacity-50"
       >
         밴 해제
       </button>
@@ -41,19 +41,19 @@ function BanControl({ team, isMutating, onBan, onUnban }) {
           value={reason}
           onChange={(event) => setReason(event.target.value)}
           placeholder="밴 사유"
-          className="w-32 rounded border border-[#4a4030] bg-[#1a1510] px-2 py-1 text-xs"
+          className="w-32 rounded border border-admin-divider bg-white/30 px-2 py-1 text-xs"
         />
         <button
           type="submit"
           disabled={isMutating || !reason.trim()}
-          className="rounded border border-[#7a3a2f] px-2 py-1 text-xs text-[#e59a86] disabled:opacity-50"
+          className="rounded border border-admin-failed px-2 py-1 text-xs text-admin-failed disabled:opacity-50"
         >
           확인
         </button>
         <button
           type="button"
           onClick={() => setIsOpen(false)}
-          className="text-xs text-[#a89b87]"
+          className="text-xs text-admin-muted"
         >
           취소
         </button>
@@ -66,7 +66,7 @@ function BanControl({ team, isMutating, onBan, onUnban }) {
       type="button"
       disabled={isMutating}
       onClick={() => setIsOpen(true)}
-      className="rounded border border-[#7a3a2f] px-2 py-1 text-xs text-[#e59a86] disabled:opacity-50"
+      className="rounded border border-admin-failed px-2 py-1 text-xs text-admin-failed disabled:opacity-50"
     >
       밴 처리
     </button>
@@ -94,17 +94,17 @@ export default function AdminTeamsPage() {
           value={searchInput}
           onChange={(event) => setSearchInput(event.target.value)}
           placeholder="팀 이름 검색"
-          className="rounded border border-[#4a4030] bg-[#1a1510] px-3 py-1.5 text-sm"
+          className="rounded border border-admin-divider bg-white/30 px-3 py-1.5 text-sm"
         />
         <select
           value={teams.params.sort}
           onChange={(event) => teams.setParams({ sort: event.target.value, page: 1 })}
-          className="rounded border border-[#4a4030] bg-[#1a1510] px-3 py-1.5 text-sm"
+          className="rounded border border-admin-divider bg-white/30 px-3 py-1.5 text-sm"
         >
           <option value="score">점수순</option>
           <option value="name">이름순</option>
         </select>
-        <button type="submit" className="rounded border border-[#4a4030] px-3 py-1.5 text-sm">
+        <button type="submit" className="rounded border border-admin-divider px-3 py-1.5 text-sm">
           검색
         </button>
       </form>
@@ -112,10 +112,10 @@ export default function AdminTeamsPage() {
       <AdminStatusMessage status={teams.status} error={teams.error} onRetry={teams.retry} />
 
       {teams.status === "success" && (
-        <div className="overflow-x-auto rounded-lg border border-[#332a20]">
+        <div className="overflow-x-auto rounded-lg border border-admin-divider">
           <table className="w-full border-collapse text-sm">
             <thead>
-              <tr className="border-b border-[#332a20] text-left text-[#a89b87]">
+              <tr className="border-b border-admin-divider text-left text-admin-muted">
                 <th className="px-3 py-2 font-normal">팀</th>
                 <th className="px-3 py-2 font-normal">점수</th>
                 <th className="px-3 py-2 font-normal">마일리지</th>
@@ -126,12 +126,12 @@ export default function AdminTeamsPage() {
             </thead>
             <tbody>
               {teams.teams.map((team) => (
-                <tr key={team.team_id} className="border-b border-[#221b14] last:border-0">
+                <tr key={team.team_id} className="border-b border-admin-divider/40 last:border-0">
                   <td className="px-3 py-2">
                     <button
                       type="button"
                       onClick={() => navigate(ROUTES.adminTeamDetail(team.team_id))}
-                      className="text-left underline decoration-dotted underline-offset-2 hover:text-[#e8b957]"
+                      className="text-left underline decoration-dotted underline-offset-2 hover:text-admin-gold"
                     >
                       {team.team_name}
                     </button>
@@ -158,7 +158,7 @@ export default function AdminTeamsPage() {
               ))}
               {teams.teams.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-3 py-6 text-center text-[#a89b87]">
+                  <td colSpan={6} className="px-3 py-6 text-center text-admin-muted">
                     표시할 팀이 없습니다.
                   </td>
                 </tr>
@@ -169,14 +169,14 @@ export default function AdminTeamsPage() {
       )}
 
       {teams.status === "success" && (
-        <div className="mt-3 flex items-center justify-between text-xs text-[#a89b87]">
+        <div className="mt-3 flex items-center justify-between text-xs text-admin-muted">
           <span>총 {teams.totalCount}팀</span>
           <div className="flex gap-2">
             <button
               type="button"
               disabled={teams.params.page <= 1}
               onClick={() => teams.setParams({ page: teams.params.page - 1 })}
-              className="rounded border border-[#4a4030] px-2 py-1 disabled:opacity-40"
+              className="rounded border border-admin-divider px-2 py-1 disabled:opacity-40"
             >
               이전
             </button>
@@ -185,7 +185,7 @@ export default function AdminTeamsPage() {
               type="button"
               disabled={teams.params.page * teams.params.size >= teams.totalCount}
               onClick={() => teams.setParams({ page: teams.params.page + 1 })}
-              className="rounded border border-[#4a4030] px-2 py-1 disabled:opacity-40"
+              className="rounded border border-admin-divider px-2 py-1 disabled:opacity-40"
             >
               다음
             </button>

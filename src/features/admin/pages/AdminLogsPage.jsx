@@ -17,19 +17,19 @@ export default function AdminLogsPage() {
   return (
     <AdminLayout title="로그 / 리소스">
       <section className="mb-8">
-        <h2 className="mb-2 text-sm font-bold text-[#a89b87]">계정/노드별 리소스 상태</h2>
+        <h2 className="mb-2 text-sm font-bold text-admin-muted">계정/노드별 리소스 상태</h2>
         <AdminStatusMessage status={resources.status} error={resources.error} onRetry={resources.retry} />
         {resources.status === "success" && !resources.data && (
-          <p className="text-sm text-[#a89b87]">수집된 리소스 정보가 없습니다.</p>
+          <p className="text-sm text-admin-muted">수집된 리소스 정보가 없습니다.</p>
         )}
         {resources.status === "success" && resources.data && (
           <div className="flex flex-col gap-3">
             {resources.data.accounts.map((account) => (
-              <div key={account.account_id} className="rounded-lg border border-[#332a20] bg-[#1a1510] p-3 text-sm">
+              <div key={account.account_id} className="rounded-lg border border-admin-divider bg-white/30 p-3 text-sm">
                 <p className="m-0 font-bold">
                   {account.account_name} - {account.status} ({account.running_instances}/{account.instance_quota})
                 </p>
-                <ul className="m-0 mt-2 flex flex-col gap-1 p-0 pl-4 text-xs text-[#a89b87]">
+                <ul className="m-0 mt-2 flex flex-col gap-1 p-0 pl-4 text-xs text-admin-muted">
                   {account.nodes.map((node) => (
                     <li key={node.node_id}>
                       {node.node_name}: {node.status}, CPU {node.cpu_usage_percent}%, 메모리{" "}
@@ -44,12 +44,12 @@ export default function AdminLogsPage() {
       </section>
 
       <section>
-        <h2 className="mb-2 text-sm font-bold text-[#a89b87]">최근 이벤트</h2>
+        <h2 className="mb-2 text-sm font-bold text-admin-muted">최근 이벤트</h2>
         <AdminStatusMessage status={events.status} error={events.error} onRetry={events.retry} />
         {events.status === "success" && (
           <table className="w-full border-collapse text-sm">
             <thead>
-              <tr className="border-b border-[#332a20] text-left text-[#a89b87]">
+              <tr className="border-b border-admin-divider text-left text-admin-muted">
                 <th className="px-2 py-1 font-normal">유형</th>
                 <th className="px-2 py-1 font-normal">심각도</th>
                 <th className="px-2 py-1 font-normal">메시지</th>
@@ -59,7 +59,7 @@ export default function AdminLogsPage() {
             </thead>
             <tbody>
               {(events.data?.events ?? []).map((event) => (
-                <tr key={event.event_id} className="border-b border-[#221b14] last:border-0">
+                <tr key={event.event_id} className="border-b border-admin-divider/40 last:border-0">
                   <td className="px-2 py-1">{event.type}</td>
                   <td className="px-2 py-1">{event.severity}</td>
                   <td className="px-2 py-1">{event.message}</td>
@@ -71,7 +71,7 @@ export default function AdminLogsPage() {
               ))}
               {(events.data?.events ?? []).length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-2 py-4 text-center text-[#a89b87]">이벤트 없음</td>
+                  <td colSpan={5} className="px-2 py-4 text-center text-admin-muted">이벤트 없음</td>
                 </tr>
               )}
             </tbody>

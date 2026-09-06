@@ -1,7 +1,7 @@
 import apiClient from "./client.js";
 
 // 관리자 API - 전부 Bearer + role: ADMIN 필요. 경로/스키마는 README.md "8. 관리자 페이지"
-// (Notion API명세서 2026-08-26 스냅샷) 기준.
+// (Notion API명세서 2026-09-07 스냅샷) 기준.
 //
 // 각 함수 옆 [백엔드] 표기는 Notion status 속성이다. "완료"/"PR 대기"는 바로 연동 가능,
 // "진행 중"/"논의"/"시작 전"은 서버가 아직 404/501을 줄 수 있으니 화면에서 방어적으로 처리.
@@ -11,8 +11,28 @@ import apiClient from "./client.js";
 
 // ── 대시보드 ────────────────────────────────────────────────────────────────
 export function getAdminDashboard() {
-  // [백엔드: 논의] GET /admin/dashboard - 요약 지표 집계
+  // [백엔드: 완료] GET /admin/dashboard - 요약 지표 집계
   return apiClient.get("/admin/dashboard");
+}
+
+// ── 계정 (2026-09-07 신규 - 회원가입 없이 관리자가 미리 계정을 등록) ────────
+export function registerAdminAccount({ loginId, password, nickname, role = "PARTICIPANT", isLeader = false, teamId, teamName }) {
+  // [백엔드: PR 대기] POST /admin/accounts - team_id/team_name 중 하나만, 둘 다 비우면 무소속
+  return apiClient.post("/admin/accounts", {
+    login_id: loginId,
+    password,
+    nickname,
+    role,
+    is_leader: isLeader,
+    team_id: teamId,
+    team_name: teamName,
+  });
+}
+
+// ── 마일리지 전체 내역 ───────────────────────────────────────────────────
+export function getAdminMileageHistory({ teamId, page = 1, size = 50 } = {}) {
+  // [백엔드: PR 대기] GET /admin/mileage_history - 팀별이 아닌 전체 조회
+  return apiClient.get("/admin/mileage_history", { params: { team_id: teamId, page, size } });
 }
 
 // ── 팀 ─────────────────────────────────────────────────────────────────────
@@ -22,7 +42,7 @@ export function getAdminTeams({ search, sort, page = 1, size = 20 } = {}) {
 }
 
 export function getAdminTeamDetail(teamId, { historyLimit = 10 } = {}) {
-  // [백엔드: 진행 중] history_limit 기본 10, 상한 50
+  // [백엔드: 완료] history_limit 기본 10, 상한 50
   return apiClient.get(`/admin/teams/${teamId}`, {
     params: { history_limit: historyLimit },
   });
@@ -43,14 +63,14 @@ export function adjustMileage(teamId, { amount, reason }) {
   return apiClient.post(`/admin/teams/${teamId}/mileage`, { amount, reason });
 }
 
-// ── 팀 강제 개입 (전부 [백엔드: 논의] - 보드 도메인 PR #14 확정 후) ──────────
+// ── 팀 강제 개입 (Notion API명세서 2026-09-07 스냅샷 기준 상태 개별 표기) ──
 export function getTeamSnapshots(teamId) {
-  // GET /admin/teams/{id}/snapshots - 롤백 지점 목록
+  // [백엔드: 시작 전] GET /admin/teams/{id}/snapshots - 롤백 지점 목록
   return apiClient.get(`/admin/teams/${teamId}/snapshots`);
 }
 
 export function rollbackTeam(teamId, { snapshotId, reason }) {
-  // POST /admin/teams/{id}/rollback - reason 1~500자
+  // [백엔드: 시작 전] POST /admin/teams/{id}/rollback - reason 1~500자
   return apiClient.post(`/admin/teams/${teamId}/rollback`, {
     snapshot_id: snapshotId,
     reason,
@@ -58,7 +78,7 @@ export function rollbackTeam(teamId, { snapshotId, reason }) {
 }
 
 export function updateBoardCell(teamId, cellIndex, { status, reason }) {
-  // PATCH .../board/cells/{cell_index} - status: UNVISITED|CONSUMED|OPENED|CLEARED. 점수 미변경.
+  // [백엔드: 진행 중] PATCH .../board/cells/{cell_index} - status: UNVISITED|CONSUMED|OPENED|CLEARED. 점수 미변경.
   return apiClient.patch(`/admin/teams/${teamId}/board/cells/${cellIndex}`, {
     status,
     reason,
@@ -66,7 +86,7 @@ export function updateBoardCell(teamId, cellIndex, { status, reason }) {
 }
 
 export function moveBoardPosition(teamId, { position, consumeCell = false, reason }) {
-  // PATCH .../board/position - position 0~35, 도착 칸 효과 미발동
+  // [백엔드: 진행 중] PATCH .../board/position - position 0~35, 도착 칸 효과 미발동
   return apiClient.patch(`/admin/teams/${teamId}/board/position`, {
     position,
     consume_cell: consumeCell,
@@ -75,13 +95,13 @@ export function moveBoardPosition(teamId, { position, consumeCell = false, reaso
 }
 
 export function adjustDiceRolls(teamId, { amount, reason }) {
-  // POST .../board/dice - amount -20~20 (0 불가), 양수=지급 / 음수=회수
+  // [백엔드: PR 대기] POST .../board/dice - amount -20~20 (0 불가), 양수=지급 / 음수=회수
   return apiClient.post(`/admin/teams/${teamId}/board/dice`, { amount, reason });
 }
 
 // ── 인스턴스 ───────────────────────────────────────────────────────────────
 export function getAdminInstances({ status, teamId, challengeId, page = 1, size = 50 } = {}) {
-  // [백엔드: PR 대기] summary.by_status/by_team/by_challenge 집계 포함
+  // [백엔드: 완료] summary.by_status/by_team/by_challenge 집계 포함
   return apiClient.get("/admin/instances", {
     params: { status, team_id: teamId, challenge_id: challengeId, page, size },
   });
@@ -99,14 +119,14 @@ export function forceStopInstance(instanceId) {
 
 // ── 문제 / 릴리스 ──────────────────────────────────────────────────────────
 export function getAdminChallenges({ category, isPublished, sort = "running", page = 1, size = 50 } = {}) {
-  // [백엔드: 논의] sort: "running" | "title" | "score"
+  // [백엔드: 완료] sort: "running" | "title" | "score"
   return apiClient.get("/admin/challenges", {
     params: { category, is_published: isPublished, sort, page, size },
   });
 }
 
 export function setChallengeVisibility(challengeId, { isPublished, reason }) {
-  // [백엔드: 논의] PATCH .../visibility
+  // [백엔드: PR 대기] PATCH .../visibility
   return apiClient.patch(`/admin/challenges/${challengeId}/visibility`, {
     is_published: isPublished,
     reason,
@@ -130,7 +150,7 @@ export function activateChallengeRelease(challengeId, releaseId) {
 
 // ── 리소스 / 로그 ─────────────────────────────────────────────────────────
 export function getAdminResources() {
-  // [백엔드: 진행 중] 수집 정보 없으면 data: null
+  // [백엔드: 시작 전] 수집 정보 없으면 data: null
   return apiClient.get("/admin/resources");
 }
 
@@ -165,11 +185,11 @@ export function refundPayment(historyId) {
 
 // ── 설정 ───────────────────────────────────────────────────────────────────
 export function getAdminSettings() {
-  // [백엔드: 논의] contest / board / flag 값
+  // [백엔드: 시작 전] contest / board / flag 값
   return apiClient.get("/admin/settings");
 }
 
 export function updateAdminSettings(partialSettings) {
-  // [백엔드: 논의] 보낸 키만 부분 수정. 예: { board: { dice_rolls_per_reset: 4 } }
+  // [백엔드: 시작 전] 보낸 키만 부분 수정. 예: { board: { dice_rolls_per_reset: 4 } }
   return apiClient.patch("/admin/settings", partialSettings);
 }

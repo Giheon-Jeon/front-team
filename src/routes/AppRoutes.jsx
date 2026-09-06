@@ -12,8 +12,10 @@ import AdminDashboardPage from "../features/admin/pages/AdminDashboardPage.jsx";
 import AdminTeamsPage from "../features/admin/pages/AdminTeamsPage.jsx";
 import AdminTeamDetailPage from "../features/admin/pages/AdminTeamDetailPage.jsx";
 import AdminChallengesPage from "../features/admin/pages/AdminChallengesPage.jsx";
+import AdminMileagePage from "../features/admin/pages/AdminMileagePage.jsx";
 import AdminSettingsPage from "../features/admin/pages/AdminSettingsPage.jsx";
 import AdminLogsPage from "../features/admin/pages/AdminLogsPage.jsx";
+import AdminAccountsPage from "../features/admin/pages/AdminAccountsPage.jsx";
 import { ROUTES } from "./routePaths.js";
 
 // TODO: 인증/관리자 라우트 가드(ProtectedRoute, AdminRoute)는 토큰 저장 방식이
@@ -35,8 +37,10 @@ export default function AppRoutes() {
       <Route path={ROUTES.adminTeams} element={<AdminTeamsPage />} />
       <Route path="/admin/teams/:teamId" element={<AdminTeamDetailPage />} />
       <Route path={ROUTES.adminChallenges} element={<AdminChallengesPage />} />
+      <Route path={ROUTES.adminMileage} element={<AdminMileagePage />} />
       <Route path={ROUTES.adminSettings} element={<AdminSettingsPage />} />
       <Route path={ROUTES.adminLogs} element={<AdminLogsPage />} />
+      <Route path={ROUTES.adminAccounts} element={<AdminAccountsPage />} />
     </Routes>
   );
 }

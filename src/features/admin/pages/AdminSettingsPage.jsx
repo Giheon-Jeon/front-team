@@ -8,14 +8,14 @@ import useAdminResource from "../hooks/useAdminResource.js";
 function Field({ label, value, onChange, min, max }) {
   return (
     <label className="flex flex-col gap-1 text-sm">
-      <span className="text-[#a89b87]">{label}</span>
+      <span className="text-admin-muted">{label}</span>
       <input
         type="number"
         min={min}
         max={max}
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="w-40 rounded border border-[#4a4030] bg-[#1a1510] px-2 py-1.5"
+        className="w-40 rounded border border-admin-divider bg-white/30 px-2 py-1.5"
       />
     </label>
   );
@@ -75,8 +75,8 @@ export default function AdminSettingsPage() {
       <AdminStatusMessage status={settings.status} error={settings.error} onRetry={settings.retry} />
 
       {settings.status === "success" && settings.data && (
-        <section className="mb-6 rounded-lg border border-[#332a20] bg-[#1a1510] p-4 text-sm">
-          <h2 className="m-0 mb-2 text-sm font-bold text-[#a89b87]">대회 시각(읽기 전용, 타이머 도메인 기준)</h2>
+        <section className="mb-6 rounded-lg border border-admin-divider bg-white/30 p-4 text-sm">
+          <h2 className="m-0 mb-2 text-sm font-bold text-admin-muted">대회 시각(읽기 전용, 타이머 도메인 기준)</h2>
           <p className="m-0">
             상태 {settings.data.contest?.status ?? "-"} / 시작{" "}
             {settings.data.contest?.started_at ? toKst(settings.data.contest.started_at) : "-"} / 종료{" "}
@@ -86,7 +86,7 @@ export default function AdminSettingsPage() {
       )}
 
       {settings.status === "success" && form && (
-        <form onSubmit={handleSave} className="flex flex-col gap-4 rounded-lg border border-[#332a20] bg-[#1a1510] p-4">
+        <form onSubmit={handleSave} className="flex flex-col gap-4 rounded-lg border border-admin-divider bg-white/30 p-4">
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
             <Field
               label="주사위 충전 개수"
@@ -125,13 +125,13 @@ export default function AdminSettingsPage() {
             />
           </div>
 
-          {saveError && <p role="alert" className="text-sm text-[#e59a86]">{saveError}</p>}
-          {saved && <p role="status" className="text-sm text-[#9fd17a]">저장했습니다.</p>}
+          {saveError && <p role="alert" className="text-sm text-admin-failed">{saveError}</p>}
+          {saved && <p role="status" className="text-sm text-admin-running">저장했습니다.</p>}
 
           <button
             type="submit"
             disabled={isSaving}
-            className="w-fit rounded border border-[#4a4030] px-4 py-1.5 text-sm disabled:opacity-50"
+            className="w-fit rounded border border-admin-divider px-4 py-1.5 text-sm disabled:opacity-50"
           >
             저장
           </button>
