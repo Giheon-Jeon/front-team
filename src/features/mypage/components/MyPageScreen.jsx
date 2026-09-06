@@ -27,7 +27,14 @@ function profileText(state, field) {
   return formatNumber(state.data[field]);
 }
 
-export default function MyPageScreen({ profile, mileageHistory, solveHistory }) {
+export default function MyPageScreen({
+  profile,
+  mileageHistory,
+  solveHistory,
+  onLogout,
+  isLoggingOut,
+  logoutError,
+}) {
   const navigate = useNavigate();
   const profileData = profile.status === "success" ? profile.data : {};
 
@@ -68,6 +75,21 @@ export default function MyPageScreen({ profile, mileageHistory, solveHistory }) 
 
         <MileageHistoryTable panelSrc={ASSETS.mileageHistoryPanel} state={mileageHistory} />
         <SolveHistoryTable panelSrc={ASSETS.solveHistoryPanel} state={solveHistory} />
+
+        <button
+          type="button"
+          className={styles.logoutButton}
+          onClick={onLogout}
+          disabled={isLoggingOut}
+          aria-label="로그아웃"
+        >
+          로그아웃
+        </button>
+        {logoutError && (
+          <p className={styles.logoutError} role="alert">
+            {logoutError}
+          </p>
+        )}
 
         <button
           type="button"
