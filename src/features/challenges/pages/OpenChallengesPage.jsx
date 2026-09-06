@@ -1,6 +1,26 @@
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../../../routes/routePaths.js";
+import OpenChallengesScreen from "../components/OpenChallengesScreen.jsx";
+import useOpenChallenges from "../hooks/useOpenChallenges.js";
+
+// 열린 문제 목록 페이지 - README.md "10. 열린 문제 목록 페이지".
+// GET /board/opened_challenges + GET /teams/me/instances 조합으로 구현
+// (전용 API 그룹 없음, README 10절에서 이 방식으로 확정).
 export default function OpenChallengesPage() {
-  // TODO: 열린 문제 목록 페이지 — 현재 인스턴스 표시, 열린 문제 목록,
-  // 푼 문제 표시, 클릭 시 문제 상세 페이지로 이동.
-  // 참고: README.md "4. 열린 문제 목록 페이지"
-  return <div>열린 문제 목록 페이지 (준비 중)</div>;
+  const navigate = useNavigate();
+  const openChallenges = useOpenChallenges();
+
+  return (
+    <OpenChallengesScreen
+      status={openChallenges.status}
+      error={openChallenges.error}
+      challenges={openChallenges.challenges}
+      totalCount={openChallenges.totalCount}
+      solvedCount={openChallenges.solvedCount}
+      totalScore={openChallenges.totalScore}
+      instance={openChallenges.instance}
+      onRetry={openChallenges.retry}
+      onSelectChallenge={(challengeId) => navigate(ROUTES.challengeDetail(challengeId))}
+    />
+  );
 }
