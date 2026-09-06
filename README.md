@@ -438,36 +438,45 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 
 인증: 전부 Bearer + `role: ADMIN` 필요(아니면 `403 FORBIDDEN`). 공통 401 3종(`TOKEN_MISSING`/`TOKEN_EXPIRED`/`TOKEN_INVALID`), 500 `INTERNAL_ERROR`는 아래에서 반복 표기하지 않는다.
 
-> **이 절은 Notion [API명세서 -> 관리자 페이지] DB(2026-08-26 스냅샷) 기준으로 전면 갱신되었다.** 이전 버전(archive 3문서 통합본)에서 "API 자체가 없다"고 🔴로 남겨둔 항목(설정, clear 칸, 공개상태, 주사위 지급, 칸 이동, 롤백)은 이제 전부 엔드포인트가 정의돼 있다. `백엔드 상태`는 Notion 각 페이지의 status 속성을 옮긴 것이다.
+> **이 절은 Notion [API명세서 -> 관리자 페이지] DB(2026-09-07 스냅샷) 기준으로 갱신되었다.** `백엔드` 열은 Notion 각 페이지의 status 속성을 옮긴 것이다.
+>
+> **프론트 구현 상태(2026-09-07): 화면 6종 전부 구현 완료.** Figma "MSG-CTF 프론트 개발" 파일 node-id `384:396`("AdminDashboard_OpsOverview_v2")에 운영 대시보드 시안이 새로 올라와 그대로 구현했고(사이드바 배경/폰트/색/버튼, 상태 배지 아이콘까지 에셋 그대로 사용), 팀별 목록/팀 상세/문제 목록-인스턴스/마일리지 관리/설정/이벤트 로그-리소스/계정 등록(신규)까지 나머지 6개 화면도 같은 톤으로 붙였다. 화면 구현은 `src/features/admin/`, 로컬 검증용 목서버 구현은 `mock-backend/api/views/admin.py` 참고. 아래 표의 "논의"/"시작 전"/"진행 중" 상태인 항목도 실제 백엔드가 준비되기 전까지 로컬 검증이 가능하도록 목서버에 먼저 구현해뒀다(자동 스냅샷 롤백 포함) - 실제 백엔드 연동 시 응답 스키마만 재대조하면 된다.
 
 | Method | URL | 설명 | 백엔드 |
 |---|---|---|---|
-| GET | `/admin/dashboard` | 운영 대시보드 요약 지표 | 논의 |
+| GET | `/admin/dashboard` | 운영 대시보드 요약 지표 | **완료** |
+| POST | `/admin/accounts` | 계정 등록(회원가입 없는 대회 특성상 관리자가 미리 등록) | PR 대기 |
+| GET | `/admin/mileage_history` | 전체 마일리지 내역 조회(팀 구분 없이) | PR 대기 |
 | GET | `/admin/teams` | 팀별 목록(검색/정렬) | **완료** |
-| GET | `/admin/teams/{team_id}` | 팀 상세(벤 이력, 마일리지 요약, 최근 내역) | 진행 중 |
+| GET | `/admin/teams/{team_id}` | 팀 상세(벤 이력, 마일리지 요약, 최근 내역) | **완료** |
 | POST | `/admin/teams/{team_id}/ban` | 팀 벤 처리 | **완료** |
 | DELETE | `/admin/teams/{team_id}/ban` | 팀 벤 해제 | **완료** |
 | POST | `/admin/teams/{team_id}/mileage` | 마일리지 지급/회수 | **완료** |
-| GET | `/admin/teams/{team_id}/snapshots` | 롤백 지점(스냅샷) 목록 | 논의 |
-| POST | `/admin/teams/{team_id}/rollback` | 스냅샷 시점으로 롤백 | 논의 |
-| PATCH | `/admin/teams/{team_id}/board/cells/{cell_index}` | clear 칸 상태 수정 | 논의 |
-| PATCH | `/admin/teams/{team_id}/board/position` | 말 위치 강제 이동 | 논의 |
-| POST | `/admin/teams/{team_id}/board/dice` | 주사위 횟수 지급/회수 | 논의 |
-| GET | `/admin/instances` | 인스턴스 목록(상태, 팀, 문제별 집계) | PR 대기 |
+| GET | `/admin/teams/{team_id}/snapshots` | 롤백 지점(스냅샷) 목록 | 시작 전 |
+| POST | `/admin/teams/{team_id}/rollback` | 스냅샷 시점으로 롤백 | 시작 전 |
+| PATCH | `/admin/teams/{team_id}/board/cells/{cell_index}` | clear 칸 상태 수정 | 진행 중 |
+| PATCH | `/admin/teams/{team_id}/board/position` | 말 위치 강제 이동 | 진행 중 |
+| POST | `/admin/teams/{team_id}/board/dice` | 주사위 횟수 지급/회수 | PR 대기 |
+| GET | `/admin/instances` | 인스턴스 목록(상태, 팀, 문제별 집계) | **완료** |
 | POST | `/admin/instances/{instance_id}/reset` | 인스턴스 강제 재시작 | **완료** |
 | DELETE | `/admin/instances/{instance_id}` | 인스턴스 강제 종료 | **완료** |
-| GET | `/admin/challenges` | 문제 목록(문제별 인스턴스 현황) | 논의 |
-| PATCH | `/admin/challenges/{challenge_id}/visibility` | 문제 공개/비공개 전환 | 논의 |
+| GET | `/admin/challenges` | 문제 목록(문제별 인스턴스 현황) | **완료** |
+| PATCH | `/admin/challenges/{challenge_id}/visibility` | 문제 공개/비공개 전환 | PR 대기 |
 | POST | `/admin/challenges/{challenge_id}/releases` | 문제 릴리스 등록(publish bundle) | 시작 전 |
 | GET | `/admin/challenges/{challenge_id}/releases` | 릴리스 이력 조회 | 시작 전 |
 | POST | `/admin/challenges/{challenge_id}/releases/{release_id}/activate` | 현재 릴리스 전환(=롤백) | 시작 전 |
-| GET | `/admin/resources` | 계정/노드별 리소스 상태 | 진행 중 |
+| GET | `/admin/resources` | 계정/노드별 리소스 상태 | 시작 전 |
 | GET | `/admin/events` | 최근 이벤트 로그 | 진행 중 |
 | GET | `/admin/payment/history` | 전체 결제 히스토리 | **완료** |
 | POST | `/admin/payment/checkout` | QR 스캔 결제 처리(부스) | **완료** |
 | DELETE | `/admin/payment/{history_id}/refund` | 결제 환불 | **완료** |
-| GET | `/admin/settings` | 대회 설정 조회 | 논의 |
-| PATCH | `/admin/settings` | 대회 설정 변경(부분 수정) | 논의 |
+| GET | `/admin/settings` | 대회 설정 조회 | 시작 전 |
+| PATCH | `/admin/settings` | 대회 설정 변경(부분 수정) | 시작 전 |
+
+**계정 (2026-09-07 신규)**
+
+- `POST /admin/accounts` - Req `{ login_id, password(4자 이상), nickname, role("PARTICIPANT"|"ADMIN", 기본 PARTICIPANT), is_leader?, team_id? | team_name? }` -> `{ user_id, login_id, nickname, role, is_leader, team_id, team_name, team_created, registered_at, registered_by }`. 이 대회는 회원가입 페이지가 없고 아이디/비밀번호를 관리자가 미리 등록해 참가자에게 일괄 배포한다. `team_id`/`team_name` 중 하나만 보내고 `team_name`이 기존에 없으면 새 팀을 생성한다(둘 다 비우면 무소속). 추가 에러: `400 INVALID_REQUEST` / `409 LOGIN_ID_TAKEN`.
+- `GET /admin/mileage_history` - Query `team_id`(선택), `page`, `size` -> `{ history: [{history_id, team_id, team_name, type, amount, reason, created_at}], total_count, page, size }`. 팀 상세의 `recent_mileage_history`와 달리 팀 구분 없이 전체를 한 화면에서 본다("마일리지 관리" 사이드바 항목).
 
 **대시보드**
 
@@ -481,7 +490,7 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 - `DELETE /admin/teams/{team_id}/ban` (Body 없음) -> `{ team_id, is_banned: false, unbanned_at, unbanned_by }`. 추가 에러: `404 TEAM_NOT_FOUND` / `409 NOT_BANNED`(data `{team_id, is_banned}`). ⚠️ **벤 해제가 자동 롤백까지 하지 않는다** - 롤백은 아래 `/rollback`으로 별도 조작(Notion 초안 전제, 팀 합의 대기 - Appendix B).
 - `POST /admin/teams/{team_id}/mileage` - Req `{ amount, reason }`(amount 0 불가, 양수=지급/음수=회수) -> `{ team_id, previous_mileage, amount, current_mileage, reason, adjusted_at, adjusted_by }`. `mileage_history.type`은 서버가 부호로 결정(`ADMIN_GRANT`/`ADMIN_DEDUCT`). 추가 에러: `400 INVALID_REQUEST` / `400 INVALID_AMOUNT`(0) / `400 INSUFFICIENT_MILEAGE`(data `{current_mileage, requested_amount}`, `requested_amount`는 항상 양수) / `404 TEAM_NOT_FOUND`.
 
-**팀 강제 개입 (전부 "논의", 보드 도메인 PR #14 확정 후 구현 가능)**
+**팀 강제 개입 (백엔드는 "시작 전"/"진행 중"/"PR 대기" - 보드 도메인 PR #14 확정 후 구현 가능, 프론트는 목서버 기준으로 먼저 구현 완료)**
 
 - `GET /admin/teams/{team_id}/snapshots` -> `{ snapshots: [{ snapshot_id, reason: "BAN"|"MANUAL", team_score, mileage, is_rolled_back, created_by, created_at }], total_count }`. 벤 등 되돌릴 필요가 생기는 순간 서버가 스냅샷을 남긴다. `TeamSnapshot` 테이블 신설 필요. 추가 에러: `404 TEAM_NOT_FOUND`.
 - `POST /admin/teams/{team_id}/rollback` - Req `{ snapshot_id, reason }`(1~500자) -> `{ team_id, snapshot_id, restored: {team_score: {before, after}, mileage: {before, after}}, adjustment_history_id, rolled_back_at, rolled_back_by }`. 마일리지는 기존 행 유지 + 차액 보정 행 추가(불변식 유지). 차액 0이면 `adjustment_history_id: null`. 추가 에러: `400 INVALID_REQUEST` / `404 TEAM_NOT_FOUND` / `404 SNAPSHOT_NOT_FOUND` / `409 ALREADY_ROLLED_BACK`(data `{snapshot_id, rolled_back_at}`).
@@ -524,6 +533,8 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 **제품 요구사항 <-> 엔드포인트 매핑**: 팀별 목록 -> `/admin/teams`, 팀 상세 -> `/admin/teams/{id}`, 문제 목록(인스턴스 현황) -> `/admin/challenges`, 운영 대시보드 -> `/admin/dashboard`, 로그 -> `/admin/events`, 설정 -> `/admin/settings`, clear 칸 관리 -> `.../board/cells/{i}`, 문제 공개상태 -> `.../visibility`, 전체 인스턴스 목록/집계/필터/실패표시 -> `/admin/instances`, 강제 재시작, 종료 -> `/admin/instances/{id}/reset`, `DELETE`, 리소스 -> `/admin/resources`, 마일리지 관리 -> `.../mileage`, 주사위 오류/임의 지급 -> `.../board/dice`, 칸 위치 이동 -> `.../board/position`, 벤 -> `.../ban`, 롤백 -> `.../snapshots`+`.../rollback`, Docker 이미지 -> `.../releases`(체계 교체).
 
 **여전히 미해결(Appendix B)**: 벤 해제 <-> 자동 롤백 여부(팀 합의), `GET /admin/resources`, `/admin/events` enum 전체 값, `board_position_states` vs `position` 필드명(Appendix A #5), 인스턴스 `port`(단수) vs `ports`(복수, Appendix A #2), 보드 강제 개입 5종은 보드 도메인(PR #14) 모델 확정 후.
+
+**목서버(mock-backend) 구현 메모**: 위 미해결/미착수 항목도 로컬 통합 테스트를 위해 전부 구현해뒀다. `TeamSnapshot`은 벤 처리, clear 칸 관리, 말 위치 이동, 주사위 지급/회수 직전마다 자동으로 한 장씩 남기고(팀당 최근 20개), 롤백은 그 스냅샷의 보드/점수/마일리지 필드를 그대로 복원하면서 "롤백 직전" 스냅샷도 하나 더 남겨 롤백 자체도 되돌릴 수 있게 했다. `AdminEvent`는 관리자 조작(벤, 마일리지 조정, 인스턴스 강제 재시작/종료, 문제 공개 전환, clear 칸/위치 이동/주사위 지급, 롤백, 계정 등록) 시점마다 한 행씩 남겨 대시보드 "최근 이벤트 로그"와 `/admin/events`가 실데이터로 동작한다. 실제 백엔드가 이 스키마와 다르게 나올 수 있으니 연동 시 재대조 필요.
 
 ---
 
@@ -573,6 +584,17 @@ API 문서 3개엔 없지만 원 기능명세(`archive/최초_MVP_기능요구�
 
 - **디스코드 봇**: DJ, 퍼블, 티켓발급, 공지사항.
 - **팀장 권한/밴 처리 정책은 0-5, 0-6절로 흡수 완료.**
+
+### 11-1. 2026-09-07 기능 명세 갱신 - 반영 범위
+
+2026-09-07에 페이지별 최신 기능 명세 전체(로그인/보드/문제 상세/열린 문제 목록/리더보드/마이페이지/타이머/관리자/KOTH/주사위 충전/시그니처)가 다시 내려왔다. 이번 작업은 그중 **관리자 페이지(8절)만 Figma 시안 연동 + 화면 6종 구현 + API 연동까지 전부 반영**했고, Notion API명세서도 관리자 도메인 기준으로 재동기화했다(8절 상단 참고). 아래는 같은 명세에 있었지만 **이번 패스에는 반영하지 못한 항목**이다 - 다음 작업 때 이 목록부터 확인할 것.
+
+- **주사위 충전 시간 안내**: "주사위 초기화" -> "주사위 충전" 문구 교체, 서버 시각 기준 잔여시간 계산. 보드 화면(2절) 반영 필요.
+- **찬스카드**: 무인도 방어/무인도 이동 2종 삭제, 5종(다시 굴리기/2회 굴림 후 선택/주변 칸 이동/세계여행/주사위 보너스)만 유지하도록 정리. 2절 찬스카드 표/프론트 카드 목록 재확인 필요.
+- **KOTH 배점/집계 규칙**: 15분 구간 채점(정각/15/30/45분), 구간 배점 40/25/15/12/8, 동점 처리(연속 순위 배점 합산 후 팀 수로 나누고 내림), 팀별 진행 조회(최초 득점 시각 고정), 문제별 순위표(공동순위+타이브레이크 순서) - 9절과 프론트 `useKothData`/`KothLeaderboardTable` 재검토 필요.
+- **라인/분야별 독점 추가점수**: 명세 자체가 미정(대상 칸/판정 기준/점수 미확정) - 구현 보류, 확정되면 별도 절 신설.
+- **시그니처 페이지(신규)**: 동아리별 플래그 제출 전용 페이지(문제 상세 = 플래그 제출 폼), 낮은 배점, 대회 점수에 합산. 페이지/라우트/API 전부 미착수.
+- **리더보드/랭킹 페이지 분리 여부**("같이 들어가면 안됨?" 문의) - 미확정, QA 필요.
 
 ---
 
