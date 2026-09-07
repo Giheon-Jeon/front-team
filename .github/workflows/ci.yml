@@ -32,7 +32,7 @@ jobs:
     # 참조한다. 태깅 완료되면 @v3.4.0으로 교체할 것 — branch ref(@jm)는 나중에
     # 다른 커밋이 push되면 이 워크플로가 가리키는 내용이 바뀌는 리스크가 있어
     # 쓰지 않는다.
-    uses: MSG-CTF/jm_devsecops/.github/workflows/frontend-ci.yml@548d7fcee5cf37220594b699927b3630b422596d
+    uses: MSG-CTF/jm_devsecops/.github/workflows/frontend-ci.yml@43e06bc6a1615dfbd60bfab85451c128b7acfb02
     with:
       working-directory: .
       dockerfile-path: ./Dockerfile
