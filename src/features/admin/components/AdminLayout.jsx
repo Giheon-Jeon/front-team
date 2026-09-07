@@ -14,7 +14,11 @@ import { ROUTES } from "../../../routes/routePaths.js";
 // 배경 아트(양피지 패널)는 그대로 가져오고, 레이아웃만 반응형 flex/grid로 짰다.
 const BASE_URL = import.meta.env.BASE_URL;
 const ASSET_BASE = `${BASE_URL}assets/admin/`;
-const LOGO_SRC = `${BASE_URL}assets/login/logo@2x.webp`;
+// login/logo@2x.webp는 배경이 투명하지 않고 옅은 분홍색이 그대로 박혀 있어서
+// (로그인 화면 배경과 색이 비슷해 안 보였을 뿐) 양피지 사이드바 위에 올리면
+// 흰 사각형처럼 튄다. rules/msg-ctf-logo.png는 같은 로고를 실제 알파 채널로
+// 누끼 딴 버전이라 이쪽을 admin 전용 사본으로 복사해 사용한다.
+const LOGO_SRC = `${ASSET_BASE}logo.png`;
 const BACKGROUND_SRC = `${ASSET_BASE}background-forest.png`;
 const PANEL_SRC = `${ASSET_BASE}board-panel.png`;
 
