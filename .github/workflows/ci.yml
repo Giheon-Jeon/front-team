@@ -34,11 +34,12 @@ jobs:
     # TODO: frontend-v1.0.0 태그 생성 전까지는 branch ref(@jm)로 임시 참조한다.
     # 태깅 완료되면 @frontend-v1.0.0으로 즉시 교체할 것 — branch ref는 나중에
     # 다른 커밋이 push되면 이 워크플로가 가리키는 내용이 바뀌는 리스크가 있다.
-    uses: MSG-CTF/jm_devsecops/.github/workflows/frontend-ci.yml@jm
+    uses: MSG-CTF/jm_devsecops/.github/workflows/frontend-ci.yml@548d7fcee5cf37220594b699927b3630b422596d
     with:
       working-directory: .
       dockerfile-path: ./Dockerfile
-    secrets: inherit
+      node-version: "20.19.5"
+      container-port: 80
 
   supply-chain-build-scan-push:
     needs: frontend-code-scan
