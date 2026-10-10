@@ -23,16 +23,21 @@ const render = (props = {}) => renderToStaticMarkup(
   createElement(StaticRouter, { location: "/login" }, createElement(LoginScreen, { onLogin() {}, ...props })),
 );
 
-test("로그인은 홍보페이지와 같은 로고를 쓰고 큰 배경판과 버튼 이미지를 요청하지 않는다", () => {
+test("로그인은 원래 로고와 프레임, 입력 아이콘과 장식 버튼을 유지한다", () => {
   const html = render();
   assert.match(html, /<main/);
   assert.match(html, /<h1 id="login-title"[^>]*>로그인<\/h1>/);
-  assert.match(html, /src="\/assets\/intro\/event-logo.webp"/);
+  assert.match(html, /src="\/assets\/login\/logo-cutout.png"/);
   assert.match(html, /width="1254" height="1254"/);
   assert.match(html, /fetchPriority="high"/i);
   assert.match(html, /href="\/#top"/);
-  assert.doesNotMatch(html, /assets\/login|login-card-plate|login-button-cutout/);
-  assert.match(html, />LOGIN<\/button>/);
+  assert.match(html, /src="\/assets\/login\/login-button-cutout.png"/);
+  assert.equal((html.match(/href="\/assets\/login\/login-card-plate.webp"/g) || []).length, 15);
+  assert.equal((html.match(/data-login-artwork="frame"/g) || []).length, 1);
+  assert.equal((html.match(/data-login-artwork="field"/g) || []).length, 2);
+  assert.match(html, /placeholder="USERNAME"/);
+  assert.match(html, /placeholder="PASSWORD"/);
+  assert.match(html, />LOGIN<\/span>/);
   assert.match(html, /autoCapitalize="none"/i);
   assert.match(html, /spellCheck="false"/i);
   assert.doesNotMatch(html, /disabled=""|role="alert"/);
@@ -48,9 +53,9 @@ test("계정 확인과 로그인 요청 중에는 같은 틀을 유지하면서 
     assert.match(html, /for="login-password"/);
     assert.match(html, /autoComplete="current-password"/i);
   }
-  assert.match(render({ checkingSession: true }), />계정 확인 중<\/button>/);
+  assert.match(render({ checkingSession: true }), /src="\/assets\/login\/login-button-cutout.png"/);
   assert.match(render({ checkingSession: true }), /role="status">로그인 상태를 확인하고 있어요<\/p>/);
-  assert.match(render({ submitting: true }), />로그인 중<\/button>/);
+  assert.match(render({ submitting: true }), /role="status">로그인 중<\/p>/);
 });
 
 test("로그인 오류는 입력창과 연결된 일반 문단으로 표시하고 서버 문자열을 HTML로 해석하지 않는다", () => {
@@ -65,12 +70,15 @@ test("로그인 오류는 입력창과 연결된 일반 문단으로 표시하�
   assert.doesNotMatch(pageRules, /overflow: hidden|100vw|scale\(|backdrop-filter|background-plaza\.png/);
 });
 
-test("로그인 장식과 글꼴은 기존 경량 에셋을 재사용하고 화면별 원본 용량을 제한한다", () => {
+test("원래 로그인 장식과 글꼴을 재사용하되 큰 PNG 배경과 외부 글꼴 요청은 되살리지 않는다", () => {
   const root = new URL("../../../", import.meta.url);
   const assets = {
     desktop: "public/assets/intro/hero-plaza.webp",
     mobile: "public/assets/intro/hero-plaza-mobile.webp",
-    logo: "public/assets/intro/event-logo.webp",
+    plate: "public/assets/login/login-card-plate.webp",
+    logo: "public/assets/login/logo-cutout.png",
+    button: "public/assets/login/login-button-cutout.png",
+    englishFont: "public/assets/intro/fonts/IMFeENrm28P.ttf",
     font: "public/assets/intro/fonts/gamtan-road-batang/GamtanRoadBatang-Regular.woff2",
   };
   const bytes = Object.fromEntries(Object.entries(assets).map(([name, path]) => {
@@ -78,9 +86,24 @@ test("로그인 장식과 글꼴은 기존 경량 에셋을 재사용하고 화�
     assert.ok(existsSync(url), path);
     return [name, statSync(url).size];
   }));
-  assert.ok(bytes.desktop + bytes.logo + bytes.font < 1_000_000);
-  assert.ok(bytes.mobile + bytes.logo + bytes.font < 700_000);
+  const common = bytes.plate + bytes.logo + bytes.button + bytes.englishFont + bytes.font;
+  assert.ok(bytes.desktop + common < 1_800_000);
+  assert.ok(bytes.mobile + common < 1_500_000);
   const css = readFileSync(new URL("./components/LoginScreen.module.css", import.meta.url), "utf8");
   assert.match(css, /font-display: swap/);
-  assert.doesNotMatch(css, /https?:|assets\/login|assets\/challenge-detail/);
+  assert.match(css, /MSG Login English/);
+  assert.doesNotMatch(css, /https?:|background-plaza\.png|assets\/challenge-detail/);
+  const artwork = readFileSync(new URL("./components/LoginArtwork.jsx", import.meta.url), "utf8");
+  assert.equal((artwork.match(/<image href=\{PLATE_SRC\}/g) || []).length, 1);
+  assert.doesNotMatch(artwork, /canvas|filter|foreignObject|dangerouslySetInnerHTML/);
+});
+
+test("원본 로그인판의 반응형 규칙은 장식과 버튼을 숨기거나 다른 모바일 틀로 바꾸지 않는다", () => {
+  const css = readFileSync(new URL("./components/LoginScreen.module.css", import.meta.url), "utf8");
+  const responsive = css.split("@media (forced-colors: active)")[0];
+  assert.doesNotMatch(responsive, /display: none|border-image|assets\/challenge-detail/);
+  assert.match(responsive, /\.frameArtwork[\s\S]*pointer-events: none/);
+  assert.match(responsive, /\.frameArtwork svg,[\s\S]*overflow: hidden/);
+  assert.match(css, /@media \(forced-colors: active\)/);
+  assert.match(css, /background: Canvas/);
 });

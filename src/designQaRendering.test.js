@@ -301,10 +301,10 @@ test("관리자 빠른 작업에는 실제 동작 이름만 표시하고 다른 
   }
 });
 
-test("모바일 로그인과 리더보드는 전체 캔버스 축소를 해제하고 44px 조작 영역을 둔다", () => {
+test("모바일 로그인은 원래 장식을 유지하고 리더보드와 함께 충분한 조작 영역을 둔다", () => {
   const loginCss = css("features/auth/components/LoginScreen.module.css");
   assert.doesNotMatch(loginCss.toString(), /--scale|1920px|scale\(/);
-  assert.ok(declarations(loginCss, ".panel").some(([property, value]) => property === "width" && value === "min(100%, 440px)"));
+  assert.ok(declarations(loginCss, ".panel").some(([property, value]) => property === "width" && value === "min(100%, 560px)"));
   assert.ok(declarations(loginCss, ".field").some(([property, value]) => property === "height" && value === "52px"));
   assert.ok(declarations(loginCss, ".loginButton").some(([property, value]) => property === "min-height" && value === "52px"));
   for (const path of ["leaderboard/components/LeaderboardScreen"]) {

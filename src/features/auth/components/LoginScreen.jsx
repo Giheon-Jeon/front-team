@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ROUTES } from "../../../routes/routePaths.js";
+import { LoginFrameArtwork, LoginFieldArtwork } from "./LoginArtwork.jsx";
 import styles from "./LoginScreen.module.css";
+
+const ASSET_BASE = `${import.meta.env.BASE_URL}assets/login/`;
 
 export default function LoginScreen({
   onLogin,
@@ -35,9 +38,10 @@ export default function LoginScreen({
       </header>
       <div className={styles.content}>
         <section className={styles.panel} aria-labelledby="login-title">
+          <LoginFrameArtwork />
           <h1 id="login-title" className={styles.srOnly}>로그인</h1>
           <img
-            src="/assets/intro/event-logo.webp"
+            src={`${ASSET_BASE}logo-cutout.png`}
             alt="MSG CTF"
             width="1254"
             height="1254"
@@ -47,7 +51,8 @@ export default function LoginScreen({
           />
           <form onSubmit={handleSubmit} className={styles.form} aria-busy={busy}>
             <div className={styles.fieldGroup}>
-              <label htmlFor="login-username">아이디</label>
+              <label htmlFor="login-username" className={styles.srOnly}>아이디</label>
+              <LoginFieldArtwork />
               <input
                 id="login-username"
                 name="username"
@@ -55,7 +60,7 @@ export default function LoginScreen({
                 autoComplete="username"
                 autoCapitalize="none"
                 spellCheck={false}
-                placeholder="아이디를 입력하세요"
+                placeholder="USERNAME"
                 value={username}
                 required
                 disabled={busy}
@@ -65,13 +70,14 @@ export default function LoginScreen({
               />
             </div>
             <div className={styles.fieldGroup}>
-              <label htmlFor="login-password">비밀번호</label>
+              <label htmlFor="login-password" className={styles.srOnly}>비밀번호</label>
+              <LoginFieldArtwork password />
               <input
                 id="login-password"
                 name="password"
                 type="password"
                 autoComplete="current-password"
-                placeholder="비밀번호를 입력하세요"
+                placeholder="PASSWORD"
                 value={password}
                 required
                 disabled={busy}
@@ -84,12 +90,24 @@ export default function LoginScreen({
               type="submit"
               disabled={busy}
               aria-label="로그인"
+              aria-busy={busy}
               className={styles.loginButton}
             >
-              {checkingSession ? "계정 확인 중" : submitting ? "로그인 중" : "LOGIN"}
+              <img
+                src={`${ASSET_BASE}login-button-cutout.png`}
+                alt=""
+                aria-hidden="true"
+                width="1710"
+                height="212"
+                decoding="async"
+                className={styles.loginButtonImg}
+              />
+              <span className={styles.srOnly}>LOGIN</span>
             </button>
-            {checkingSession && (
-              <p className={styles.feedback} role="status">로그인 상태를 확인하고 있어요</p>
+            {busy && (
+              <p className={styles.feedback} role="status">
+                {checkingSession ? "로그인 상태를 확인하고 있어요" : "로그인 중"}
+              </p>
             )}
             {feedback && (
               <p

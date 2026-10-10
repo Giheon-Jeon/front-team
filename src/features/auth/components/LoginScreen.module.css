@@ -1,4 +1,12 @@
 @font-face {
+  font-family: "MSG Login English";
+  src: url("/assets/intro/fonts/IMFeENrm28P.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
   font-family: "MSG Login Body";
   src: url("/assets/intro/fonts/gamtan-road-batang/GamtanRoadBatang-Regular.woff2") format("woff2");
   font-style: normal;
@@ -15,10 +23,10 @@
   gap: 16px;
   padding: 20px 32px 32px;
   background-color: #21150d;
-  background-image: linear-gradient(#20140d45, #20140d70), url("/assets/intro/hero-plaza.webp");
+  background-image: linear-gradient(#20140d15, #20140d35), url("/assets/intro/hero-plaza.webp");
   background-size: cover;
   background-position: center;
-  color: #54371f;
+  color: #613d15;
   font: 16px/1.5 "MSG Login Body", "Apple SD Gothic Neo", "Malgun Gothic", serif;
 }
 
@@ -67,74 +75,129 @@
   display: grid;
   place-items: center;
   min-width: 0;
-  padding: 16px 0 28px;
+  padding: 12px 0 24px;
 }
 
 .panel {
   position: relative;
-  width: min(100%, 440px);
-  padding: 28px 32px 32px;
-  background: linear-gradient(135deg, #f2e3c2, #e8d3a9);
-  border: 1px solid #9a723f;
-  box-shadow: 0 0 0 5px #583922, 0 0 0 6px #bc9157, 0 18px 45px #180e0a80;
+  isolation: isolate;
+  width: min(100%, 560px);
+  padding: 38px 60px 96px;
 }
 
-.panel::before {
-  content: "";
+.frameArtwork {
   position: absolute;
-  inset: 7px;
-  border: 1px solid #ad844e60;
+  inset: 0;
+  z-index: -1;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 56px;
+  grid-template-rows: 76px minmax(0, 1fr) 86px;
   pointer-events: none;
+  user-select: none;
+}
+
+.framePaper {
+  position: absolute;
+  inset: 14px;
+  z-index: -1;
+  clip-path: polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px), 0 18px);
+}
+
+.frameSlice0 {
+  mask-image: linear-gradient(to right, #000 60%, transparent), linear-gradient(to bottom, #000 80%, transparent);
+}
+
+.frameSlice1 {
+  mask-image: linear-gradient(to bottom, #000 80%, transparent);
+}
+
+.frameSlice2 {
+  mask-image: linear-gradient(to left, #000 60%, transparent), linear-gradient(to bottom, #000 80%, transparent);
+}
+
+.frameSlice3 {
+  mask-image: linear-gradient(to right, #000 60%, transparent);
+}
+
+.frameSlice5 {
+  mask-image: linear-gradient(to left, #000 60%, transparent);
+}
+
+.frameSlice6 {
+  mask-image: linear-gradient(to right, #000 60%, transparent), linear-gradient(to top, #000 80%, transparent);
+}
+
+.frameSlice7 {
+  mask-image: linear-gradient(to top, #000 80%, transparent);
+}
+
+.frameSlice8 {
+  mask-image: linear-gradient(to left, #000 60%, transparent), linear-gradient(to top, #000 80%, transparent);
+}
+
+.frameArtwork svg,
+.fieldArtwork svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .logo {
   display: block;
-  width: min(100%, 320px);
-  height: 172px;
-  margin: -12px auto 16px;
+  width: min(100%, 300px);
+  height: 180px;
+  margin: -12px auto 28px;
   object-fit: cover;
   pointer-events: none;
   user-select: none;
 }
 
 .form {
-  position: relative;
   display: grid;
   gap: 20px;
 }
 
 .fieldGroup {
-  display: grid;
-  gap: 8px;
+  position: relative;
   min-width: 0;
+  height: 52px;
 }
 
-.fieldGroup label {
-  font-size: 14px;
-  line-height: 1.5;
+.fieldArtwork {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 55px minmax(0, 1fr) 29px;
+  pointer-events: none;
+  user-select: none;
+  mask-image: linear-gradient(transparent, #000 3px, #000 calc(100% - 3px), transparent);
 }
 
 .field {
+  position: relative;
   width: 100%;
   min-width: 0;
   height: 52px;
-  padding: 12px 14px;
-  border: 1px solid #ac8655;
+  margin: 0;
+  padding: 0 18px 0 62px;
+  border: 0;
   border-radius: 0;
-  background: #fff8e9;
-  color: #54371f;
-  font: inherit;
-  font-size: 16px;
+  background: transparent;
+  color: #613d15;
+  font: 24px/1.2 "MSG Login English", Georgia, serif;
 }
 
 .field::placeholder {
-  color: #896b4d;
-  opacity: 1;
+  color: #613d15;
+  opacity: 0.85;
 }
 
 .field:focus-visible {
-  outline: 2px solid #78512a;
-  outline-offset: 2px;
+  outline: 2px solid #8a5728;
+  outline-offset: 3px;
 }
 
 .field:disabled {
@@ -143,32 +206,38 @@
 }
 
 .loginButton {
+  display: grid;
+  place-items: center;
   width: 100%;
   min-height: 52px;
-  margin-top: 4px;
-  border: 1px solid #be965c;
-  border-radius: 0;
-  background: linear-gradient(#5c351c, #42230f);
-  box-shadow: inset 0 0 0 3px #6b492b;
-  color: #f6e4bb;
-  font: inherit;
-  font-size: 18px;
-  letter-spacing: 0.06em;
+  margin-top: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
 
-.loginButton:hover:not(:disabled) {
-  background: #694225;
+.loginButtonImg {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+  clip-path: inset(4% 0 0 0);
 }
 
-.loginButton:active:not(:disabled) {
-  background: #35200f;
+.loginButton:hover:not(:disabled) .loginButtonImg {
+  filter: brightness(1.12);
+}
+
+.loginButton:active:not(:disabled) .loginButtonImg {
+  filter: brightness(0.9);
 }
 
 .loginButton:focus-visible {
-  outline: 2px solid #78512a;
+  outline: 2px solid #8a5728;
   outline-offset: 3px;
 }
 
@@ -181,7 +250,7 @@
   margin: 0;
   font-size: 14px;
   line-height: 1.7;
-  text-align: left;
+  text-align: center;
   overflow-wrap: anywhere;
 }
 
@@ -208,9 +277,9 @@
 @media (max-width: 680px) {
   .page {
     gap: 12px;
-    padding: 12px 24px 24px;
-    background-image: linear-gradient(#20140d45, #20140d70), url("/assets/intro/hero-plaza-mobile.webp");
-    background-image: linear-gradient(#20140d45, #20140d70), image-set(
+    padding: 12px 16px 24px;
+    background-image: linear-gradient(#20140d15, #20140d35), url("/assets/intro/hero-plaza-mobile.webp");
+    background-image: linear-gradient(#20140d15, #20140d35), image-set(
       url("/assets/intro/hero-plaza-mobile.webp") 1x,
       url("/assets/intro/hero-plaza.webp") 2x
     );
@@ -219,11 +288,22 @@
     padding: 12px 0 24px;
   }
   .panel {
-    padding: 24px 24px 28px;
+    padding: 30px 28px 82px;
+  }
+  .frameArtwork {
+    grid-template-columns: 40px minmax(0, 1fr) 40px;
+    grid-template-rows: 62px minmax(0, 1fr) 72px;
   }
   .logo {
-    height: 148px;
-    margin-top: -8px;
+    width: min(100%, 260px);
+    height: 156px;
+    margin: -8px auto 22px;
+  }
+  .field {
+    font-size: 20px;
+  }
+  .loginButton {
+    margin-top: 16px;
   }
 }
 
@@ -233,20 +313,35 @@
   }
   .logo {
     height: 132px;
-    margin-bottom: 12px;
+    margin-bottom: 18px;
   }
   .panel {
-    padding-top: 20px;
+    padding-top: 28px;
   }
 }
 
 @media (forced-colors: active) {
-  .panel::before {
+  .frameArtwork,
+  .fieldArtwork,
+  .loginButtonImg {
     display: none;
   }
   .panel,
   .field,
   .loginButton {
-    border-color: CanvasText;
+    border: 1px solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+  .field {
+    padding-inline: 12px;
+  }
+  .loginButton .srOnly {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    clip: auto;
+    overflow: visible;
   }
 }
