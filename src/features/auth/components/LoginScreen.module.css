@@ -1,185 +1,257 @@
-/*
- * Figma: "MSG-CTF 프론트 개발" 파일, node-id 10:14 ("Login page", 1920x1080)
- * 좌표/치수는 get_metadata(id 63:51 / 97:434 / 63:55 / 63:62 / 63:60) 실측값 그대로.
- * 조정이 필요하면 아래 --* 변수만 고치면 된다 (본문 셀렉터는 좌표를 직접 갖지 않음).
- */
+@font-face {
+  font-family: "MSG Login English";
+  src: url("/assets/intro/fonts/IMFeENrm28P.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
 
-/* Figma node 467:345 "Frame 2" > "Background_Forest" - 관리자 대시보드(node
-   384:396)와 같은 원본 그림(md5 동일)이다. 배경과 로그인 카드를 분리했다 -
-   .page가 뷰포트 전체를 이 그림 하나로만 cover 채우고(정렬 좌표가 필요 없는
-   순수 장식이라 잘리는 건 문제 없음), 그 위에 .stage(양피지 카드 오려낸 판
-   + 입력창 + 버튼)를 원본 비율 그대로 균일 축소(min)해서 얹는다. .stage의
-   카드 판(login-card-plate)은 카드 주변이 전부 투명하므로, 예전처럼 카드
-   그림에 구워진 풍경과 .page 배경이 겹쳐 경계선이 보이는 일이 없다. 화면
-   비율이 16:9가 아니어도 .page가 항상 화면을 꽉 채우고, .stage는 절대 잘리지
-   않고(카드 테두리 전체 항상 보임) 크기만 반응형으로 줄어든다. */
+@font-face {
+  font-family: "MSG Login Body";
+  src: url("/assets/intro/fonts/gamtan-road-batang/GamtanRoadBatang-Regular.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
 .page {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-  background-image: url("/assets/login/background-plaza.png");
+  min-height: 100vh;
+  min-height: 100svh;
+  width: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 16px;
+  padding: 20px 32px 32px;
+  background-color: #21150d;
+  background-image: linear-gradient(#20140d15, #20140d35), url("/assets/intro/hero-plaza.webp");
   background-size: cover;
   background-position: center;
-  /* 배경 이미지가 로드되기 전 잠깐 비치는 색상용 폴백(Figma 프레임 배경색) */
-  background-color: #f9eeee;
+  color: #613d15;
+  font: 16px/1.5 "MSG Login Body", "Apple SD Gothic Neo", "Malgun Gothic", serif;
 }
 
-.stage {
-  --stage-w: 1920px;
-  --stage-h: 1080px;
-  /* 뷰포트 어느 비율이든 1920x1080 카드 캔버스를 통째로 균일 스케일 - 카드가
-     잘리는 일 없이 항상 전체가 보인다. 남는 여백은 위 .page의 배경 그림이
-     채운다. */
-  --scale: min(100vw / 1920px, 100vh / 1080px);
-
-  --username-x: 622px;
-  --username-y: 455px;
-  --username-w: 430px;
-  --username-h: 88px;
-
-  --password-x: 626px;
-  --password-y: 568px;
-  --password-w: 430px;
-  --password-h: 88px;
-
-  --button-x: 531px;
-  --button-y: 747px;
-  --button-w: 855px;
-  --button-h: 106px;
-
-  --logo-x: 705px;
-  --logo-y: 18px;
-  --logo-w: 509px;
-  --logo-h: 509px;
-
-  --field-font-size: 36px;
-  --field-text-color: #613d15;
-
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: var(--stage-w);
-  height: var(--stage-h);
-  transform-origin: center center;
-  transform: translate(-50%, -50%) scale(var(--scale));
+.page *,
+.page *::before,
+.page *::after {
+  box-sizing: border-box;
 }
 
-.background {
+.header {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  color: #fff0d5;
+  font-size: 15px;
+  text-decoration: none;
+  text-shadow: 0 1px 4px #21150d;
+}
+
+.backLink svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+
+.backLink:focus-visible {
+  outline: 2px solid #f0c36e;
+  outline-offset: 4px;
+}
+
+.content {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  padding: 12px 0 24px;
+}
+
+.panel {
+  position: relative;
+  isolation: isolate;
+  width: min(100%, 560px);
+  padding: 38px 60px 96px;
+}
+
+.frameArtwork {
   position: absolute;
-  top: 0;
-  left: 0;
-  /* object-fit/cover 금지 — 이 판엔 프레임/입력창 테두리가 이미 그려져 있어서
-     크롭/확대가 조금이라도 들어가면 위에 겹치는 input/button 좌표와 어긋난다.
-     카드 주변은 투명(오려낸 판)이라 여백이 남아도 .page 배경이 그대로 비친다. */
-  width: 1920px;
-  height: 1080px;
-  display: block;
+  inset: 0;
+  z-index: -1;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 56px;
+  grid-template-rows: 76px minmax(0, 1fr) 86px;
   pointer-events: none;
   user-select: none;
+}
+
+.framePaper {
+  position: absolute;
+  inset: 14px;
+  z-index: -1;
+  clip-path: polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px), 0 18px);
+}
+
+.frameSlice0 {
+  mask-image: linear-gradient(to right, #000 60%, transparent), linear-gradient(to bottom, #000 80%, transparent);
+}
+
+.frameSlice1 {
+  mask-image: linear-gradient(to bottom, #000 80%, transparent);
+}
+
+.frameSlice2 {
+  mask-image: linear-gradient(to left, #000 60%, transparent), linear-gradient(to bottom, #000 80%, transparent);
+}
+
+.frameSlice3 {
+  mask-image: linear-gradient(to right, #000 60%, transparent);
+}
+
+.frameSlice5 {
+  mask-image: linear-gradient(to left, #000 60%, transparent);
+}
+
+.frameSlice6 {
+  mask-image: linear-gradient(to right, #000 60%, transparent), linear-gradient(to top, #000 80%, transparent);
+}
+
+.frameSlice7 {
+  mask-image: linear-gradient(to top, #000 80%, transparent);
+}
+
+.frameSlice8 {
+  mask-image: linear-gradient(to left, #000 60%, transparent), linear-gradient(to top, #000 80%, transparent);
+}
+
+.frameArtwork svg,
+.fieldArtwork svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .logo {
-  position: absolute;
-  left: var(--logo-x);
-  top: var(--logo-y);
-  width: var(--logo-w);
-  height: var(--logo-h);
+  display: block;
+  width: min(100%, 300px);
+  height: 180px;
+  margin: -12px auto 28px;
+  object-fit: cover;
   pointer-events: none;
   user-select: none;
 }
 
-/* 입력창 테두리는 배경에 이미 그려져 있으므로 border/box-shadow/outline은 항상 none.
-   위치·크기·폰트는 Figma의 "USERNAME"/"PASSWORD" placeholder 텍스트 레이어 실측값. */
-.field {
+.form {
+  display: grid;
+  gap: 20px;
+}
+
+.fieldGroup {
+  position: relative;
+  min-width: 0;
+  height: 52px;
+}
+
+.fieldArtwork {
   position: absolute;
-  background: transparent;
-  border: none;
-  outline: none;
-  box-shadow: none;
-  padding: 0;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 55px minmax(0, 1fr) 29px;
+  pointer-events: none;
+  user-select: none;
+  mask-image: linear-gradient(transparent, #000 3px, #000 calc(100% - 3px), transparent);
+}
+
+.field {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  height: 52px;
   margin: 0;
-  font-family: "IM Fell English", serif;
-  font-size: var(--field-font-size);
-  color: var(--field-text-color);
-  line-height: normal;
+  padding: 0 18px 0 62px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #613d15;
+  font: 24px/1.2 "MSG Login English", Georgia, serif;
 }
 
 .field::placeholder {
-  color: var(--field-text-color);
+  color: #613d15;
   opacity: 0.85;
 }
 
 .field:focus-visible {
   outline: 2px solid #8a5728;
-  outline-offset: 6px;
+  outline-offset: 3px;
 }
 
-.loginButton:focus-visible {
-  outline: 3px solid #f0c36e;
-  outline-offset: 4px;
+.field:disabled {
+  opacity: 0.65;
+  cursor: wait;
 }
 
-.username {
-  left: var(--username-x);
-  top: var(--username-y);
-  width: var(--username-w);
-  height: var(--username-h);
-}
-
-.password {
-  left: var(--password-x);
-  top: var(--password-y);
-  width: var(--password-w);
-  height: var(--password-h);
-}
-
-/* 로그인 버튼은 배경에 안 구워져 있는 별도 인스턴스(Figma id 63:62) — 클릭 영역을
-   시각적 이미지 크기와 정확히 맞춘다. hover/active는 filter로만 표현. */
 .loginButton {
-  position: absolute;
-  left: var(--button-x);
-  top: var(--button-y);
-  width: var(--button-w);
-  height: var(--button-h);
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 52px;
+  margin-top: 24px;
   padding: 0;
-  border: none;
+  border: 0;
   background: transparent;
   cursor: pointer;
+  touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
 
 .loginButtonImg {
   display: block;
   width: 100%;
-  height: 100%;
+  height: auto;
   pointer-events: none;
   user-select: none;
+  clip-path: inset(4% 0 0 0);
 }
 
-.loginButton:hover .loginButtonImg {
+.loginButton:hover:not(:disabled) .loginButtonImg {
   filter: brightness(1.12);
 }
 
-.loginButton:active .loginButtonImg {
+.loginButton:active:not(:disabled) .loginButtonImg {
   filter: brightness(0.9);
 }
 
+.loginButton:focus-visible {
+  outline: 2px solid #8a5728;
+  outline-offset: 3px;
+}
+
 .loginButton:disabled {
-  cursor: not-allowed;
-  filter: grayscale(0.4) brightness(0.85);
+  opacity: 0.7;
+  cursor: wait;
 }
 
 .feedback {
-  position: absolute;
-  top: 865px;
-  left: 531px;
-  width: 855px;
   margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
   text-align: center;
-  font-family: "IM Fell English", serif;
-  font-size: 24px;
-  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .feedbackError {
@@ -202,74 +274,74 @@
   border: 0;
 }
 
-/* 좁은 화면에서는 배경과 입력 영역을 함께 축소하지 않는다 */
-@media (max-width: 900px) {
+@media (max-width: 680px) {
   .page {
-    min-height: 100svh;
-    height: auto;
-    overflow: auto;
-    display: grid;
-    align-items: center;
-    padding: 32px 16px;
-    box-sizing: border-box;
+    gap: 12px;
+    padding: 12px 16px 24px;
+    background-image: linear-gradient(#20140d15, #20140d35), url("/assets/intro/hero-plaza-mobile.webp");
+    background-image: linear-gradient(#20140d15, #20140d35), image-set(
+      url("/assets/intro/hero-plaza-mobile.webp") 1x,
+      url("/assets/intro/hero-plaza.webp") 2x
+    );
   }
-  .stage {
-    position: relative;
-    inset: auto;
-    width: min(100%, 440px);
-    height: auto;
-    margin: auto;
-    padding: 20px 24px 28px;
-    transform: none;
-    border: 8px solid transparent;
-    border-image: url("/assets/challenge-detail/panel-board.png") 32 stretch;
-    background: #eedfbd;
-    background-clip: padding-box;
-    box-shadow: 0 12px 40px #24150870;
+  .content {
+    padding: 12px 0 24px;
   }
-  .background { display: none; }
+  .panel {
+    padding: 30px 28px 82px;
+  }
+  .frameArtwork {
+    grid-template-columns: 40px minmax(0, 1fr) 40px;
+    grid-template-rows: 62px minmax(0, 1fr) 72px;
+  }
   .logo {
-    position: static;
-    width: 200px;
-    height: 160px;
-    margin: -16px auto 12px;
-    object-fit: contain;
+    width: min(100%, 260px);
+    height: 156px;
+    margin: -8px auto 22px;
   }
-  .form { display: grid; gap: 10px; }
-  .form .srOnly {
+  .field {
+    font-size: 20px;
+  }
+  .loginButton {
+    margin-top: 16px;
+  }
+}
+
+@media (max-height: 620px) {
+  .content {
+    padding-block: 8px;
+  }
+  .logo {
+    height: 132px;
+    margin-bottom: 18px;
+  }
+  .panel {
+    padding-top: 28px;
+  }
+}
+
+@media (forced-colors: active) {
+  .frameArtwork,
+  .fieldArtwork,
+  .loginButtonImg {
+    display: none;
+  }
+  .panel,
+  .field,
+  .loginButton {
+    border: 1px solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+  .field {
+    padding-inline: 12px;
+  }
+  .loginButton .srOnly {
     position: static;
     width: auto;
     height: auto;
     margin: 0;
     clip: auto;
     overflow: visible;
-    font: 14px/1.5 "Pretendard", "Apple SD Gothic Neo", sans-serif;
-    color: #613d15;
-  }
-  .field {
-    position: static;
-    width: 100%;
-    height: 52px;
-    margin-bottom: 12px;
-    padding: 12px;
-    border: 1px solid #a07843;
-    background: #fff7e7;
-    font-size: 18px;
-  }
-  .field:focus-visible { outline-offset: 2px; }
-  .loginButton {
-    position: relative;
-    inset: auto;
-    width: 100%;
-    height: 52px;
-    margin-top: 8px;
-  }
-  .loginButtonImg { object-fit: fill; }
-  .feedback {
-    position: static;
-    width: auto;
-    margin-top: 8px;
-    font: 14px/1.6 "Pretendard", "Apple SD Gothic Neo", sans-serif;
-    overflow-wrap: anywhere;
   }
 }

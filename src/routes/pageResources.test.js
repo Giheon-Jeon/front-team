@@ -35,6 +35,18 @@ test("게임 화면 진입과 재방문은 기존 글꼴 CSS를 한 번만 붙�
   assert.ok([...document.links.values()].every(link => link.attributes.rel === "stylesheet"));
 });
 
+test("로그인 화면만 열 때에는 외부 게임 글꼴을 요청하지 않는다", () => {
+  const document = mockDocument();
+  ensureGameFonts(document, "/login");
+  ensureGameFonts(document, "/login/");
+  assert.equal(document.links.size, 0);
+  ensureGameFonts(document, "/board");
+  assert.equal(document.links.size, GAME_FONT_STYLESHEETS.length);
+  ensureGameFonts(document, "/login");
+  ensureGameFonts(document, "/board");
+  assert.equal(document.links.size, GAME_FONT_STYLESHEETS.length);
+});
+
 test("첫 화면 그림만 우선 받고 화면 폭과 픽셀 밀도에 맞춰 고른다", () => {
   const document = mockDocument();
   preloadIntroResources(document, "/");
