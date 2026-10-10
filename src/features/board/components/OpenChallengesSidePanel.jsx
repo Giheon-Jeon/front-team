@@ -20,9 +20,9 @@ export function OpenChallengesToggle({ isOpen, count, onToggle, buttonRef }) {
       aria-expanded={isOpen}
       aria-controls="board-open-challenges-panel"
       // 금테 명판 버튼. 주사위판 바로 아래에 붙이고 양끝을 주사위판 테두리(무대 2.45%~19.74%)에 맞춘다.
-      // 세로 순서: 주사위판 → 이 버튼 → 주사위 안내 문구 → 보유 찬스카드(ChanceCardSummary).
+      // 세로 순서: 주사위판 → 안내 문구 → 이 버튼 → 보유 찬스카드.
       // 열린 동안에도 자리를 옮기지 않아 닫을 때 초점이 이 버튼으로 바로 돌아온다.
-      className={`${styles.plaqueButton} ${styles.openToggle} absolute left-[2.45%] top-[14.6%] z-30 w-[17.29%]`}
+      className={`${styles.plaqueButton} ${styles.openToggle} absolute left-[2.45%] top-[17%] z-30 w-[17.29%]`}
     >
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M6 4h9l3 3v13H6z" /><path d="M9 10h6M9 13.5h6M9 17h4" />
@@ -69,7 +69,7 @@ export default function OpenChallengesSidePanel({
       id="board-open-challenges-panel"
       aria-label="열린 문제"
       onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); onClose(); } }}
-      className={`${styles.openPanel} absolute left-[1.67%] top-[16.57%] z-40 h-[75.37%] w-[14.79%]`}
+      className={`${styles.openPanel} absolute left-[1.67%] top-[22.4%] z-40 h-[69.54%] w-[14.79%]`}
     >
       <img
         src="/assets/board/open-challenges-panel.webp"
@@ -77,6 +77,9 @@ export default function OpenChallengesSidePanel({
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 h-full w-full object-fill"
       />
+      {/* 원본의 종이/장식 부분만 재사용해 제목은 그대로 두고 장식선을 조금 내린다. */}
+      <span className={styles.openPaperGap} aria-hidden="true"><img src="/assets/board/open-challenges-panel.webp" alt="" /></span>
+      <span className={styles.openPaperDivider} aria-hidden="true"><img src="/assets/board/open-challenges-panel.webp" alt="" /></span>
       {/* 데스크톱은 패널 이미지에 제목이 그려져 있어 모바일에서만 보이는 제목 */}
       <h2 className={styles.mobileOpenTitle}>열린 문제</h2>
 

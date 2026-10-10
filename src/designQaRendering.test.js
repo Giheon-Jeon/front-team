@@ -179,6 +179,18 @@ test("일반 칸 클릭 정보 패널은 제거하고 게임용 문제 선택은
   }
 });
 
+test("좌측 보드 UI는 타이머를 분리하고 열린 문제 패널 동안 찬스카드를 숨긴다", () => {
+  const html = render("DiceStatusPanel", { rollsLeft: 0, canRoll: false, blockedMessage: "남은 주사위가 없습니다.", resetInSeconds: 260, challengeRemainingSeconds: 303 });
+  assert.match(html, /right-\[10%\].*top-\[25%\]/);
+  assert.match(html, /top-\[70%\]/);
+  assert.doesNotMatch(html, /truncate/);
+  const screen = readFileSync(new URL("./features/board/components/BoardScreen.jsx", import.meta.url), "utf8");
+  assert.match(screen, /!isOpenListVisible && <ChanceCardSummary/);
+  const panel = readFileSync(new URL("./features/board/components/OpenChallengesSidePanel.jsx", import.meta.url), "utf8");
+  assert.match(panel, /top-\[17%\]/);
+  assert.match(panel, /top-\[22\.4%\]/);
+});
+
 test("문제 후보가 0개면 재조회 안내를 띄우고 다음 칸으로 넘기지 않는다", () => {
   const props = { myBoard: {}, currentCell: { type: "CHALLENGE", challengeCandidates: [] }, blockedReason: "CHALLENGE_NOT_SELECTED", ownedChanceCards: [] };
   const html = render("BoardEventPanel", props);
@@ -764,7 +776,7 @@ test("라인 점수표는 해결 진행, 예정 배점, 획득 합계를 한 펼
     { lineId: "b", label: "2번 라인", cellIndexes: [4,5], solvedCellIndexes: [4], rewardScore: 150 },
   ]);
   const html = render("BoardLineSummary", { lines, selectedLineId: "b", onSelectLine() {}, isOpen: true });
-  assert.match(html, /라인 점수 <span>독점 1\/2/);
+  assert.match(html, /라인 점수 <span[^>]*><span>독점 1\/2/);
   assert.match(html, /<span>라인<\/span><span>배점<\/span><span>획득<\/span>/);
   assert.match(html, /data-line-earned-score="b" data-score-state="unearned">0 pts/);
   assert.match(html, /data-line-reward-total="true">450 pts/);
@@ -782,6 +794,14 @@ test("라인 완료 대기나 배점 미정은 숫자로 확정하지 않고 점
   assert.match(html, /data-line-reward-total="true">미정/);
   assert.match(html, /data-line-earned-total="true">확인 중/);
   assert.doesNotMatch(html, /500 pts|>0 pts</);
+  const unknown = render("BoardLineSummary", { lines: lines.map(line => ({ ...line, payoutStatus: "unknown", allProblemsCleared: true })) });
+  assert.match(unknown, /<span>풀이 완료 1\/1<\/span><span>지급 미확인<\/span>/);
+  const root = css("features/board/components/BoardScreen.module.css");
+  const status = declarations(root, ".lineProgressStatus");
+  assert.ok(status.some(([key, value]) => key === "font" && value.startsWith("18px/")));
+  assert.ok(status.some(([key, value]) => key === "word-break" && value === "keep-all"));
+  assert.ok(status.some(([key, value]) => key === "flex-direction" && value === "column"));
+  assert.ok(!status.some(([key]) => key === "float" || key === "position"));
 });
 
 test("라인 점수표는 행과 합계의 열을 맞추고 좁은 데스크톱에서는 종이 폭을 확보한다", () => {

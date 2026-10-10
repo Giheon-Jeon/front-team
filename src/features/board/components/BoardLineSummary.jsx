@@ -13,9 +13,9 @@ export default function BoardLineSummary({ lines, selectedLineId, onSelectLine, 
   return (
     <details id="board-line-progress" className={styles.lineSummary} open={isOpen}
       onToggle={(event) => onToggle?.(event.currentTarget.open)}>
-      <summary ref={summaryRef}>라인 점수 <span>{payoutUnknown
-        ? `풀이 완료 ${lines.filter(line => line.allProblemsCleared).length}/${lines.length} · 지급 미확인`
-        : `독점 ${lines.filter((line) => line.isCompleted).length}/${lines.length}`}</span></summary>
+      <summary ref={summaryRef}>라인 점수 <span className={styles.lineProgressStatus}>{payoutUnknown
+        ? <><span>풀이 완료 {lines.filter(line => line.allProblemsCleared).length}/{lines.length}</span><span>지급 미확인</span></>
+        : <span>독점 {lines.filter((line) => line.isCompleted).length}/{lines.length}</span>}</span></summary>
       {isPreview && <p className={styles.linePreviewNote}>시안 배점 · 실제 총점 반영 없음</p>}
       <div className={styles.lineScoreColumns} aria-hidden="true"><span>라인</span><span>배점</span><span>획득</span></div>
       <div className={styles.lineScoreTotals} role="group" aria-label="라인 독점 점수 합계">

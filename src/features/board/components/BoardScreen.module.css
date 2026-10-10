@@ -4,8 +4,9 @@
 .diceReadout { display: grid; gap: 0.2cqw; padding-block: 0.2cqw; font-size: clamp(10px, 0.66cqw, 14px); line-height: 1.5; }
 .diceCountRow { display: flex; align-items: center; justify-content: space-between; gap: 0.3cqw; white-space: nowrap; }
 .diceReadout strong { font-variant-numeric: tabular-nums; }
-.diceChallengeRow { color: #e7c68f; text-align: right; }
-.diceStatusMessage { font-size: clamp(9px, 0.5cqw, 11px); }
+.diceChallengeRow { color: #e7c68f; text-align: right; font-size: clamp(10px, 0.66cqw, 14px); line-height: 1.5; white-space: nowrap; }
+.diceChallengeRow strong { font-variant-numeric: tabular-nums; }
+.diceStatusMessage { font-size: clamp(9px, 0.5cqw, 11px); line-height: 1.5; overflow-wrap: anywhere; }
 .airportTitleRow { position: relative; display: flex; align-items: center; justify-content: center; min-height: 36px; }
 .airportConfirm .trainSoundButton {
   position: absolute; right: -4px; display: grid; place-items: center;
@@ -137,14 +138,18 @@
   scrollbar-width: thin;
   scrollbar-color: var(--board-scroll-thumb) transparent;
 }
+.openPaperGap, .openPaperDivider { position: absolute; inset: 0; pointer-events: none; clip-path: polygon(0 22.6%, 100% 22.6%, 100% 26.3%, 0 26.3%); }
+.openPaperGap img, .openPaperDivider img { width: 100%; height: 100%; object-fit: fill; }
+.openPaperGap img { transform: translateY(-4%); }
+.openPaperDivider img { clip-path: polygon(0 22.6%, 100% 22.6%, 100% 25.3%, 0 25.3%); transform: translateY(6px); }
 .openPanelBody {
   --board-scroll-thumb: #967345;
   --board-scroll-hover: #70502c;
   position: absolute;
   left: 11%;
-  top: 26.41%;
+  top: 28%;
   width: 78%;
-  height: 65%;
+  height: 63.41%;
   padding-inline-end: 8px;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -208,9 +213,10 @@
 .openPanelBody :is(input, select, button):focus-visible, .openPanelBody:focus-visible { outline: 2px solid #825725; outline-offset: -2px; }
 .openPanel .openClose { min-width: 44px; min-height: 44px; padding: 12px; transform: translate(-25%, -25%); }
 .lineSummary { margin-bottom: 12px; border-bottom: 1px solid #9c754875; color: #513717; font: clamp(16px, 1.05cqw, 18px)/1.5 "Song Myung", serif; }
-.lineSummary > summary { min-height: 44px; padding: 10px 0; cursor: pointer; }
+.lineSummary > summary { min-height: 44px; padding: 8px 0 12px; cursor: pointer; }
 .lineSummary > summary::marker { color: #805726; }
-.lineSummary > summary > span { float: right; margin-left: 8px; color: #795c39; }
+.lineProgressStatus { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; color: #795c39; font: 18px/1.35 "Song Myung", serif; word-break: keep-all; overflow-wrap: normal; }
+.lineProgressStatus > span { display: block; }
 .lineList { list-style: none; padding: 0; margin: 0; }
 .lineList li + li { border-top: 1px solid #9c75483d; }
 .lineScoreColumns, .lineList li button, .lineScoreTotals { display: grid; grid-template-columns: minmax(0, 1.1fr) repeat(2, minmax(0, 1fr)); align-items: center; gap: 6px; }
@@ -278,12 +284,12 @@
   .mobileNavIcon img { position: absolute; left: 50%; top: 50%; height: auto; max-width: none; pointer-events: none; }
   .mobileNav a:hover, .mobileNav button:hover { color: #ffd98a; }
   .mobileNav a:focus-visible, .mobileNav button:focus-visible { outline: 2px solid #f1cb79; outline-offset: -3px; }
-  .stage .diceStatus { position: relative; inset: auto; order: -1; width: auto; height: auto; margin: 0 16px; padding: 9px 0 3px; border-top: 1px solid #b58a5640; }
+  .stage .diceStatus { position: relative; inset: auto; order: -1; width: auto; height: auto; margin: 0 16px; padding: 9px 0 3px; border-top: 1px solid #b58a5640; display: grid; }
   .diceStatus > img { display: none; }
-  .diceStatus .diceReadout { position: static; width: auto; height: auto; padding: 0; gap: 4px; background: none; font-size: 16px; line-height: 1.5; }
+  .diceStatus .diceReadout { position: static; width: auto; height: auto; padding: 0; gap: 4px; background: none; font-size: 16px; line-height: 1.5; grid-row: 2; }
   .diceCountRow { flex-wrap: wrap; gap: 6px 12px; }
-  .diceChallengeRow { font-size: 14px; text-align: left; }
-  .diceStatus > p { position: static; width: auto; margin-top: 4px; font-size: 13px; white-space: normal; text-align: left; line-height: 1.6; color: #d7bd96; }
+  .diceChallengeRow { position: static; font-size: 14px; text-align: right; grid-row: 1; }
+  .diceStatus > p { position: static; width: auto; margin-top: 4px; font-size: 13px; white-space: normal; text-align: left; line-height: 1.6; color: #d7bd96; grid-row: 3; }
   .diceStatus[data-roll-ready="true"] > p { display: none; }
   .boardArea { display: flex; flex-direction: column; min-width: 0; }
   .boardTools { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 16px; }
@@ -350,7 +356,7 @@
     background: #eddbb6;
     background-clip: padding-box;
   }
-  .openPanel > img { display: none; }
+  .openPanel > img, .openPaperGap, .openPaperDivider { display: none; }
   .openPanel .mobileOpenTitle { position: static; flex-shrink: 0; width: auto; height: auto; overflow: visible; clip: auto; margin: 0 48px 12px 0; font: 24px/1.4 "Song Myung", serif; color: #613d15; }
   .openPanel .openPanelBody { position: static; flex: 0 1 auto; min-height: 0; width: auto; height: auto; max-height: 60dvh; }
   .openPanel .openClose { top: 8px; left: auto; right: 8px; width: 44px; height: 44px; padding: 10px; transform: none; }

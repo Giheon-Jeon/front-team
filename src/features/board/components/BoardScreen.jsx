@@ -307,7 +307,7 @@ export default function BoardScreen({
         </div>
       </div>
 
-      <ChanceCardSummary
+      {!isOpenListVisible && <ChanceCardSummary
         cards={ownedChanceCards}
         cells={cells}
         consumedCellIndexes={myBoard?.consumedCellIndexes ?? []}
@@ -317,7 +317,7 @@ export default function BoardScreen({
           Boolean(pendingRoll) || diceStatus?.blockedReason === "PENDING_CONFIRM"
         }
         onUseCard={onUseChanceCard}
-      />
+      />}
 
       {isOpenListVisible && (
         <OpenChallengesSidePanel
