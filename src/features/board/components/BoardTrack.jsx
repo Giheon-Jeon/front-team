@@ -35,6 +35,7 @@ export default function BoardTrack({
   cellStatesByIndex,
   consumedCellIndexes,
   piecePosition,
+  pieceTransitionMs,
   trainTravel,
   startRewardEvent = null,
   onSelectCell,
@@ -100,7 +101,7 @@ export default function BoardTrack({
 
       {trainTravel?.journey
         ? <BoardTrain journey={trainTravel.journey} onComplete={trainTravel.finish} onProgress={trainTravel.onProgress} onStart={trainTravel.onStart} onStop={trainTravel.onStop} />
-        : <BoardPiece position={renderedPiecePosition} />}
+        : <BoardPiece position={renderedPiecePosition} transitionMs={pieceTransitionMs} />}
 
       {isPiecePositionTest && (
         <>

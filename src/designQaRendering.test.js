@@ -168,6 +168,17 @@ test("출발칸 보상은 게임 화면을 막지 않고 실제 금액과 실제
   assert.ok(declarations(reduced, ".startRewardVisual").some(([key, value]) => key === "animation" && value === "none"));
 });
 
+test("일반 칸 클릭 정보 패널은 제거하고 게임용 문제 선택은 유지한다", () => {
+  const props = { myBoard: {}, ownedChanceCards: [], selectedCell: { cellIndex: 2, name: "정보 모달 제거 확인", type: "CHALLENGE", difficulty: "HARD" } };
+  assert.equal(render("BoardEventPanel", props), "");
+  const html = render("BoardEventPanel", { ...props, currentCell: { cellIndex: 2, type: "CHALLENGE", challengeCandidates: [{ challengeId: "challenge-2", title: "게임 문제", category: "WEB" }] } });
+  assert.match(html, /게임 문제/);
+  assert.doesNotMatch(html, /정보 모달 제거 확인|2번 칸/);
+  for (const path of ["hooks/useBoardController.js", "pages/BoardPage.jsx", "components/BoardScreen.jsx", "components/BoardEventPanel.jsx"]) {
+    assert.doesNotMatch(readFileSync(new URL(`./features/board/${path}`, import.meta.url), "utf8"), /selectedCell|SelectedCell/);
+  }
+});
+
 test("문제 후보가 0개면 재조회 안내를 띄우고 다음 칸으로 넘기지 않는다", () => {
   const props = { myBoard: {}, currentCell: { type: "CHALLENGE", challengeCandidates: [] }, blockedReason: "CHALLENGE_NOT_SELECTED", ownedChanceCards: [] };
   const html = render("BoardEventPanel", props);

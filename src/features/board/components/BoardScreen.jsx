@@ -33,6 +33,7 @@ export default function BoardScreen({
   diceStatus,
   currentCell,
   displayPosition,
+  pieceTransitionMs,
   pendingRoll,
   pendingChanceChoice,
   cellEvent,
@@ -40,7 +41,6 @@ export default function BoardScreen({
   awaitingDiscard,
   ownedChanceCards,
   cellStatesByIndex,
-  selectedCell,
   openedChallenges = [],
   openedChallengesLoading = false,
   openedChallengesError = "",
@@ -69,7 +69,6 @@ export default function BoardScreen({
   onSpinRoulette,
   onRetryChanceDraw,
   onCloseCellEvent,
-  onClearSelectedCell,
   onOpenChallengeDetail,
   onCancelAirportDestination,
 }) {
@@ -278,6 +277,7 @@ export default function BoardScreen({
               cellStatesByIndex={cellStatesByIndex}
               consumedCellIndexes={myBoard?.consumedCellIndexes ?? []}
               piecePosition={displayPosition}
+              pieceTransitionMs={pieceTransitionMs}
               trainTravel={{ ...trainTravel, onProgress: followTrain, onStart: trainWhistle.play, onStop: trainWhistle.stop }}
               startRewardEvent={startRewardEvent}
               canRoll={canRoll}
@@ -361,7 +361,6 @@ export default function BoardScreen({
           ownedChanceCards={ownedChanceCards}
           awaitingDiscard={awaitingDiscard}
           blockedReason={diceStatus?.blockedReason}
-          selectedCell={selectedCell}
           isMutating={isMutating}
           isAirportSelecting={isAirportSelecting}
           isLoading={isLoading}
@@ -376,7 +375,6 @@ export default function BoardScreen({
           onCloseCellEvent={closeCellEvent}
           isRouletteOpen={isRouletteOpen}
           onReopenRoulette={() => setDismissedRouletteToken(null)}
-          onClearSelectedCell={onClearSelectedCell}
           isChallengeSelectionOpen={isChallengeSelectionOpen}
           onCloseChallengeSelection={() => setDismissedSelectionKey(selectionKey)}
           onReopenChallengeSelection={() => setDismissedSelectionKey(null)}
