@@ -13,24 +13,23 @@ test("6개의 별도 보석 팔레트에는 청록과 금테보다 짙은 주황
   assert.equal(BOARD_GEM_RAIL_PALETTES[5].mid, "#98502f");
 });
 
-test("6개의 rail은 각각 별도 mesh이며 내부 특수칸만 연결하고 다음 구역은 포함하지 않는다", () => {
+test("6개 라인은 같은 재질 mesh를 쓰며 특수칸과 다음 구역은 포함하지 않는다", () => {
   const meshes = groups.map(indexes => {
     const segments = getBoardLineAccentSegments(indexes, cells);
-    assert.equal(segments.length, 1);
+    assert.equal(segments.length, indexes.some(index => [17,22,31].includes(index)) ? 2 : 1);
     const mesh = getBoardGemRailGeometry(segments[0].cellIndexes, segments[0]);
     assert.ok(mesh.clipPath);
     assert.doesNotMatch(mesh.clipPath, /NaN|Infinity/);
     assert.doesNotMatch(mesh.strip(17,31), /NaN|Infinity/);
     assert.equal((mesh.strip(17,31).match(/M/g) || []).length, 1);
-    assert.ok(mesh.chain.length > 10);
-    return mesh;
+    assert.ok(mesh.chain.length >= 2);
+    return segments.map(segment => getBoardGemRailGeometry(segment.cellIndexes, segment));
   });
-  assert.deepEqual(meshes[2].visualCellIndexes,[13,14,15,16,17,18]);
-  assert.deepEqual(meshes[3].visualCellIndexes,[19,20,21,22,23,24]);
-  assert.deepEqual(meshes[4].visualCellIndexes,[26,27,28,29,30,31]);
+  meshes.forEach((parts, index) => assert.deepEqual(parts.flatMap(mesh => mesh.visualCellIndexes), groups[index]));
   const segments = groups.map(indexes => getBoardLineAccentSegments(indexes, cells)[0]);
   for (let i = 0; i < 5; i++) {
-    const gap = (segments[i + 1].startAngle - segments[i].endAngle + Math.PI * 2) % (Math.PI * 2);
+    const last = getBoardLineAccentSegments(groups[i], cells).at(-1);
+    const gap = (segments[i + 1].startAngle - last.endAngle + Math.PI * 2) % (Math.PI * 2);
     assert.ok(gap >= Math.PI / 45 - 1e-8);
   }
   const component = readFileSync(new URL("../components/BoardGemRail.jsx", import.meta.url), "utf8");
