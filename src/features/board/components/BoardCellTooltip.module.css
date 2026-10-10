@@ -1,0 +1,45 @@
+@font-face {
+  font-family: "Board Tooltip Pretendard";
+  src: url("/assets/fonts/pretendard/PretendardVariable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  max-width: calc(100vw - 16px);
+  padding: 9px 12px;
+  border: 1px solid rgba(224, 215, 197, 0.16);
+  border-radius: 16px;
+  background: rgba(60, 60, 68, 0.68);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 3px 10px rgba(18, 13, 9, 0.14);
+  color: #f3ebdc;
+  font: 400 13px/1.5 "Board Tooltip Pretendard", "Pretendard", sans-serif;
+}
+.tooltip dl { margin: 0; }
+.tooltip dl > div { display: flex; gap: 12px; }
+.tooltip dt { min-width: 3em; color: #d5d2cd; }
+.tooltip dd { margin: 0; overflow-wrap: anywhere; }
+.tooltip::after {
+  content: "";
+  position: absolute;
+  left: var(--tail-left);
+  width: 12px;
+  height: 6px;
+  transform: translateX(-50%);
+  background: inherit;
+  pointer-events: none;
+}
+.tooltip[data-tail="bottom"]::after {
+  top: 100%;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+.tooltip[data-tail="top"]::after {
+  bottom: 100%;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+@media (hover: none), (pointer: coarse) { .tooltip { display: none; } }
