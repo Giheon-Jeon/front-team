@@ -554,7 +554,7 @@ test("문제 선택은 피그마 기반 보정 에셋과 로컬 Alegreya Medium�
   assert.equal(alegreya["font-weight"], "500");
   assert.match(alegreya.src, /\/assets\/fonts\/alegreya\/Alegreya-Medium\.ttf/);
   const html = render("ChallengeSelection", { candidates: [{ challengeId: 1, title: "AFTERIMAGE", category: "WEB" }] });
-  assert.match(html, /selection-squirrel-refined\.webp/);
+  assert.doesNotMatch(html, /selection-squirrel-refined\.webp/);
   assert.doesNotMatch(html, /piece-squirrel\.png/);
   assert.doesNotMatch(html, /<svg|floorMark|cardFrame/);
   for (const tone of ["brown", "slate", "olive"]) {
@@ -573,6 +573,21 @@ test("보정 카드와 다람쥐는 투명도를 가진 고해상도 WebP로 제
     assert.ok(asset.readUIntLE(24, 3) + 1 >= 1000, `${name}: keep high-resolution artwork`);
     assert.ok(asset.length < 800_000, `${name}: web asset must stay below 800 KB`);
   }
+});
+
+test("문제 선택 카드는 장식용 다람쥐 예약 공간 없이 같은 크기와 간격으로 중앙 정렬한다", () => {
+  const root = css("features/board/components/ChallengeSelection.module.css");
+  const cards = Object.fromEntries(declarations(root, ".cards"));
+  assert.equal(cards.width, "100%");
+  assert.equal(cards.display, "flex");
+  assert.equal(cards["justify-content"], "center");
+  assert.equal(cards.gap, "3cqw");
+  const card = Object.fromEntries(declarations(root, ".card"));
+  assert.equal(card.position, "relative");
+  assert.equal(card["aspect-ratio"], "188 / 253");
+  assert.equal(declarations(root, ".squirrel").length, 0);
+  const mobile = root.nodes.find(node => node.type === "atrule" && node.params === "(max-width: 600px)");
+  assert.match(mobile.toString(), /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
 });
 
 test("카드 색상에 따라 제목 너비를 더 줄이지 않아 보통 길이의 단어가 잘리지 않는다", () => {
