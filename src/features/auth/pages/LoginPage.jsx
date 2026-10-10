@@ -86,13 +86,12 @@ export default function LoginPage() {
     }
   };
 
-  if (checkingSession) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#14100c] text-sm text-[#a89b87]">
-        로그인 상태 확인 중입니다...
-      </div>
-    );
-  }
-
-  return <LoginScreen onLogin={handleLogin} submitting={submitting} feedback={feedback} />;
+  return (
+    <LoginScreen
+      onLogin={handleLogin}
+      submitting={submitting}
+      checkingSession={checkingSession}
+      feedback={feedback}
+    />
+  );
 }

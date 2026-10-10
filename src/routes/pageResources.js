@@ -19,7 +19,8 @@ function addHeadLink(document, id, attributes) {
 }
 
 export function ensureGameFonts(document, pathname) {
-  if (isIntroPath(pathname)) return;
+  // 로그인은 홍보 페이지와 같은 로컬 글꼴을 사용한다
+  if (isIntroPath(pathname) || pathname === "/login" || pathname === "/login/") return;
   GAME_FONT_STYLESHEETS.forEach((href, index) => {
     addHeadLink(document, `msg-game-fonts-${index}`, { rel: "stylesheet", href });
   });
