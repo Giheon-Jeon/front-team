@@ -22,7 +22,7 @@ test("36개 출발점 모두 짧은 이동과 긴 이동을 곡선으로 연결�
     const end = (start - 1 + step) % 36 + 1;
     const journey = createTrainJourney({ previousPosition: start, currentPosition: end });
     assert.equal(journey.cells.length, step + 1);
-    assert.ok(journey.duration >= 2200 && journey.duration <= 4400);
+    assert.ok(journey.duration >= 2200 && journey.duration + 260 <= 3000);
     let previous = 0;
     for (let t = 0; t <= 1; t += .025) {
       const pose = sampleTrainJourney(journey, t);
