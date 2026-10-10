@@ -1,10 +1,11 @@
-import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { BOARD_CELL_COUNT, getBoardCellPosition } from "../utils/boardData.js";
 import { getBoardCellVisitState, getBoardSpentSpecialCells } from "../utils/boardVisited.js";
 import { getBoardSolvedCellIndexes } from "../utils/boardLines.js";
 import BoardLineOverlay from "./BoardLineOverlay.jsx";
 import BoardSurface from "./BoardSurface.jsx";
 import BoardCellTarget from "./BoardCellTarget.jsx";
+import BoardCellTooltip from "./BoardCellTooltip.jsx";
 import BoardPiece from "./BoardPiece.jsx";
 import BoardTrain from "./BoardTrain.jsx";
 import BoardStartReward from "./BoardStartReward.jsx";
@@ -48,6 +49,9 @@ export default function BoardTrack({
   highlightedCellIndex = null,
   isHidden = false,
 }) {
+  const [hoveredCell, setHoveredCell] = useState(null);
+  const tooltipId = useId();
+  const dismissTooltip = useCallback(() => setHoveredCell(null), []);
   const [previewCell, setPreviewCell] = useState(hasFixedPreviewCell ? fixedPreviewCell : 1);
   useEffect(() => {
     if (piecePositionTestParam !== "all") return undefined;
@@ -140,7 +144,15 @@ export default function BoardTrack({
             key={cell.cellIndex}
             type="button"
             disabled={isRolling || Boolean(trainTravel?.journey)}
-            onClick={() => { if (!isSelecting || isSelectable) onSelectCell(cell.cellIndex); }}
+            onClick={() => { dismissTooltip(); if (!isSelecting || isSelectable) onSelectCell(cell.cellIndex); }}
+            onPointerEnter={event => {
+              if (event.pointerType !== "mouse" || !window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+              const { left, right, top, bottom } = event.currentTarget.getBoundingClientRect();
+              setHoveredCell({ cell, anchor: { left, right, top, bottom } });
+            }}
+            onPointerLeave={dismissTooltip}
+            onPointerCancel={dismissTooltip}
+            aria-describedby={hoveredCell?.cell.cellIndex === cell.cellIndex ? tooltipId : undefined}
             tabIndex={isSelecting && !isSelectable ? -1 : undefined}
             aria-disabled={isSelecting && !isSelectable ? true : undefined}
             aria-pressed={isSelecting ? isHighlighted : undefined}
@@ -157,6 +169,7 @@ export default function BoardTrack({
           </button>
         );
       })}
+      {!isHidden && !isRolling && !trainTravel?.journey && <BoardCellTooltip hovered={hoveredCell} id={tooltipId} onDismiss={dismissTooltip} />}
     </div>
   );
 }
