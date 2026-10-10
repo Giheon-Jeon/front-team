@@ -10,6 +10,7 @@ let server;
 let ClubBrand;
 let BoothAchievement;
 let FestivalScreen;
+let ChallengeMenu;
 before(async () => {
   server = await createServer({
     server: { middlewareMode: true, hmr: false, ws: false, watch: null },
@@ -26,6 +27,30 @@ before(async () => {
   ({ SignatureFestivalScreen: FestivalScreen } = await server.ssrLoadModule(
     "/src/features/signatures/pages/SignaturesPage.jsx",
   ));
+  ({ default: ChallengeMenu } = await server.ssrLoadModule(
+    "/src/features/signatures/components/ChallengeMenuModal.jsx",
+  ));
+});
+
+test("메뉴판은 preview에서 실제 문제 링크 없이 상태와 샘플 안내를 표시한다", () => {
+  const html = renderToStaticMarkup(createElement(StaticRouter, {}, createElement(ChallengeMenu, {
+    club: { name: "MJSEC", university: "명지대학교" }, preview: true, onClose() {},
+    items: [{ id: "sample", title: "Sample", score: 300, state: "solved" }],
+  })));
+  assert.match(html, /샘플 데이터/);
+  assert.match(html, /풀이 완료/);
+  assert.match(html, /disabled=""/);
+  assert.doesNotMatch(html, /href=/);
+});
+
+test("메뉴판의 loading, error, empty도 같은 dialog 안에 표시한다", () => {
+  for (const [status, text] of [["loading", "준비하고"], ["error", "불러오지 못했습니다"], ["success", "아직 공개된"]]) {
+    const html = renderToStaticMarkup(createElement(ChallengeMenu, {
+      club: { name: "MJSEC" }, status, items: [], onClose() {},
+    }));
+    assert.match(html, /<dialog/);
+    assert.match(html, new RegExp(text));
+  }
 });
 after(async () => {
   await server?.close();
