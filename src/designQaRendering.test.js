@@ -685,16 +685,17 @@ test("기존 6개 예시 라인 중 0개, 1개, 떨어진 2개, 전체 완료일
       solvedCellIndexes: cellIndexes, isCompleted: completed.includes(index) })), boardCells);
     const html = render("BoardLineOverlay", { lines, boardCells });
     assert.equal((html.match(/data-line-accent=/g) || []).length, completed.length);
-    assert.equal((html.match(/data-line-segment=/g) || []).length, completed.length);
+    const meshCount = completed.reduce((count, index) => count + ([2,3,4].includes(index) ? 2 : 1), 0);
+    assert.equal((html.match(/data-line-segment=/g) || []).length, meshCount);
     assert.equal((html.match(/data-solved="true"/g) || []).length, 30);
     assert.doesNotMatch(html, /data-line-outline=|<text|data-line-badge=/);
     for (const index of completed) assert.ok(html.includes(`data-line-accent="preview-line-${index + 1}"`));
     const colors = [...html.matchAll(/style="--line-accent:(#[0-9a-f]+)"/g)].map(match => match[1]);
     assert.deepEqual(colors, ["#8e3e48", "#355677", "#3a6955", "#67477c", "#376f77", "#98502f"]);
-    assert.equal((html.match(/data-gem-rail=/g) || []).length, completed.length);
-    assert.equal((html.match(/data-rail-core=/g) || []).length, completed.length);
-    assert.equal((html.match(/data-rail-bloom=/g) || []).length, completed.length);
-    assert.equal((html.match(/data-rail-reflection=/g) || []).length, completed.length);
+    assert.equal((html.match(/data-gem-rail=/g) || []).length, meshCount);
+    assert.equal((html.match(/data-rail-core=/g) || []).length, meshCount);
+    assert.equal((html.match(/data-rail-bloom=/g) || []).length, meshCount);
+    assert.equal((html.match(/data-rail-reflection=/g) || []).length, meshCount);
   }
 });
 

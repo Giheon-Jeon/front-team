@@ -4,6 +4,7 @@ import { BOARD_GEM_RAIL_PALETTES } from "./boardGemRail.js";
 
 // 동일한 금속 프레임 위에 얇게 사용하는 저채도 보석색
 const LINE_ACCENTS = Object.freeze(BOARD_GEM_RAIL_PALETTES.map(palette => palette.mid));
+export const BOARD_LINE_SPECIAL_INDEXES = Object.freeze([1, 7, 16, 21, 25, 30]);
 const validScore = (score) => Number.isFinite(score) && score >= 0 ? (score === 0 ? 0 : score) : null;
 export const BOARD_LINE_SCORE_UNIT = "pts";
 
@@ -37,7 +38,7 @@ function sumKnownScores(scores) {
 
 // 예정 배점과 지급된 보너스는 다른 값이다 완료 확정 대기는 0점으로 숨기지 않는다
 export function getBoardLineEarnedScore(line) {
-  if (!line || line.awaitingConfirmation === true) return null;
+  if (!line || line.payoutStatus === "unknown" || line.awaitingConfirmation === true) return null;
   return line.isCompleted === true ? validScore(line.bonusScore) : 0;
 }
 
@@ -59,7 +60,10 @@ export function getBoardLineAccent(lineId) {
 // 완료된 항목만 세지 않으므로 완료 여부나 입력 배열 순서가 바뀌어도 색은 같다.
 export function getBoardLineAccentMap(lines) {
   const ordered = [...lines].sort((a, b) => Math.min(...a.cellIndexes) - Math.min(...b.cellIndexes) || a.lineId.localeCompare(b.lineId));
-  return new Map(ordered.map((line, index) => [line.lineId, LINE_ACCENTS[index % LINE_ACCENTS.length]]));
+  return new Map(ordered.map((line, index) => {
+    const number = line.lineNumber ?? Number(/^line-([1-6])$/.exec(line.lineId)?.[1]);
+    return [line.lineId, LINE_ACCENTS[Number.isInteger(number) && number >= 1 && number <= 6 ? number - 1 : index % 6]];
+  }));
 }
 
 // 라인 계약이 없어도 서버가 정답 처리한 문제 칸은 개별로 표시할 수 있다
@@ -78,13 +82,16 @@ export function getBoardLineProgress(cells, cellStatesByIndex) {
   if (!Array.isArray(cells) || !(cellStatesByIndex instanceof Map)) return [];
   const grouped = new Map();
   for (const cell of cells) {
+    if (cell?.type !== "CHALLENGE" || BOARD_LINE_SPECIAL_INDEXES.includes(cell.cellIndex)) continue;
     if (!Number.isInteger(cell?.lineNumber) || cell.lineNumber < 1 || cell.lineNumber > 6) continue;
     const indexes = grouped.get(cell.lineNumber) ?? [];
     indexes.push(cell.cellIndex);
     grouped.set(cell.lineNumber, indexes);
   }
-  return prepareBoardLines([...grouped].sort(([left], [right]) => left - right).map(([number, cellIndexes]) => ({
+  return prepareBoardLines([...grouped].filter(([, indexes]) => indexes.length === 5).sort(([left], [right]) => left - right).map(([number, cellIndexes]) => ({
     lineId: `line-${number}`,
+    lineNumber: number,
+    payoutStatus: "unknown",
     label: `${number}번 라인`,
     cellIndexes,
     solvedCellIndexes: cellIndexes.filter((index) => cellStatesByIndex.get(index)?.status === "CLEARED"),
@@ -122,9 +129,13 @@ export function prepareBoardLines(input, cells) {
   ).map((line) => {
     const cellIndexes = [...line.cellIndexes].sort((a, b) => a - b);
     const solvedCellIndexes = [...new Set(line.solvedCellIndexes)].sort((a, b) => a - b);
-    const isCompleted = line.isCompleted === true && solvedCellIndexes.length === cellIndexes.length;
+    const allProblemsCleared = solvedCellIndexes.length === cellIndexes.length;
+    const isCompleted = line.payoutStatus !== "unknown" && line.isCompleted === true && allProblemsCleared;
     return {
       lineId: line.lineId, label: line.label, cellIndexes, solvedCellIndexes, isCompleted,
+      lineNumber: line.lineNumber,
+      payoutStatus: line.payoutStatus,
+      allProblemsCleared,
       rewardScore: validScore(line.rewardScore),
       bonusScore: isCompleted ? validScore(line.bonusScore) : null,
       awaitingConfirmation: !isCompleted && solvedCellIndexes.length === cellIndexes.length,
@@ -134,23 +145,16 @@ export function prepareBoardLines(input, cells) {
 
 const CENTER = { x: 886, y: 665 };
 
-// 시각적인 rail 경로만 계산한다. 특수칸을 지나가도 독점 대상 칸은 추가하지 않는다.
-export function getBoardLineAccentSegments(cellIndexes, cells = []) {
+// 같은 라인 색은 유지하되 특수칸에는 rail을 씌우지 않는다.
+export function getBoardLineAccentSegments(cellIndexes) {
   if (!Array.isArray(cellIndexes) || cellIndexes.length === 0 ||
     cellIndexes.some((index) => !Number.isInteger(index) || index < 1 || index > BOARD_CELL_COUNT) ||
     new Set(cellIndexes).size !== cellIndexes.length) return [];
 
-  const bridgeable = new Set((Array.isArray(cells) ? cells : [])
-    .filter((cell) => ["CHANCE", "ROULETTE", "AIRPORT"].includes(cell?.type))
-    .map((cell) => cell.cellIndex));
-  const canBridge = (from, to) => {
-    for (let index = from + 1; index < to; index++) if (!bridgeable.has(index)) return false;
-    return true;
-  };
   const indexes = [...cellIndexes].sort((a, b) => a - b);
   const runs = [];
   for (const index of indexes) {
-    if (runs.length && canBridge(runs.at(-1).at(-1), index)) runs.at(-1).push(index);
+    if (runs.length && runs.at(-1).at(-1) + 1 === index) runs.at(-1).push(index);
     else runs.push([index]);
   }
   // 36번 다음 1번도 실제로 인접하므로 배열 순서와 무관하게 연결한다.
@@ -298,6 +302,7 @@ export function getBoardLineTileLabelPosition(cellIndexes) {
 }
 
 export function getBoardLineStatus(line) {
+  if (line.payoutStatus === "unknown" && line.allProblemsCleared) return "풀이 완료 / 지급 미확인";
   if (line.isCompleted) return "독점 완료";
   if (line.awaitingConfirmation) return "완료 확인 중";
   return `${line.solvedCellIndexes.length}/${line.cellIndexes.length} 해결`;

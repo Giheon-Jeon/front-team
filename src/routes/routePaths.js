@@ -3,6 +3,7 @@ export const ROUTES = {
   introGuide: "/guide",
   login: "/login",
   board: "/board",
+  lineRailPreview: "/dev/line-rail-preview",
   boardChallenges: "/board?panel=challenges",
   challengeDetail: (challengeId) => `/challenges/${encodeURIComponent(challengeId)}`,
   openChallenges: "/challenges",

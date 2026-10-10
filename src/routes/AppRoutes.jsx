@@ -9,6 +9,8 @@ import usePageResources from "./usePageResources.js";
 
 // 현재 화면에 필요한 코드만 읽는다 관리자 화면과 QR 기능은 참가자 진입에서 제외한다
 const LoginPage = lazy(() => import("../features/auth/pages/LoginPage.jsx"));
+const LineRailPreviewPage = import.meta.env.DEV
+  ? lazy(() => import("../features/board/preview/LineRailPreviewPage.jsx")) : null;
 const BoardPage = lazy(() => {
   // 보드 페이지를 받은 뒤에 3D 코드를 찾는 직렬 대기를 줄인다 실패 시 원래 대체 주사위를 쓴다
   void import("../features/board/components/Dice3D.jsx").catch(() => {});
@@ -104,6 +106,7 @@ export default function AppRoutes() {
         </Route>
         <Route path="/login" element={<LoginPage />} />
         <Route path={ROUTES.board} element={<BoardPage />} />
+        {import.meta.env.DEV && <Route path={ROUTES.lineRailPreview} element={<LineRailPreviewPage />} />}
         <Route path={ROUTES.openChallenges} element={<OpenChallengesPage />} />
         <Route
           path="/challenges/:challengeId"
