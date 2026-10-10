@@ -39,6 +39,7 @@ export default function BoardTrack({
   trainTravel,
   startRewardEvent = null,
   onSelectCell,
+  onInspectCell,
   onRollDice,
   canRoll,
   isRolling,
@@ -145,7 +146,11 @@ export default function BoardTrack({
             key={cell.cellIndex}
             type="button"
             disabled={isRolling || Boolean(trainTravel?.journey)}
-            onClick={() => { dismissTooltip(); if (!isSelecting || isSelectable) onSelectCell(cell.cellIndex); }}
+            onClick={() => {
+              dismissTooltip();
+              if (!isSelecting && window.matchMedia("(max-width: 1100px)").matches) onInspectCell?.(cell);
+              if (!isSelecting || isSelectable) onSelectCell(cell.cellIndex);
+            }}
             onPointerEnter={event => {
               if (event.pointerType !== "mouse" || !window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
               const { left, right, top, bottom } = event.currentTarget.getBoundingClientRect();

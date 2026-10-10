@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useRef } from "react";
 import { performLogout } from "../../../api/auth.js";
 import { ROUTES } from "../../../routes/routePaths.js";
 import styles from "./BoardScreen.module.css";
@@ -60,10 +61,17 @@ const BUTTONS = [
 
 export default function BoardNav() {
   const navigate = useNavigate();
+  const mobileMenu = useRef(null);
+  const closeMenu = () => { if (mobileMenu.current) mobileMenu.current.open = false; };
 
   return (
     <>
       <nav className={styles.mobileNav} aria-label="대회 메뉴">
+        <Link to={ROUTES.mypage} className={styles.mobileNavPrimary}>마이페이지</Link>
+        <Link to={ROUTES.leaderboard} className={styles.mobileNavPrimary}>순위</Link>
+        <details ref={mobileMenu} className={styles.mobileMenu} onKeyDown={event => { if (event.key === "Escape") { closeMenu(); mobileMenu.current?.querySelector("summary")?.focus(); } }}>
+          <summary aria-label="대회 전체 메뉴"><span aria-hidden="true">☰</span> 메뉴</summary>
+          <div className={styles.mobileMenuItems} onClick={closeMenu}>
         {BUTTONS.map((button) => {
           const content = <>
             <span className={styles.mobileNavIcon} aria-hidden="true">
@@ -82,6 +90,8 @@ export default function BoardNav() {
         })}
         <Link to={ROUTES.koth}>KoTH</Link>
         <Link to={ROUTES.signatures}>동아리 부스</Link>
+          </div>
+        </details>
       </nav>
       <div className={styles.desktopOnly}>
       {BUTTONS.map((button) => (

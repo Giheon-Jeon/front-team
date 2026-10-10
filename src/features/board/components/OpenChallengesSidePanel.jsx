@@ -1,4 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import useMobileBoardOverlay from "../hooks/useMobileBoardOverlay.js";
 import { formatOpenChallengeNumber } from "../utils/boardOverlays.js";
 import { normalizeBoardListView, selectBoardChallenges } from "../utils/boardChallengeList.js";
 import { INSTANCE_STATUS_LABEL } from "../../../constants/enums.js";
@@ -38,6 +40,8 @@ export default function OpenChallengesSidePanel({
   challenges, onSelectChallenge, onClose, children, initialView, onViewChange,
   loading = false, error = "", onRetry, instanceInfo,
 }) {
+  const panelRef = useRef(null);
+  const isMobile = useMobileBoardOverlay(panelRef);
   const closeButton = useRef(null);
   const scrollBody = useRef(null);
   const restored = useRef(false);
@@ -64,8 +68,11 @@ export default function OpenChallengesSidePanel({
     }
   }, [loading, instanceInfo?.loading, challenges]);
   useEffect(() => { closeButton.current?.focus({ preventScroll: true }); }, []);
-  return (
+  const panel = (
     <aside
+      ref={panelRef}
+      role={isMobile ? "dialog" : undefined}
+      aria-modal={isMobile ? true : undefined}
       id="board-open-challenges-panel"
       aria-label="열린 문제"
       onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); onClose(); } }}
@@ -81,6 +88,7 @@ export default function OpenChallengesSidePanel({
       <span className={styles.openPaperGap} aria-hidden="true"><img src="/assets/board/open-challenges-panel.webp" alt="" /></span>
       <span className={styles.openPaperDivider} aria-hidden="true"><img src="/assets/board/open-challenges-panel.webp" alt="" /></span>
       {/* 데스크톱은 패널 이미지에 제목이 그려져 있어 모바일에서만 보이는 제목 */}
+      <div className={styles.openPanelHeader}>
       <h2 className={styles.mobileOpenTitle}>열린 문제</h2>
 
       <button
@@ -92,6 +100,7 @@ export default function OpenChallengesSidePanel({
       >
         <img src="/assets/board/icon-close-round.png" alt="" aria-hidden="true" className="h-full w-full object-contain" />
       </button>
+      </div>
 
       <div className={styles.openPanelBody} ref={scrollBody}
         onScroll={(event) => { if (restored.current) saveView({ ...currentView.current, scrollTop: event.currentTarget.scrollTop }); }}
@@ -175,4 +184,5 @@ export default function OpenChallengesSidePanel({
       </div>
     </aside>
   );
+  return isMobile ? createPortal(<div className={styles.mobileOpenOverlay}>{panel}</div>, document.body) : panel;
 }

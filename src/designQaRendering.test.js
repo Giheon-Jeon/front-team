@@ -347,6 +347,7 @@ test("모바일 보드 메뉴는 기존 금색 아이콘과 여섯 이동 기능
   const html = render("BoardNav");
   const mobileNav = html.match(/<nav[^>]*aria-label="대회 메뉴"[\s\S]*?<\/nav>/)?.[0];
   assert.ok(mobileNav);
+  assert.match(mobileNav, /<details[^>]*>[\s\S]*?<summary[^>]*aria-label="대회 전체 메뉴"/);
   for (const image of ["nav-rules.png", "nav-mypage.png", "nav-scoreboard.png", "nav-logout.png"]) {
     assert.ok(mobileNav.includes(`/assets/board/${image}`));
   }
@@ -812,6 +813,25 @@ test("라인 점수표는 행과 합계의 열을 맞추고 좁은 데스크톱�
   assert.ok(declarations(root, ".lineName").some(([property, value]) => property === "overflow-wrap" && value === "anywhere"));
   assert.ok(declarations(root, ".lineScore, .lineScoreTotals > :not(:first-child)").some(([property, value]) => property === "font-variant-numeric" && value === "tabular-nums"));
   assert.ok(root.nodes.some((node) => node.type === "atrule" && node.params === "(min-width: 1101px)" && node.toString().includes(".openPanel:has(.lineSummary[open])") && node.toString().includes("clamp(300px, 23cqw, 410px)")));
+});
+
+test("모바일 열린 문제는 독립 포털과 내부 스크롤을 사용하고 보드 배경을 잠근다", () => {
+  const root = css("features/board/components/BoardScreen.module.css");
+  const overlay = Object.fromEntries(declarations(root, ".mobileOpenOverlay"));
+  assert.equal(overlay.position, "fixed");
+  assert.equal(overlay.height, "100dvh");
+  assert.ok(overlay.padding.includes("safe-area-inset"));
+  const body = Object.fromEntries(declarations(root, ".mobileOpenOverlay .openPanelBody"));
+  assert.equal(body["min-height"], "0");
+  assert.equal(body["overflow-y"], "auto");
+  assert.equal(body.flex, "1 1 auto");
+  const source = readFileSync(new URL("./features/board/components/OpenChallengesSidePanel.jsx", import.meta.url), "utf8");
+  assert.match(source, /isMobile \? createPortal/);
+  assert.match(source, /aria-modal/);
+  const hook = readFileSync(new URL("./features/board/hooks/useMobileBoardOverlay.js", import.meta.url), "utf8");
+  assert.match(hook, /app\.inert = true/);
+  assert.match(hook, /window\.scrollTo\(x, y\)/);
+  assert.match(hook, /previousFocus\.focus/);
 });
 
 test("칸별 독점 border 없이 마지막 문제 정답과 완료 확정 후에만 독립 rail이 생긴다", () => {
