@@ -80,6 +80,7 @@ export default function BoardScreen({
   };
   const openListView = useRef(normalizeBoardListView(initialOpenListView));
   const [isBoardZoomed, setIsBoardZoomed] = useState(false);
+  const [inspectedCell, setInspectedCell] = useState(null);
   const zoomBeforeTrainSelection = useRef(null);
   const [isLineSummaryOpen, setIsLineSummaryOpen] = useState(false);
   const [selectedLineId, setSelectedLineId] = useState(null);
@@ -261,6 +262,7 @@ export default function BoardScreen({
             </button>
           </div>
         </div>
+        {inspectedCell && <p className={styles.mobileCellInfo} role="status">{inspectedCell.cellIndex}번 · 유형 {inspectedCell.type} · 난이도 {inspectedCell.difficulty || "—"}</p>}
         <div
           id={boardRegionId}
           ref={boardViewport}
@@ -283,6 +285,7 @@ export default function BoardScreen({
               canRoll={canRoll}
               isRolling={isMutating}
               onRollDice={onRollDice}
+              onInspectCell={setInspectedCell}
               onSelectCell={(cellIndex) => {
                 if (isMutating || trainTravel.journey) return;
                 setIsOpenListVisible(false);
@@ -307,7 +310,7 @@ export default function BoardScreen({
         </div>
       </div>
 
-      <ChanceCardSummary
+      {!isOpenListVisible && <ChanceCardSummary
         cards={ownedChanceCards}
         cells={cells}
         consumedCellIndexes={myBoard?.consumedCellIndexes ?? []}
@@ -317,7 +320,7 @@ export default function BoardScreen({
           Boolean(pendingRoll) || diceStatus?.blockedReason === "PENDING_CONFIRM"
         }
         onUseCard={onUseChanceCard}
-      />
+      />}
 
       {isOpenListVisible && (
         <OpenChallengesSidePanel

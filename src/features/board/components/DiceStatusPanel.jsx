@@ -38,9 +38,9 @@ export default function DiceStatusPanel({
           <span>주사위 {rollsLeft}/{MAX_DICE_ROLLS}</span>
           {rechargeVisible && <span>충전까지 <strong>{formatRemaining(resetInSeconds)}</strong></span>}
         </div>
-        {challengeRemainingSeconds != null && <div className={styles.diceChallengeRow}>문제 제한 <strong>{formatRemaining(challengeRemainingSeconds)}</strong></div>}
       </div>
-      <p className={`${styles.diceStatusMessage} absolute left-[5.6%] top-[97%] z-10 m-0 w-[87.8%] truncate text-left font-inria-serif text-[#e7d2ad]`}>
+      {challengeRemainingSeconds != null && <div className={`${styles.diceChallengeRow} absolute right-[10%] top-[25%] z-10 font-inria-serif`}>문제 제한 <strong>{formatRemaining(challengeRemainingSeconds)}</strong></div>}
+      <p className={`${styles.diceStatusMessage} absolute left-[5.6%] top-[70%] z-10 m-0 w-[87.8%] text-left font-inria-serif text-[#e7d2ad]`}>
         {statusLabel}
       </p>
     </div>
