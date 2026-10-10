@@ -27,7 +27,7 @@
   filter: drop-shadow(0 1px 1px #25120685);
   pointer-events: none;
   user-select: none;
-  transition: left 150ms linear, top 150ms linear;
+  transition: left var(--piece-transition, 150ms) linear, top var(--piece-transition, 150ms) linear;
 }
 @media (prefers-reduced-motion: reduce) {
   .boardPiece { transition: none; }
