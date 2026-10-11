@@ -145,6 +145,12 @@
   overflow: hidden;
 }
 
+/* WebKit에서 조각 높이를 판 전체 높이로 계산하지 않도록 각 격자 행에 맞춘다 */
+.frameArtwork > svg {
+  height: auto;
+  align-self: stretch;
+}
+
 .logo {
   display: block;
   width: min(100%, 300px);

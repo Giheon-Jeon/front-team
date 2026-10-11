@@ -107,3 +107,16 @@ test("원본 로그인판의 반응형 규칙은 장식과 버튼을 숨기거�
   assert.match(css, /@media \(forced-colors: active\)/);
   assert.match(css, /background: Canvas/);
 });
+
+test("로그인판 조각은 WebKit에서도 판 전체가 아닌 각 격자 행 높이에 맞춘다", () => {
+  const css = readFileSync(new URL("./components/LoginScreen.module.css", import.meta.url), "utf8");
+  const sliceRule = css.match(/\.frameArtwork > svg \{([^}]+)\}/);
+  assert.ok(sliceRule, "격자 안의 프레임 조각에 별도 높이 규칙이 있어야 한다");
+  assert.match(sliceRule[1], /height:\s*auto\s*;/);
+  assert.match(sliceRule[1], /align-self:\s*stretch\s*;/);
+  assert.doesNotMatch(sliceRule[1], /height:\s*100%/);
+  const sharedRule = css.match(/\.frameArtwork svg,\s*\.fieldArtwork svg \{([^}]+)\}/);
+  assert.ok(sharedRule, "배경 종이와 입력창 장식의 공통 규칙은 유지한다");
+  assert.match(sharedRule[1], /height:\s*100%\s*;/);
+  assert.ok(sliceRule.index > sharedRule.index, "프레임 조각 높이가 공통 규칙보다 우선해야 한다");
+});
