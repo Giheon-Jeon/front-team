@@ -127,9 +127,17 @@ test("상단 지도는 확정 주소의 공유 지도를 사용하고 지도 밖
   const addressToken = mapSpec.match(/!2z([^!]+)/)?.[1];
   assert.equal(Buffer.from(addressToken, "base64").toString("utf8"), "서울특별시 종로구 우정국로 6");
   assert.ok(overview.includes(`src="${eventConfig.venueMapEmbedUrl}"`));
-  assert.match(overview, /<\/iframe><\/div><p class="venue-name">교원챌린지홀 2층<\/p>/);
+  assert.match(overview, /<\/iframe><\/div><div class="venue-details"><div class="venue-location"><p class="venue-name">교원챌린지홀 2층<\/p>/);
   assert.match(overview, /<p class="venue-transit">1호선 종각역에서 도보 2분<\/p>/);
   assert.equal((overview.match(/<iframe\b/g) || []).length, 1);
+});
+
+test("오시는 길은 장소와 교통 안내를 나눠 배치하고 필요한 내용을 지도 밖에서 제공한다", () => {
+  assert.match(overview, /class="venue-location"><p class="venue-name">[^<]+<\/p><p class="venue-address">[^<]+<\/p><\/div>/);
+  assert.match(overview, /class="venue-access"><p class="venue-transit">[^<]+<\/p><nav class="venue-map-links"/);
+  assert.match(overview, /title="교원챌린지홀 주변 도로와 행사장 위치 지도"/);
+  assert.match(overview, /loading="lazy"/);
+  assert.equal((overview.match(/class="venue-map-links"/g) || []).length, 1);
 });
 
 test("장소 확정과 별개인 현장 운영 정보는 확정된 것처럼 안내하지 않는다", () => {

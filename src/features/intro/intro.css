@@ -747,8 +747,8 @@
   line-height: 1.35;
 }
 .msg-intro .venue-map {
-  height: clamp(260px, 24vw, 320px);
-  margin: 20px 0;
+  height: 200px;
+  margin: 16px 0;
   background: #ebe8e2;
 }
 .msg-intro .venue-map iframe {
@@ -756,6 +756,17 @@
   width: 100%;
   height: 100%;
   border: 0;
+}
+.msg-intro .venue-details {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  align-content: start;
+  gap: var(--space-3);
+}
+.msg-intro .venue-location,
+.msg-intro .venue-access {
+  min-width: 0;
 }
 .msg-intro .venue-summary .venue-name {
   margin: 0;
@@ -773,7 +784,7 @@
   word-break: keep-all;
 }
 .msg-intro .venue-transit {
-  margin-top: 4px;
+  margin: 0;
   color: var(--muted);
   font-size: 14px;
   line-height: 1.65;
@@ -1738,12 +1749,37 @@
   .msg-intro .overview-layout {
     gap: var(--space-4);
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto;
   }
   .msg-intro .overview-intro {
     font-size: 18px;
   }
   .msg-intro .overview-intro strong {
     font-size: 28px;
+  }
+  .msg-intro .overview-copy {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .msg-intro .venue-summary {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: var(--space-2) var(--space-4);
+    padding: var(--space-3) 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+  .msg-intro .venue-summary h3 {
+    grid-column: 1 / -1;
+  }
+  .msg-intro .venue-map {
+    margin: 0;
+  }
+  .msg-intro .venue-details {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
   }
   .msg-intro .overview-copy .event-facts > div {
     grid-template-columns: 80px minmax(0, 1fr);
@@ -1974,11 +2010,13 @@
   }
   .msg-intro .overview-copy {
     grid-column: 1 / -1;
+    grid-row: 2;
     width: 100%;
   }
   .msg-intro .venue-summary {
     grid-column: 1;
     grid-row: 3;
+    display: block;
     padding: var(--space-3) 0 0;
     border-left: 0;
     border-top: 1px solid var(--line);
@@ -1987,8 +2025,11 @@
     font-size: 26px;
   }
   .msg-intro .venue-map {
-    height: 280px;
+    height: 200px;
     margin: 16px 0;
+  }
+  .msg-intro .venue-details {
+    gap: var(--space-1);
   }
   .msg-intro .venue-summary .venue-name {
     font-size: 20px;
