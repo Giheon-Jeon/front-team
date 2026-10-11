@@ -358,11 +358,8 @@ export default function IntroGuidePage() {
             </p>
           </details>
           <details>
-            <summary>AI와 외부 도구를 사용해도 되나요?</summary>
-            <p>
-              AI와 자동화 도구, 팀 밖 협업의 허용 범위는 최종 운영규정에서
-              안내합니다
-            </p>
+            <summary>AI를 사용해도 되나요?</summary>
+            <p>네, 문제 풀이에 AI를 사용할 수 있습니다</p>
           </details>
         </div>
       </section>

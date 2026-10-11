@@ -76,6 +76,14 @@ test("신청과 현장 안내, 상세 안내와 FAQ에 무료 참가비를 표�
   assert.match(guide, /참가비는 무료입니다/);
   assert.doesNotMatch(main + guide, /참가비[^<]*(?:추후|미정|접수 공지)/);
 });
+test("FAQ는 문제 풀이에 AI를 사용할 수 있다고 명확히 안내한다", () => {
+  const faq = guide.match(/<details>[\s\S]*?<\/details>/g)
+    .find((item) => item.includes("<summary>AI를 사용해도 되나요?</summary>"));
+  assert.ok(faq, "AI 사용 여부를 안내하는 질문이 있어야 한다");
+  assert.match(faq, /<p>네, 문제 풀이에 AI를 사용할 수 있습니다<\/p>/);
+  assert.doesNotMatch(faq, /최종 운영규정|팀 밖 협업|자동화 도구/);
+});
+
 test("신청 자격과 내부, 외부 선발 기준을 유지한다", () => {
   for (const html of [main, guide]) {
     assert.match(html, /대회 당일 만 19세 이상인 학부 재학생·휴학생/);
