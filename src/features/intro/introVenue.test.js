@@ -84,14 +84,15 @@ test("상단 장소 안내에 도로명 주소와 카카오맵, 네이버지도 
   }
 });
 
-test("장소 안내는 다람쥐 대신 한 번만 표시하고 출구 번호나 주차 정보를 임의로 넣지 않는다", () => {
+test("참가 규모 아래에 대회 장소를 표시하고 주소와 교통 안내는 오시는 길에 모은다", () => {
   const copy = overview.match(/<div class="overview-copy"[\s\S]*?<\/dl>/)?.[0];
   const summary = overview.match(/<aside class="venue-summary"[\s\S]*?<\/aside>/)?.[0];
   assert.ok(copy);
   assert.ok(summary);
-  assert.match(copy, /일정/);
-  assert.match(copy, /참가 규모/);
-  assert.ok(!copy.includes(eventConfig.venue));
+  const labels = [...copy.matchAll(/<dt>([^<]+)<\/dt>/g)].map((match) => match[1]);
+  assert.deepEqual(labels, ["일정", "참가 규모", "대회 장소"]);
+  assert.match(copy, /<dt>대회 장소<\/dt><dd>교원챌린지홀 2층<\/dd>/);
+  assert.ok(!copy.includes(eventConfig.venueAddress));
   assert.equal(overview.split(eventConfig.venueAddress).length - 1, 1);
   assert.match(summary, /1호선 종각역/);
   assert.match(summary, /도보 2분/);
