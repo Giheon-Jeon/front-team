@@ -33,10 +33,31 @@ test("공유 소개는 대회 이름과 한 줄 소개로 정리하고 모집 �
   assert.match(metadata.imageAlt, /11월 8일 일요일 오전 10시 시작/);
 });
 
+test("기본 대표 주소와 공유 주소는 운영 도메인을 사용하고 예전 개발 주소를 남기지 않는다", () => {
+  const metadata = createShareMetadata();
+  const html = shareMetadataPlugin().transformIndexHtml.handler(source);
+  assert.equal(metadata.siteUrl, "https://msgctf.kr/");
+  assert.equal(attribute(html, "og:url"), metadata.siteUrl);
+  assert.match(html, /rel="canonical" href="https:\/\/msgctf.kr\/"/);
+  for (const property of ["og:image", "og:image:secure_url", "twitter:image"]) {
+    assert.equal(new URL(attribute(html, property)).origin, "https://msgctf.kr");
+  }
+  assert.doesNotMatch(html, /msg2\.mjsec\.kr|%MSG_SHARE_/);
+});
+
+test("Docker 기본 빌드도 운영 도메인을 사용하고 일반 빌드와 같은 공유 주소를 만든다", () => {
+  const dockerfile = readFileSync(new URL("../Dockerfile", import.meta.url), "utf8");
+  const argument = dockerfile.match(/^ARG VITE_PUBLIC_SITE_URL=(\S+)\s*$/m);
+  assert.ok(argument, "공유 주소를 빌드 인자로 지정할 수 있어야 한다");
+  assert.equal(argument[1], "https://msgctf.kr");
+  assert.ok(argument.index < dockerfile.indexOf("RUN npm run build"));
+  assert.deepEqual(createShareMetadata(argument[1]), createShareMetadata());
+});
+
 test("이미지는 공개 HTTPS 절대 주소이고 일반 OG와 큰 이미지 카드가 같은 파일을 가리킨다", () => {
   const html = shareMetadataPlugin().transformIndexHtml.handler(source);
   const image = new URL(attribute(html, "og:image"));
-  assert.equal(image.origin, "https://msg2.mjsec.kr");
+  assert.equal(image.origin, "https://msgctf.kr");
   assert.equal(image.pathname, SHARE_IMAGE.path);
   assert.match(image.searchParams.get("v"), /^[a-f0-9]{12}$/);
   assert.equal(attribute(html, "og:image"), attribute(html, "og:image:secure_url"));
