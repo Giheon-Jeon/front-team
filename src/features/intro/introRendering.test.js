@@ -69,6 +69,27 @@ test("개요 다음에 참가 신청을 배치하고 현장 안내는 부스 뒤
     "sponsors",
   ]);
 });
+
+test("후원사는 HSPACE, 시야인사이트, 몬스터 에너지 순서로 표시한다", () => {
+  const sponsors = main.match(/<section id="sponsors"[\s\S]*?<\/section>/)?.[0];
+  assert.ok(sponsors);
+  const names = [...sponsors.matchAll(/<img\b[^>]*alt="([^"]+)"/g)]
+    .map((match) => match[1]);
+  assert.deepEqual(names, ["HSPACE", "시야인사이트", "MONSTER ENERGY"]);
+});
+
+test("모바일 후원 배치는 마지막 몬스터 에너지만 전체 너비를 사용한다", () => {
+  const css = readFileSync(new URL("./intro.css", import.meta.url), "utf8");
+  const fullRowSponsors = [];
+  postcss.parse(css).walkRules((rule) => {
+    if (!rule.selector.startsWith(".msg-intro .sponsor--")) return;
+    rule.walkDecls("grid-column", (decl) => {
+      if (decl.value === "1 / -1") fullRowSponsors.push(rule.selector);
+    });
+  });
+  assert.deepEqual(fullRowSponsors, [".msg-intro .sponsor--monster"]);
+});
+
 test("신청과 현장 안내, 상세 안내와 FAQ에 무료 참가비를 표시한다", () => {
   assert.match(main, /참가비 무료/);
   assert.match(main, /<dt>참가비<\/dt><dd>무료<\/dd>/);
