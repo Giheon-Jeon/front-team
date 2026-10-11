@@ -84,14 +84,15 @@ test("상단 장소 안내에 도로명 주소와 카카오맵, 네이버지도 
   }
 });
 
-test("장소 안내는 다람쥐 대신 한 번만 표시하고 출구 번호나 주차 정보를 임의로 넣지 않는다", () => {
+test("참가 규모 아래에 대회 장소를 표시하고 주소와 교통 안내는 오시는 길에 모은다", () => {
   const copy = overview.match(/<div class="overview-copy"[\s\S]*?<\/dl>/)?.[0];
   const summary = overview.match(/<aside class="venue-summary"[\s\S]*?<\/aside>/)?.[0];
   assert.ok(copy);
   assert.ok(summary);
-  assert.match(copy, /일정/);
-  assert.match(copy, /참가 규모/);
-  assert.ok(!copy.includes(eventConfig.venue));
+  const labels = [...copy.matchAll(/<dt>([^<]+)<\/dt>/g)].map((match) => match[1]);
+  assert.deepEqual(labels, ["일정", "참가 규모", "대회 장소"]);
+  assert.match(copy, /<dt>대회 장소<\/dt><dd>교원챌린지홀 2층<\/dd>/);
+  assert.ok(!copy.includes(eventConfig.venueAddress));
   assert.equal(overview.split(eventConfig.venueAddress).length - 1, 1);
   assert.match(summary, /1호선 종각역/);
   assert.match(summary, /도보 2분/);
@@ -127,9 +128,17 @@ test("상단 지도는 확정 주소의 공유 지도를 사용하고 지도 밖
   const addressToken = mapSpec.match(/!2z([^!]+)/)?.[1];
   assert.equal(Buffer.from(addressToken, "base64").toString("utf8"), "서울특별시 종로구 우정국로 6");
   assert.ok(overview.includes(`src="${eventConfig.venueMapEmbedUrl}"`));
-  assert.match(overview, /<\/iframe><\/div><p class="venue-name">교원챌린지홀 2층<\/p>/);
+  assert.match(overview, /<\/iframe><\/div><div class="venue-details"><div class="venue-location"><p class="venue-name">교원챌린지홀 2층<\/p>/);
   assert.match(overview, /<p class="venue-transit">1호선 종각역에서 도보 2분<\/p>/);
   assert.equal((overview.match(/<iframe\b/g) || []).length, 1);
+});
+
+test("오시는 길은 장소와 교통 안내를 나눠 배치하고 필요한 내용을 지도 밖에서 제공한다", () => {
+  assert.match(overview, /class="venue-location"><p class="venue-name">[^<]+<\/p><p class="venue-address">[^<]+<\/p><\/div>/);
+  assert.match(overview, /class="venue-access"><p class="venue-transit">[^<]+<\/p><nav class="venue-map-links"/);
+  assert.match(overview, /title="교원챌린지홀 주변 도로와 행사장 위치 지도"/);
+  assert.match(overview, /loading="lazy"/);
+  assert.equal((overview.match(/class="venue-map-links"/g) || []).length, 1);
 });
 
 test("장소 확정과 별개인 현장 운영 정보는 확정된 것처럼 안내하지 않는다", () => {

@@ -32,6 +32,10 @@ export default function EventOverview() {
                 75팀, 150명 <span>2인 1팀</span>
               </dd>
             </div>
+            <div>
+              <dt>대회 장소</dt>
+              <dd>{eventConfig.venue}</dd>
+            </div>
           </dl>
         </div>
         <VenueSummary />
