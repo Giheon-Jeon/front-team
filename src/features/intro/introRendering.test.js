@@ -84,6 +84,11 @@ test("FAQ는 문제 풀이에 AI를 사용할 수 있다고 명확히 안내한�
   assert.doesNotMatch(faq, /최종 운영규정|팀 밖 협업|자동화 도구/);
 });
 
+test("공개 경기 규칙에는 기획 단계의 검토 요청 문구를 표시하지 않는다", () => {
+  assert.match(guide, /<h2 id="rules-title">경기 규칙<\/h2>/);
+  assert.doesNotMatch(guide, /현재 기획 기준|공개 전 최종 운영규정 확인이 필요/);
+});
+
 test("신청 자격과 내부, 외부 선발 기준을 유지한다", () => {
   for (const html of [main, guide]) {
     assert.match(html, /대회 당일 만 19세 이상인 학부 재학생·휴학생/);

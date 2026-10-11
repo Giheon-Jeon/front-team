@@ -158,9 +158,6 @@ export default function IntroGuidePage() {
         aria-labelledby="rules-title"
       >
         <h2 id="rules-title">경기 규칙</h2>
-        <p className="document-note">
-          현재 기획 기준이며 공개 전 최종 운영규정 확인이 필요합니다
-        </p>
         <details className="rule-detail">
           <summary>보드와 문제 선택</summary>
           <div>
