@@ -5,7 +5,7 @@ const venueMapQuery = encodeURIComponent(venueAddress);
 export const eventConfig = Object.freeze({
   event: { date: "2026-11-08", startsAt: "2026-11-08T10:00:00+09:00" },
   registrationPeriod: "10월 12일 ~ 10월 25일",
-  registrationUrl: "https://forms.gle/mZQoNZkUM5mSj7XE6",
+  registrationUrl: "https://hspace.io/u/2026-msgctf",
   contactEmail: "msgctf@gmail.com",
   venue: `${venueName} 2층`,
   venueAddress,
