@@ -143,16 +143,22 @@ test("메인과 상세 안내의 150만원 시상과 외부 3위 10만원이 일
     /외부 트랙<\/th><td>50만원<\/td><td>30만원<\/td><td>10만원<\/td>/,
   );
 });
-test("로그인은 기존 경로를 사용하고 참가 신청은 지정한 폼을 새 창으로 연다", () => {
+test("로그인은 기존 경로를 사용하고 참가 신청은 HSPACE 주소를 새 창으로 연다", () => {
   for (const html of [main, guide]) {
     assert.match(html, /class="header-login" href="\/login"[^>]*>LOGIN<\/a>/);
     assert.doesNotMatch(html, /aria-disabled="true"|LOGIN 준비 중/);
     for (const tag of html.match(/<a\b[^>]*>/g)) {
       if (tag.includes('target="_blank"'))
         assert.match(tag, /rel="noopener noreferrer"/);
-      if (tag.includes('aria-label="참가 신청 새 창"'))
-        assert.match(tag, /href="https:\/\/forms.gle\/mZQoNZkUM5mSj7XE6"/);
     }
+    const applyLinks = html.match(/<a\b[^>]*aria-label="참가 신청 새 창"[^>]*>/g) || [];
+    assert.ok(applyLinks.length > 0, "참가 신청 버튼이 있어야 한다");
+    for (const tag of applyLinks) {
+      assert.match(tag, /href="https:\/\/hspace\.io\/u\/2026-msgctf"/);
+      assert.match(tag, /target="_blank"/);
+      assert.match(tag, /rel="noopener noreferrer"/);
+    }
+    assert.doesNotMatch(html, /href="https:\/\/(?:forms\.gle|docs\.google\.com\/forms)/);
     assert.doesNotMatch(html, /<form|<dialog|javascript:/);
   }
   assert.doesNotMatch(guide, /<iframe/);
