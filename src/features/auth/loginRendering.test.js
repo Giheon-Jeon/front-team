@@ -70,6 +70,35 @@ test("로그인 오류는 입력창과 연결된 일반 문단으로 표시하�
   assert.doesNotMatch(pageRules, /overflow: hidden|100vw|scale\(|backdrop-filter|background-plaza\.png/);
 });
 
+test("자동채움은 유지하면서 브라우저 배경이 로그인 장식을 가리지 않게 한다", () => {
+  const html = render();
+  assert.match(html, /autoComplete="username"/i);
+  assert.match(html, /autoComplete="current-password"/i);
+  assert.doesNotMatch(html, /autoComplete="(?:off|new-password)"/i);
+
+  const css = readFileSync(new URL("./components/LoginScreen.module.css", import.meta.url), "utf8");
+  const autofill = css.match(/\.field:is\(:autofill, :-webkit-autofill\) \{([^}]+)\}/);
+  assert.ok(autofill, "표준 및 WebKit 자동채움 상태를 모두 처리해야 한다");
+  assert.match(autofill[1], /appearance:\s*none\s*;/);
+  assert.match(autofill[1], /-webkit-background-clip:\s*text\s*;/);
+  assert.match(autofill[1], /\n\s*background-clip:\s*text\s*;/);
+  assert.match(autofill[1], /-webkit-text-fill-color:\s*#613d15\s*;/);
+  assert.match(autofill[1], /caret-color:\s*#613d15\s*;/);
+  assert.doesNotMatch(autofill[1], /box-shadow|transition|animation|text-fill-color:\s*transparent/);
+});
+
+test("고대비 모드에서는 자동채움 글자와 커서에 시스템 색상을 적용한다", () => {
+  const css = readFileSync(new URL("./components/LoginScreen.module.css", import.meta.url), "utf8");
+  const forcedColors = css.split("@media (forced-colors: active)")[1];
+  const autofill = forcedColors.match(/\.field:is\(:autofill, :-webkit-autofill\) \{([^}]+)\}/);
+  assert.ok(autofill, "고대비 모드에는 별도 자동채움 규칙이 있어야 한다");
+  assert.match(autofill[1], /-webkit-background-clip:\s*border-box\s*;/);
+  assert.match(autofill[1], /\n\s*background-clip:\s*border-box\s*;/);
+  assert.match(autofill[1], /-webkit-text-fill-color:\s*CanvasText\s*;/);
+  assert.match(autofill[1], /caret-color:\s*CanvasText\s*;/);
+  assert.doesNotMatch(autofill[1], /forced-color-adjust:\s*none/);
+});
+
 test("원래 로그인 장식과 글꼴을 재사용하되 큰 PNG 배경과 외부 글꼴 요청은 되살리지 않는다", () => {
   const root = new URL("../../../", import.meta.url);
   const assets = {
