@@ -1,5 +1,14 @@
 # MSG CTF 플랫폼 - 통합 기획/API 명세서
 
+## 2026년 10월 12일 접근 정책
+
+홍보페이지, 참가 안내, 로그인만 비로그인으로 접근할 수 있습니다
+게임과 관리자 화면은 서버의 로그인 확인이 성공한 뒤에만 코드와 데이터를 읽습니다
+관리자 권한은 서버에서 받은 role로 확인하며 브라우저에 저장된 role은 사용하지 않습니다
+보드 배치, 카드 목록, KoTH 목록, 순위와 대회 타이머 API도 Bearer 인증이 필요합니다
+로그인, 토큰 갱신, 상태 점검과 별도 인증을 사용하는 채점 서버 연동은 유지합니다
+이 정책이 아래 과거 문서의 인증 불필요 안내보다 우선합니다
+
 > **2026-09-28 갱신 요약** (각 절의 "2026-09-28" 표시 참고)
 >
 > - **관리자 API(백엔드 #81~#85)**: 말 위치 이동/칸 상태 수정 main 머지, 칸 번호 **1~36**(0번 칸 없음), OPENED/CLEARED는 그 칸에 연 문제가 있어야 함(없으면 400), 이벤트 로그 type **11종**(`DICE_ADJUSTED`/`BOARD_POSITION_MOVED`/`CELL_STATUS_CHANGED` 추가), severity **4종**(`ERROR` 없음 → `CRITICAL`), 리소스 응답 `account_name`/`instance_quota` 삭제 + `provider`/`scope_id` 추가, null=미수집, 503 `SCHEDULER_UNAVAILABLE`. → 8절
@@ -271,7 +280,7 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 
 **주사위 연속 사용(2026-09-14)**: 보유한 최대 3회는 문제 선택 후 대기 없이 연속 사용한다. 문제의 15분 보상 타이머는 굴리기를 막지 않으므로 `timer_running`과 `can_roll`은 동시에 true일 수 있다. 추가 소비로 `next_dice_reset_at`을 미루지 않는다.
 
-인증: `GET /board`, `GET /board/chance/catalog`만 불필요, 나머지 전부 Bearer 필요.
+인증: 모든 보드 API에 Bearer 필요.
 
 > **이 절은 최신 보드 계약 기준으로 갱신되었다.** 굴림 -> 확정 2단계 흐름, 찬스카드 폐기, `cell_states`, 룰렛칸 2개를 반영한다. `POST` 쓰기 계열은 전부 `Idempotency-Key` 헤더(`<이름>-<UUID>`) 필수, 이동/굴림 계열은 팀장만.
 
@@ -377,7 +386,7 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 
 ## 4. 리더보드 페이지
 
-인증 불필요.
+Bearer 인증 필요.
 
 | Method | URL | 설명 |
 |---|---|---|
@@ -398,11 +407,11 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 
 | Method | URL | 설명 | 인증 | 백엔드 |
 |---|---|---|---|---|
-| GET | `/ranking` | 전체 팀 순위(페이지네이션) | 불필요 | **완료** |
+| GET | `/ranking` | 전체 팀 순위(페이지네이션) | Bearer | **완료** |
 | GET | `/ranking/me` | 내 팀 순위 | Bearer | **완료** |
 | GET | `/ranking/member` | 개인 순위(제오파디만) | Bearer | **완료** |
 
-> **Notion 갱신(2026-08-27~29)으로 구 README의 🔴 이슈 3개가 전부 해소됨**: `/ranking`은 인증 불필요로 확정, `/ranking/me`는 비표준 `team:` 헤더 -> **표준 Bearer**로 변경, `/ranking/member`는 완전 스펙화. 전부 밴 팀 제외 + 0솔브 팀 포함.
+> **Notion 갱신(2026-08-27~29)으로 구 README의 🔴 이슈 3개가 전부 해소됨**: `/ranking/me`는 비표준 `team:` 헤더 -> **표준 Bearer**로 변경, `/ranking/member`는 완전 스펙화. 전부 밴 팀 제외 + 0솔브 팀 포함. 전체 순위도 2026년 10월 12일부터 Bearer 인증 필요.
 > **2026-09-03 재갱신**: 3개 엔드포인트 전부 백엔드 상태 **완료**로 전환(정렬/동점 처리 기준 문서도 같이 보강됨, 아래 각 항목의 정렬 설명이 그 내용). 필드 자체는 변경 없음.
 
 - `GET /ranking` - Query `page`(기본 1), `size`(기본 20, 최대 100) -> `{ rankings: [{ rank, team_id, team_name, team_score, mileage, last_solved_at }], total_count, page, size }`. 정렬: `team_score DESC -> last_solved_at ASC -> team_id ASC`. `team_score` = 제오파디 + KOTH. `last_solved_at` = 제오파디 `MAX(solves.solved_at)`, 없으면 KOTH `MIN(koth_solves.solved_at)`, 둘 다 없으면 null(동점 시 맨 뒤). **밴 팀 제외**(0-6절), **0솔브 팀 포함**. 팀 없으면 `rankings: []`.
@@ -435,7 +444,7 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 
 ## 7. 타이머 페이지
 
-인증 불필요.
+Bearer 인증 필요.
 
 | Method | URL | 설명 |
 |---|---|---|
@@ -565,7 +574,7 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 
 ## 9. KOTH 페이지
 
-인증: `GET /koth/clubs`, `GET /koth/clubs/{club_id}`만 불필요, 나머지 Bearer 필요.
+인증: 모든 KoTH 참가자 API에 Bearer 필요. 채점 서버 연동은 별도 인증 유지.
 
 | Method | URL | 설명 |
 |---|---|---|
