@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
-import { Route, Routes } from "react-router-dom";
-import OpenChallengesPage from "../features/challenges/pages/OpenChallengesPage.jsx";
+import { Navigate, Route, Routes } from "react-router-dom";
+import AuthenticatedRoute from "./AuthenticatedRoute.jsx";
 import AdminRoute from "./AdminRoute.jsx";
 import RouteLoadBoundary from "./RouteLoadBoundary.jsx";
 import { ROUTES } from "./routePaths.js";
@@ -18,6 +18,9 @@ const BoardPage = lazy(() => {
 });
 const ChallengeDetailPage = lazy(
   () => import("../features/challenges/pages/ChallengeDetailPage.jsx"),
+);
+const OpenChallengesPage = lazy(
+  () => import("../features/challenges/pages/OpenChallengesPage.jsx"),
 );
 const LeaderboardPage = lazy(
   () => import("../features/leaderboard/pages/LeaderboardPage.jsx"),
@@ -76,11 +79,10 @@ const SignatureClubPage = lazy(
   () => import("../features/signatures/pages/SignatureClubPage.jsx"),
 );
 
-// TODO: 참가자 라우트 가드(로그인 안 한 상태에서 /board 등 직접 접근)는 토큰
-// 저장 방식이 정해지면 추가. 관리자 라우트는 AdminRoute로 막아뒀다(아래).
+// 홍보와 참가 안내, 로그인 외에는 서버의 로그인 확인을 통과한 뒤에만 연다
 export default function AppRoutes() {
   useRouteTitle();
-  usePageResources();
+  usePageResources({ gameAllowed: false });
   return (
     <RouteLoadBoundary>
     <Suspense
@@ -105,6 +107,7 @@ export default function AppRoutes() {
           <Route path={ROUTES.introGuide} element={<IntroGuidePage />} />
         </Route>
         <Route path="/login" element={<LoginPage />} />
+        <Route element={<AuthenticatedRoute />}>
         <Route path={ROUTES.board} element={<BoardPage />} />
         {import.meta.env.DEV && <Route path={ROUTES.lineRailPreview} element={<LineRailPreviewPage />} />}
         <Route path={ROUTES.openChallenges} element={<OpenChallengesPage />} />
@@ -213,6 +216,8 @@ export default function AppRoutes() {
             </AdminRoute>
           }
         />
+        </Route>
+        <Route path="*" element={<Navigate to={ROUTES.intro} replace />} />
       </Routes>
     </Suspense>
     </RouteLoadBoundary>
