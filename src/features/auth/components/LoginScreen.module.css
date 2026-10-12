@@ -201,6 +201,15 @@
   opacity: 0.85;
 }
 
+/* 자동채움 배경이 원본 입력창 장식을 덮지 않도록 글자 영역에만 그린다 */
+.field:is(:autofill, :-webkit-autofill) {
+  appearance: none;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: #613d15;
+  caret-color: #613d15;
+}
+
 .field:focus-visible {
   outline: 2px solid #8a5728;
   outline-offset: 3px;
@@ -341,6 +350,12 @@
   }
   .field {
     padding-inline: 12px;
+  }
+  .field:is(:autofill, :-webkit-autofill) {
+    -webkit-background-clip: border-box;
+    background-clip: border-box;
+    -webkit-text-fill-color: CanvasText;
+    caret-color: CanvasText;
   }
   .loginButton .srOnly {
     position: static;
