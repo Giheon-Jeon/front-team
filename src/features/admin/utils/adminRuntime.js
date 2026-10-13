@@ -51,7 +51,7 @@ export function buildDerivedSettings(draft, secrets) {
     for (const row of container.env) {
       const name = row.name.trim();
       if (!/^[A-Z_][A-Z0-9_]{0,63}$/.test(name)) throw new Error(`${container.name}: 환경변수 이름을 확인해주세요`);
-      if (name === "FLAG" || /SECRET|TOKEN|PASSWORD|PASSWD|PRIVATE_KEY|API_KEY|CREDENTIAL/.test(name)) throw new Error(`${name}은 비밀값 연결에서 설정해주세요`);
+      if (/SECRET|TOKEN|PASSWORD|PASSWD|(?:^|_)PASS(?:_|$)|PRIVATE_KEY|API_KEY|CREDENTIAL|SIGNING_KEY|CARTRIDGE_KEY|(?:^|_)FLAG$/.test(name)) throw new Error(`${name}은 비밀값 연결에서 설정해주세요`);
       if (Object.hasOwn(env, name)) throw new Error(`${container.name}: ${name}이 중복됐습니다`);
       env[name] = row.value;
     }

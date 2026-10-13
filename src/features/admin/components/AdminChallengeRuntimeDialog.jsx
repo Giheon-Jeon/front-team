@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { activateChallengeRelease, deriveChallengeRelease, getChallengeReleases, getChallengeRuntimeSecrets, registerChallengeRelease, registerChallengeRuntimeSecret } from "../../../api/admin.js";
+import { activateChallengeRelease, deriveChallengeRelease, getChallengeReleases, getChallengeRuntimeSecrets, importChallengeEnvironmentFile, registerChallengeRelease, registerChallengeRuntimeSecret } from "../../../api/admin.js";
 import { isSuccess } from "../../../utils/response.js";
 import { toKst } from "../../../utils/time.js";
 import useAdminResource from "../hooks/useAdminResource.js";
 import { buildDerivedSettings, parseReleaseFile, releaseRequirements, releaseSettingsDraft, validateRuntimeSecret } from "../utils/adminRuntime.js";
 import AdminDialog from "./AdminDialog.jsx";
+import AdminEnvironmentFileImporter from "./AdminEnvironmentFileImporter.jsx";
 import { AdminBadge, AdminStatusMessage } from "./AdminLayout.jsx";
 
 const BUTTON = "rounded border border-admin-divider px-3 py-1.5 text-sm disabled:opacity-50";
@@ -144,6 +145,12 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
     if (saved) setReleaseId(saved.release_id ?? "");
   }
 
+  async function saveEnvironmentFile(sourceId, body) {
+    const saved = await mutate(() => importChallengeEnvironmentFile(challenge.challenge_id, sourceId, body), ".env 설정 버전을 저장했습니다 내용을 확인한 뒤 이 버전 사용을 선택해주세요");
+    if (saved) setReleaseId(saved.release_id ?? "");
+    return saved;
+  }
+
   return <AdminDialog title={challenge.title + " · 실행 설정"} onClose={onClose} busy={busy} wide>
     <div className="space-y-5 font-song-myung text-sm">
       <div className="flex items-center justify-between gap-3">
@@ -174,6 +181,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
               <h4 className="mb-2 font-kode-mono">{container.name}</h4>
               <p className="break-all font-kode-mono text-xs">{container.image_ref}</p>
               <p className="mt-2">포트 {container.ports.map((port) => port.port + (port.public ? " (공개)" : " (내부)")).join(", ") || "없음"}</p>
+              {Object.values(container.env_rules ?? {}).some((rule) => rule.required) && <p className="mt-2 text-admin-muted">필수 항목: {Object.entries(container.env_rules).filter(([, rule]) => rule.required).map(([name]) => name).join(", ")}</p>}
               <h5 className="mb-1 mt-3">릴리스 주입 환경변수</h5>
               {Object.keys(container.env ?? {}).length === 0 ? <p className="text-admin-muted">릴리스에서 추가로 주입하는 일반 환경변수가 없습니다 이미지 기본값은 별도로 확인해주세요</p> : <table className="w-full text-left"><thead><tr><th className="py-1 font-normal">이름</th><th className="py-1 font-normal">값</th></tr></thead><tbody>{Object.entries(container.env).map(([key, envValue]) => <tr key={key}><td className="py-1 font-kode-mono">{key}</td><td className="break-all py-1 font-kode-mono">{envValue}</td></tr>)}</tbody></table>}
               <h5 className="mb-1 mt-3">비밀값 연결</h5>
@@ -183,7 +191,13 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
               {!selected.is_deployable && <p className="mb-2 text-admin-failed">현재 계약으로 실행할 수 없는 릴리스입니다</p>}
               {confirming ? <div className="space-y-2"><p>새로 생성하는 인스턴스부터 버전 {selected.version}을 사용합니다 기존 인스턴스는 생성 당시 버전을 유지합니다</p><button type="button" className={BUTTON} disabled={busy || loading} onClick={() => mutate(() => activateChallengeRelease(challenge.challenge_id, selected.release_id), "사용할 릴리스를 변경했습니다")}>이 버전 사용 확인</button><button type="button" className={BUTTON + " ml-2"} disabled={busy} onClick={() => setConfirming(false)}>취소</button></div> : <button type="button" className={BUTTON} disabled={busy || !selected.is_deployable || loading || selected.containers.some((container) => container.secret_bindings?.some((binding) => binding.status === "missing"))} onClick={() => setConfirming(true)}>이 버전 사용</button>}
             </div>}
-            {selected.is_deployable && <RuntimeSettingsEditor key={selected.release_id} release={selected} secrets={runtime.data.secrets ?? []} busy={busy} onSave={(settings) => saveDerived(selected.release_id, settings)}/>}
+            {selected.is_deployable && <>
+              <AdminEnvironmentFileImporter key={selected.release_id} challengeId={challenge.challenge_id} release={selected}
+                secrets={runtime.data.secrets ?? []} busy={busy} onSave={(body) => saveEnvironmentFile(selected.release_id, body)}/>
+              <details className="mt-4"><summary className="cursor-pointer">직접 항목 편집</summary>
+                <RuntimeSettingsEditor key={selected.release_id} release={selected} secrets={runtime.data.secrets ?? []} busy={busy} onSave={(settings) => saveDerived(selected.release_id, settings)}/>
+              </details>
+            </>}
           </>}
         </section>
         <section className="rounded-lg border border-admin-divider p-4">

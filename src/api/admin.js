@@ -216,6 +216,14 @@ export function deriveChallengeRelease(challengeId, releaseId, settings) {
   return apiClient.post(`/admin/challenges/${challengeId}/releases/${releaseId}/derive`, settings, MUTATION_CONFIG);
 }
 
+export function previewChallengeEnvironmentFile(challengeId, releaseId, body) {
+  return apiClient.post(`/admin/challenges/${challengeId}/releases/${releaseId}/environment_files/preview`, body, MUTATION_CONFIG);
+}
+
+export function importChallengeEnvironmentFile(challengeId, releaseId, body) {
+  return apiClient.post(`/admin/challenges/${challengeId}/releases/${releaseId}/environment_files/import`, body, MUTATION_CONFIG);
+}
+
 export function getChallengeRuntimeSecrets(challengeId, config) {
   return apiClient.get(`/admin/challenges/${challengeId}/runtime-secrets`, config);
 }
