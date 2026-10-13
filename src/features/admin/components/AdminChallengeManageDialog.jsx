@@ -1,0 +1,47 @@
+import { useState } from "react";
+import AdminDialog from "./AdminDialog.jsx";
+import AdminTabs from "./AdminTabs.jsx";
+import AdminChallengeSettingsDialog from "./AdminChallengeSettingsDialog.jsx";
+import AdminChallengeRuntimeDialog from "./AdminChallengeRuntimeDialog.jsx";
+import { AdminBadge } from "./AdminLayout.jsx";
+import styles from "./AdminWorkspace.module.css";
+
+export default function AdminChallengeManageDialog({ challenge, initialSection = "problem", onClose, onChanged }) {
+  const [section, setSection] = useState(initialSection);
+  const [opened, setOpened] = useState(() => new Set([initialSection]));
+  const [title, setTitle] = useState(challenge.title);
+  const [problemBusy, setProblemBusy] = useState(false);
+  const [deploymentBusy, setDeploymentBusy] = useState(false);
+  const busy = problemBusy || deploymentBusy;
+
+  function selectSection(next) {
+    if (busy) return;
+    setOpened((current) => new Set([...current, next]));
+    setSection(next);
+  }
+
+  async function savedProblem(data) {
+    setTitle(data.title);
+    return onChanged?.();
+  }
+
+  return <AdminDialog title={title} onClose={onClose} busy={busy} variant="workspace">
+    <div className={styles.settingSummary}>
+      <span className={styles.mono}>{challenge.challenge_slug || "저장소 미연결"}</span>
+      <AdminBadge tone={challenge.is_published ? "good" : "neutral"}>{challenge.is_published ? "공개" : "비공개"}</AdminBadge>
+    </div>
+    <AdminTabs idPrefix="challenge-workspace" label="설정 구분" variant="sections" value={section} onChange={selectSection} disabled={busy}
+      items={[
+        { id: "problem", label: "문제 설정", description: "제목 · 지문 · 채점 플래그" },
+        { id: "deployment", label: "배포 설정", description: "버전 · 참가자 파일 · 실행 환경" },
+      ]}/>
+    <section role="tabpanel" id="challenge-workspace-panel-problem" aria-labelledby="challenge-workspace-tab-problem" hidden={section !== "problem"} className={styles.panel}>
+      {opened.has("problem") && <AdminChallengeSettingsDialog challenge={challenge} embedded active={section === "problem"}
+        onBusyChange={setProblemBusy} onSaved={savedProblem} onOpenDeployment={() => selectSection("deployment")}/>}
+    </section>
+    <section role="tabpanel" id="challenge-workspace-panel-deployment" aria-labelledby="challenge-workspace-tab-deployment" hidden={section !== "deployment"} className={styles.panel}>
+      {opened.has("deployment") && <AdminChallengeRuntimeDialog challenge={challenge} embedded
+        onBusyChange={setDeploymentBusy} onChanged={onChanged}/>}
+    </section>
+  </AdminDialog>;
+}

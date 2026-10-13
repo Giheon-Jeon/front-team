@@ -87,6 +87,13 @@
   background: #8b6230;
   border-radius: 3px 3px 0 0;
 }
+.sectionTabs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+.sectionTabs button { min-width: 0; padding: 16px 18px; border: 1px solid var(--admin-line); border-radius: 9px; background: #fff; text-align: left; font: inherit; font-weight: 600; color: var(--admin-subtle); cursor: pointer; }
+.sectionTabs button[aria-selected="true"] { border-color: #8b6230; background: #f7f0e3; color: #67451f; box-shadow: inset 3px 0 #8b6230; }
+.sectionTabs button:disabled { cursor: default; opacity: .6; }
+.tabDescription { display: block; margin-top: 4px; color: var(--admin-subtle); font-size: 12px; font-weight: 400; }
+.scopeNote { margin: 0 0 14px; color: var(--admin-subtle); font-size: 12px; }
+.relatedSetting { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 12px; border-top: 1px solid var(--admin-line); margin-top: 28px; padding-top: 18px; font-size: 13px; color: var(--admin-subtle); }
 .toolbar {
   display: flex;
   align-items: end;
@@ -180,7 +187,7 @@
 .fileLink { text-decoration: underline; text-underline-offset: 3px; }
 .filePagination { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 16px; }
 .table td.deploymentCell { min-width: 255px; white-space: normal; }
-.deploymentSummary { display: grid; gap: 3px; margin-top: 9px; font-size: 12px; color: var(--admin-subtle); line-height: 1.6; }
+.deploymentSummary { display: grid; gap: 3px; font-size: 12px; color: var(--admin-subtle); line-height: 1.6; }
 .environmentSummary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding: 18px; margin-bottom: 24px; background: #f7f5f0; border: 1px solid var(--admin-line); border-radius: 9px; }
 .environmentSummary dt { color: var(--admin-subtle); font-size: 12px; margin-bottom: 7px; }
 .environmentSummary dd { font-size: 13px; line-height: 1.7; }
@@ -191,6 +198,14 @@
 .releaseFilesForm .select { width: 100%; min-width: 0; }
 .releaseFilesForm .panelIntro, .releaseFilesForm .fileNotice { margin: 0; }
 .releaseFilesSummary { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 18px; margin-bottom: 24px; border: 1px solid var(--admin-line); border-radius: 9px; }
+.containerValues summary { padding: 12px 16px; cursor: pointer; font-size: 13px; color: var(--admin-subtle); }
+.fileChoices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; min-width: 0; }
+.fileChoices legend { margin-bottom: 12px; font-weight: 600; }
+.fileChoices .fileChoice, .fileChoices .fileChoiceSelected { display: flex; align-items: start; gap: 10px; min-width: 0; padding: 16px 14px; border: 1px solid var(--admin-line); border-radius: 9px; background: #fff; cursor: pointer; }
+.fileChoices .fileChoiceSelected { border-color: #8b6230; background: #fcf7ed; }
+.fileChoices input { margin-top: 5px; accent-color: #8b6230; flex-shrink: 0; }
+.fileChoices strong { font-weight: 550; }
+.fileChoices:disabled label { cursor: default; opacity: .6; }
 @media (max-width: 767px) {
   .workspace main { padding: 18px !important; }
   .toolbar { gap: 10px; }
@@ -202,6 +217,10 @@
   .dialogBody { padding: 18px 16px; }
   .tabs { gap: 18px; margin-bottom: 18px; }
   .tabs button { font-size: 13px; }
+  .sectionTabs { gap: 8px; margin-bottom: 20px; }
+  .sectionTabs button { padding: 12px; }
+  .tabDescription { font-size: 11px; line-height: 1.6; }
+  .fileChoices { grid-template-columns: 1fr; }
   .versionBar { align-items: start; gap: 10px; }
   .versionBar label { width: 100%; }
   .versionBar .select { min-width: 0; width: 100%; }

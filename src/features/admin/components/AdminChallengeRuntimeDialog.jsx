@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { activateChallengeRelease, deriveChallengeRelease, getChallengeReleases, getChallengeRuntimeSecrets, importChallengeEnvironmentFile, importChallengeRepositoryEnvironment, registerChallengeRelease, registerChallengeRuntimeSecret, configureChallengeReleaseFiles } from "../../../api/admin.js";
 import AdminReleaseFilesEditor from "./AdminReleaseFilesEditor.jsx";
+import AdminCollectedFilesPanel, { RepositoryFilesDetails } from "./AdminCollectedFilesPanel.jsx";
+import AdminActiveFlagBindings from "./AdminActiveFlagBindings.jsx";
 import { isSuccess } from "../../../utils/response.js";
 import { toKst } from "../../../utils/time.js";
 import useAdminResource from "../hooks/useAdminResource.js";
@@ -78,6 +80,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
   const [panel, setPanel] = useState("overview");
   const [environmentMethod, setEnvironmentMethod] = useState("repository");
   const [showSecretHistory, setShowSecretHistory] = useState(false);
+  const [showFlagBindings, setShowFlagBindings] = useState(false);
   const focusSecret = useRef(false);
   const [name, setName] = useState("flag");
   const [value, setValue] = useState("");
@@ -193,9 +196,9 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
     {runtime.status === "success" && <>
       <div className={styles.versionBar}>
         {selected ? <>
-          <label>설정 버전
-            <select aria-label="설정 버전" className={styles.select} value={selected.release_id} disabled={busy}
-              onChange={(event) => { setReleaseId(event.target.value); setConfirming(false); setPanel("overview"); }}>
+          <label>배포 버전
+            <select aria-label="배포 버전" className={styles.select} value={selected.release_id} disabled={busy}
+              onChange={(event) => { setReleaseId(event.target.value); setConfirming(false); setShowFlagBindings(false); }}>
               {releases.map((release) => <option key={release.release_id} value={release.release_id}>버전 {release.version}{release.is_current ? " · 사용 중" : ""}</option>)}
             </select>
           </label>
@@ -213,9 +216,9 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
           onClick={() => mutate(() => activateChallengeRelease(challenge.challenge_id, selected.release_id), "새 인스턴스에 적용할 설정을 변경했습니다")}>이 버전 사용 확인</button>
         <button type="button" className={BUTTON + " ml-2"} disabled={busy} onClick={() => setConfirming(false)}>취소</button>
       </div>}
-      <AdminTabs idPrefix="runtime-settings" label="실행 설정 메뉴" value={panel} onChange={setPanel} disabled={busy}
-        items={[{ id: "overview", label: "설정 확인" }, { id: "files", label: "배포 파일" }, { id: "environment", label: "환경변수 수정" },
-          { id: "secrets", label: "비밀값 관리" }, { id: "image", label: "이미지 등록" }]}/>
+      <AdminTabs idPrefix="runtime-settings" label="배포 설정 메뉴" value={panel} onChange={setPanel} disabled={busy}
+        items={[{ id: "overview", label: "버전 정보" }, { id: "files", label: "참가자 파일" }, { id: "environment", label: "환경변수" },
+          { id: "secrets", label: "비밀값" }, { id: "image", label: "이미지 등록" }]}/>
 
       <section role="tabpanel" id="runtime-settings-panel-overview" aria-labelledby="runtime-settings-tab-overview" hidden={panel !== "overview"} className={styles.panel}>
         {selected ? <>
@@ -226,14 +229,16 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
           </dl>
           <div className={styles.releaseFilesSummary}><div><strong>참가자 파일</strong><span className={styles.secondary}>{fileLabel}</span></div>
             <button type="button" className={BUTTON} disabled={busy} onClick={() => setPanel("files")}>파일 설정</button></div>
-          <p className={styles.panelIntro}>컨테이너별 포트와 주입할 값입니다 비밀값은 저장된 이름과 버전으로 표시합니다</p>
+          <h3 className={styles.sectionTitle}>컨테이너</h3>
           {!selected.is_deployable && <p className="mb-4 text-admin-failed">현재 실행 계약으로 사용할 수 없는 버전입니다</p>}
           {selected.containers.map((container) => <section key={container.name} className={styles.containerCard}>
             <div className={styles.containerHeader}>
               <h3>{container.name}</h3>
               <span>포트 {container.ports.map((port) => port.port + (port.public ? " 공개" : " 내부")).join(" · ") || "없음"}</span>
             </div>
-            {Object.keys(container.env ?? {}).length + (container.secret_bindings ?? []).length === 0
+            <details className={styles.containerValues}>
+              <summary>환경변수 {Object.keys(container.env ?? {}).length}개 · 비밀값 {(container.secret_bindings ?? []).length}개</summary>
+              {Object.keys(container.env ?? {}).length + (container.secret_bindings ?? []).length === 0
               ? <p className={styles.empty}>추가로 주입하는 값이 없습니다</p>
               : <table className={styles.settingsTable} aria-label={container.name + " 환경변수"}>
                 <thead><tr><th>환경변수</th><th>값 또는 연결</th><th>구분</th></tr></thead>
@@ -250,8 +255,13 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
                   </tr>)}
                 </tbody>
               </table>}
+            </details>
           </section>)}
           <button type="button" className={BUTTON} disabled={busy || !selected.is_deployable} onClick={() => setPanel("environment")}>환경변수 수정</button>
+          {selected.is_current && <details className={styles.details} onToggle={(event) => setShowFlagBindings(event.currentTarget.open)}>
+            <summary>채점 플래그와 주입 값 비교</summary>
+            {showFlagBindings && <div className="mt-4"><AdminActiveFlagBindings challengeId={challenge.challenge_id} releaseVersion={selected.version}/></div>}
+          </details>}
           <details className={styles.details}>
             <summary>이미지·자원 상세</summary>
             <dl>
@@ -264,13 +274,17 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
               {selected.note && <><dt>메모</dt><dd>{selected.note}</dd></>}
             </dl>
           </details>
-        </> : <div className={styles.empty}><p className="mb-4">실행할 이미지가 있는 문제라면 CI에서 받은 릴리스를 먼저 등록해주세요</p>
-          <button type="button" className={BUTTON} onClick={() => setPanel("image")}>이미지 등록으로 이동</button></div>}
+        </> : <div className={styles.empty}><p className="mb-4">파일만 제공하는 문제는 수집된 ZIP을 확인할 수 있습니다 실행 환경이 필요하면 이미지를 등록해주세요</p>
+          <div className="flex flex-wrap justify-center gap-2">
+            <button type="button" className={BUTTON} onClick={() => setPanel("files")}>참가자 파일 보기</button>
+            <button type="button" className={BUTTON} onClick={() => setPanel("image")}>이미지 등록</button>
+          </div></div>}
       </section>
 
       <section role="tabpanel" id="runtime-settings-panel-files" aria-labelledby="runtime-settings-tab-files" hidden={panel !== "files"} className={styles.panel}>
         {panel === "files" && selected?.user_files && <AdminReleaseFilesEditor key={selected.release_id} challengeId={challenge.challenge_id} release={selected} busy={busy} onSave={saveReleaseFiles}/>}
-        {panel === "files" && !selected && <p className={styles.empty}>실행 이미지를 등록한 뒤 파일을 연결해주세요</p>}
+        {panel === "files" && selected && <RepositoryFilesDetails challengeId={challenge.challenge_id}/>}
+        {panel === "files" && !selected && <AdminCollectedFilesPanel challengeId={challenge.challenge_id}/>}
       </section>
 
       <section role="tabpanel" id="runtime-settings-panel-environment" aria-labelledby="runtime-settings-tab-environment" hidden={panel !== "environment"} className={styles.panel}>
@@ -295,7 +309,8 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
       </section>
 
       <section role="tabpanel" id="runtime-settings-panel-secrets" aria-labelledby="runtime-settings-tab-secrets" hidden={panel !== "secrets"} className={styles.panel}>
-        <p className={styles.panelIntro}>새 값을 저장해도 기존 설정의 연결은 유지됩니다 채점용 플래그 원문은 문제 설정의 ‘플래그’에서 확인할 수 있습니다</p>
+        <p className={styles.panelIntro}>이 문제의 비밀값 보관함입니다 각 배포 버전은 연결한 값의 버전을 유지합니다</p>
+        <p className={styles.helpText}>채점용 원문은 문제 설정 → 채점 플래그에서 확인할 수 있습니다</p>
         {storedSecrets.some((secret) => !secret.is_latest) && <label className="mb-3 flex items-center gap-2">
           <input type="checkbox" checked={showSecretHistory} onChange={(event) => setShowSecretHistory(event.target.checked)}/>이전 버전도 보기</label>}
         {visibleSecrets.length === 0 ? <p className={styles.empty}>저장된 비밀값이 없습니다</p> : <div className={styles.tableWrap}>

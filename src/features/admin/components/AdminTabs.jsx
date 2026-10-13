@@ -1,6 +1,6 @@
 import styles from "./AdminWorkspace.module.css";
 
-export default function AdminTabs({ idPrefix, label, items, value, onChange, disabled = false }) {
+export default function AdminTabs({ idPrefix, label, items, value, onChange, disabled = false, variant }) {
   function navigate(event, index) {
     const offsets = { ArrowRight: 1, ArrowLeft: -1 };
     let next;
@@ -12,10 +12,12 @@ export default function AdminTabs({ idPrefix, label, items, value, onChange, dis
     onChange(items[next].id);
     event.currentTarget.parentElement.querySelectorAll('[role="tab"]')[next]?.focus();
   }
-  return <div role="tablist" aria-label={label} className={styles.tabs}>
+  return <div role="tablist" aria-label={label} className={variant === "sections" ? styles.sectionTabs : styles.tabs}>
     {items.map((item, index) => <button key={item.id} type="button" role="tab"
       id={`${idPrefix}-tab-${item.id}`} aria-controls={`${idPrefix}-panel-${item.id}`}
       aria-selected={value === item.id} tabIndex={value === item.id ? 0 : -1} disabled={disabled}
-      onClick={() => onChange(item.id)} onKeyDown={(event) => navigate(event, index)}>{item.label}</button>)}
+      onClick={() => onChange(item.id)} onKeyDown={(event) => navigate(event, index)}>
+      {item.label}{item.description && <span className={styles.tabDescription}>{item.description}</span>}
+    </button>)}
   </div>;
 }

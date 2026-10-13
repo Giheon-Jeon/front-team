@@ -45,10 +45,17 @@ export default function AdminReleaseFilesEditor({ challengeId, release, busy, on
   return <>
     <AdminStatusMessage status={resource.status} error={resource.error} onRetry={resource.retry}/>
     {resource.status === "success" && <form onSubmit={save} className={styles.releaseFilesForm}>
-      <p className={styles.panelIntro}>설정 버전 {release.version} · 이미지 발행 {release.registry_revision}에 연결할 참가자 ZIP을 고릅니다</p>
-      <label>파일 연결 방식<select className={styles.select} value={mode} disabled={busy} onChange={(event) => changeMode(event.target.value)}>
-        <option value="MATCH_REVISION">이미지와 같은 발행본 자동 연결</option><option value="SELECTED">등록된 ZIP 직접 선택</option><option value="NONE">파일 없음</option>
-      </select></label>
+      <fieldset className={styles.fileChoices} disabled={busy}>
+        <legend>참가자에게 제공할 파일</legend>
+        {[
+          { value: "MATCH_REVISION", label: "같은 발행본", description: `이미지 발행 ${release.registry_revision}의 ZIP 자동 연결` },
+          { value: "SELECTED", label: "다른 ZIP 선택", description: "이 문제에 등록된 파일 중 선택" },
+          { value: "NONE", label: "파일 없음", description: "이 버전은 첨부파일을 제공하지 않음" },
+        ].map((choice) => <label key={choice.value} className={mode === choice.value ? styles.fileChoiceSelected : styles.fileChoice}>
+          <input type="radio" name="release-file-mode" value={choice.value} checked={mode === choice.value} onChange={() => changeMode(choice.value)}/>
+          <span><strong>{choice.label}</strong><span className={styles.secondary}>{choice.description}</span></span>
+        </label>)}
+      </fieldset>
       {mode === "SELECTED" && <label>참가자 ZIP<select className={styles.select} value={fileId} disabled={busy} onChange={(event) => { setFileId(event.target.value); requestKey.current = null; }}>
         <option value="">ZIP을 선택해주세요</option>{candidates.map((item) => <option key={item.file_id} value={item.file_id}>발행 {item.registry_revision} · {item.file_count}개 · {formatFileSize(item.file_size)} · {item.source_sha.slice(0, 8)}</option>)}
       </select></label>}
@@ -62,8 +69,9 @@ export default function AdminReleaseFilesEditor({ challengeId, release, busy, on
         : preview ? "같은 발행본은 첨부파일 없이 발행됐습니다" : "같은 발행번호의 파일이 아직 수집되지 않았습니다 수집되면 자동으로 연결됩니다"}</p>}
       {preview?.present && preview.registry_revision !== release.registry_revision && <p className={styles.fileNotice}>이미지와 ZIP의 발행번호가 다릅니다 이 이미지에 맞는 파일인지 확인해주세요</p>}
       {error && <p role="alert" className={styles.errorNotice}>{error}</p>}
-      <div className={styles.formFooter}><span className={styles.helpText}>새 설정 버전으로 저장한 뒤 ‘이 버전 사용’을 누르면 적용됩니다</span>
-        <button type="submit" className={styles.primary} disabled={busy || !release.is_deployable || !dirty || (mode === "SELECTED" && !preview)}>파일 연결을 새 버전으로 저장</button></div>
+      <p className={styles.helpText}>출제 저장소의 for_user 파일을 묶은 ZIP입니다 실행 중인 참가자는 생성 당시 버전의 파일을 계속 받습니다</p>
+      <div className={styles.formFooter}><span className={styles.helpText}>{dirty ? "저장 후 ‘이 버전 사용’을 누르면 새 인스턴스부터 적용됩니다" : "이 버전에 저장된 파일 설정입니다"}</span>
+        <button type="submit" className={styles.primary} disabled={busy || !release.is_deployable || !dirty || (mode === "SELECTED" && !preview)}>{busy ? "저장 중…" : "새 버전으로 저장"}</button></div>
     </form>}
   </>;
 }
