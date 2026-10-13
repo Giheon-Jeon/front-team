@@ -22,6 +22,15 @@ export function getAdminChallengeFiles(challengeId, config) {
   return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}/files`, config);
 }
 
+export function getAdminReleaseFiles(challengeId, releaseId, config) {
+  return getAdminChallengeFiles(challengeId, { ...config, params: { ...config?.params, release_id: releaseId } });
+}
+
+export function configureChallengeReleaseFiles(challengeId, releaseId, body, idempotencyKey) {
+  return apiClient.post(`/admin/challenges/${encodeURIComponent(challengeId)}/releases/${encodeURIComponent(releaseId)}/files`, body,
+    idKey("release-files", idempotencyKey));
+}
+
 export function getAdminChallengeRepositoryFiles(challengeId, config) {
   return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}/repository-files`, config);
 }
@@ -32,9 +41,7 @@ export function downloadAdminChallengeFile(challengeId, fileId, config) {
   });
 }
 
-// board.js createBoardIdempotencyKey와 동일한 패턴. 관리자 API 중에는 마일리지
-// 지급/회수만 Idempotency-Key 헤더가 필수(README 8절) - 재시도 시 호출부에서
-// 같은 키를 그대로 넘겨야 중복 지급이 막힌다.
+// 마일리지 지급·회수와 배포 파일 저장은 재시도할 때 같은 키를 넘긴다.
 export function createAdminIdempotencyKey(prefix) {
   const uuid =
     globalThis.crypto?.randomUUID?.() ??

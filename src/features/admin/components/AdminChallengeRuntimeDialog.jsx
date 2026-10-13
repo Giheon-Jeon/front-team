@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { activateChallengeRelease, deriveChallengeRelease, getChallengeReleases, getChallengeRuntimeSecrets, importChallengeEnvironmentFile, importChallengeRepositoryEnvironment, registerChallengeRelease, registerChallengeRuntimeSecret } from "../../../api/admin.js";
+import { activateChallengeRelease, deriveChallengeRelease, getChallengeReleases, getChallengeRuntimeSecrets, importChallengeEnvironmentFile, importChallengeRepositoryEnvironment, registerChallengeRelease, registerChallengeRuntimeSecret, configureChallengeReleaseFiles } from "../../../api/admin.js";
+import AdminReleaseFilesEditor from "./AdminReleaseFilesEditor.jsx";
 import { isSuccess } from "../../../utils/response.js";
 import { toKst } from "../../../utils/time.js";
 import useAdminResource from "../hooks/useAdminResource.js";
@@ -174,6 +175,17 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
     return saved;
   }
 
+  async function saveReleaseFiles(sourceId, body, key) {
+    const saved = await mutate(() => configureChallengeReleaseFiles(challenge.challenge_id, sourceId, body, key), "파일 연결을 새 버전으로 저장했습니다 ‘이 버전 사용’을 누르면 적용됩니다");
+    if (saved) { setReleaseId(saved.release_id); setPanel("files"); }
+    return saved;
+  }
+
+  const fileSummary = selected?.user_files;
+  const fileLabel = fileSummary?.status === "unavailable" ? "파일 연결 확인 필요"
+    : fileSummary?.file?.present ? `ZIP 발행 ${fileSummary.file.registry_revision} · 파일 ${fileSummary.file.file_count}개`
+    : fileSummary?.status === "pending" ? "같은 발행번호의 파일 수집 대기" : "파일 없음";
+
   const content = <>
     <AdminStatusMessage status={runtime.status} error={runtime.error} onRetry={runtime.retry}/>
     {error && <p role="alert" className="mb-4 text-admin-failed">{error}</p>}
@@ -195,13 +207,14 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
         <button type="button" className={BUTTON} onClick={runtime.retry} disabled={busy || loading}>새로고침</button>
       </div>
       {confirming && selected && <div className={styles.confirmation}>
-        <p className="mb-3">새 인스턴스부터 버전 {selected.version}을 사용합니다 기존 인스턴스와 초기화에는 생성 당시 버전이 유지됩니다</p>
+        <p className="mb-3">새 인스턴스부터 버전 {selected.version}의 이미지와 파일 연결을 사용합니다 실행 중인 인스턴스와 초기화에는 생성 당시 버전이 유지됩니다</p>
+        <p className="mb-3">참가자 파일: {fileLabel}</p>
         <button type="button" className={styles.primary} disabled={busy || loading}
           onClick={() => mutate(() => activateChallengeRelease(challenge.challenge_id, selected.release_id), "새 인스턴스에 적용할 설정을 변경했습니다")}>이 버전 사용 확인</button>
         <button type="button" className={BUTTON + " ml-2"} disabled={busy} onClick={() => setConfirming(false)}>취소</button>
       </div>}
       <AdminTabs idPrefix="runtime-settings" label="실행 설정 메뉴" value={panel} onChange={setPanel} disabled={busy}
-        items={[{ id: "overview", label: "설정 확인" }, { id: "environment", label: "환경변수 수정" },
+        items={[{ id: "overview", label: "설정 확인" }, { id: "files", label: "배포 파일" }, { id: "environment", label: "환경변수 수정" },
           { id: "secrets", label: "비밀값 관리" }, { id: "image", label: "이미지 등록" }]}/>
 
       <section role="tabpanel" id="runtime-settings-panel-overview" aria-labelledby="runtime-settings-tab-overview" hidden={panel !== "overview"} className={styles.panel}>
@@ -211,6 +224,8 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
             <div><dt>할당 자원</dt><dd>CPU {selected.resource_profile?.cpu_millicores}m · 메모리 {selected.resource_profile?.memory_mib}MiB<span>임시 저장 {selected.resource_profile?.ephemeral_storage_mib}MiB</span></dd></div>
             <div><dt>주입 설정</dt><dd>환경변수 {selected.containers.reduce((sum, item) => sum + Object.keys(item.env ?? {}).length, 0)}개 · 비밀값 {selected.containers.reduce((sum, item) => sum + (item.secret_bindings?.length ?? 0), 0)}개<span>이미지 발행 {selected.registry_revision}</span></dd></div>
           </dl>
+          <div className={styles.releaseFilesSummary}><div><strong>참가자 파일</strong><span className={styles.secondary}>{fileLabel}</span></div>
+            <button type="button" className={BUTTON} disabled={busy} onClick={() => setPanel("files")}>파일 설정</button></div>
           <p className={styles.panelIntro}>컨테이너별 포트와 주입할 값입니다 비밀값은 저장된 이름과 버전으로 표시합니다</p>
           {!selected.is_deployable && <p className="mb-4 text-admin-failed">현재 실행 계약으로 사용할 수 없는 버전입니다</p>}
           {selected.containers.map((container) => <section key={container.name} className={styles.containerCard}>
@@ -251,6 +266,11 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
           </details>
         </> : <div className={styles.empty}><p className="mb-4">실행할 이미지가 있는 문제라면 CI에서 받은 릴리스를 먼저 등록해주세요</p>
           <button type="button" className={BUTTON} onClick={() => setPanel("image")}>이미지 등록으로 이동</button></div>}
+      </section>
+
+      <section role="tabpanel" id="runtime-settings-panel-files" aria-labelledby="runtime-settings-tab-files" hidden={panel !== "files"} className={styles.panel}>
+        {panel === "files" && selected?.user_files && <AdminReleaseFilesEditor key={selected.release_id} challengeId={challenge.challenge_id} release={selected} busy={busy} onSave={saveReleaseFiles}/>}
+        {panel === "files" && !selected && <p className={styles.empty}>실행 이미지를 등록한 뒤 파일을 연결해주세요</p>}
       </section>
 
       <section role="tabpanel" id="runtime-settings-panel-environment" aria-labelledby="runtime-settings-tab-environment" hidden={panel !== "environment"} className={styles.panel}>

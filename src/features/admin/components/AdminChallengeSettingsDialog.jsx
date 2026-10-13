@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { getAdminChallenge, updateAdminChallenge, getAdminChallengeFlag, revealAdminChallengeFlag, getAdminChallengeFiles, getAdminChallengeRepositoryFiles, downloadAdminChallengeFile } from "../../../api/admin.js";
-import { safeDownloadName, validateFileBlob } from "../../challenges/utils/challengeFileDownload.js";
+import { getAdminChallenge, updateAdminChallenge, getAdminChallengeFlag, revealAdminChallengeFlag, getAdminChallengeFiles, getAdminChallengeRepositoryFiles } from "../../../api/admin.js";
 import { isSuccess } from "../../../utils/response.js";
 import useAdminResource from "../hooks/useAdminResource.js";
 import { ADMIN_CHALLENGE_CATEGORIES } from "../utils/adminValidation.js";
 import { challengeDetailsDraft, challengeDetailsChanges, FILE_KINDS, FLAG_BINDING_STATES, formatFileSize } from "../utils/adminChallengeSettings.js";
 import AdminDialog from "./AdminDialog.jsx";
+import AdminFileDownloadButton from "./AdminFileDownloadButton.jsx";
 import AdminTabs from "./AdminTabs.jsx";
 import { AdminBadge, AdminStatusMessage } from "./AdminLayout.jsx";
 import styles from "./AdminWorkspace.module.css";
@@ -111,67 +111,35 @@ function RepositoryFilesPanel({ challengeId }) {
 function FilesPanel({ challengeId }) {
   const resource = useAdminResource((config) => getAdminChallengeFiles(challengeId, config), [challengeId], "참가자 파일을 불러오지 못했습니다");
   const [showSource, setShowSource] = useState(false);
-  const [downloading, setDownloading] = useState(null);
-  const [error, setError] = useState("");
-  const request = useRef(null);
-  useEffect(() => () => request.current?.abort(), []);
-  async function download(file) {
-    if (request.current) return;
-    const controller = new AbortController();
-    request.current = controller;
-    setDownloading(file.file_id); setError("");
-    try {
-      const response = await downloadAdminChallengeFile(challengeId, file.file_id, { signal: controller.signal });
-      const blob = await validateFileBlob(response.data);
-      if (controller.signal.aborted) return;
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url; link.download = safeDownloadName(file.file_name);
-      document.body.append(link); link.click(); link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch (failure) {
-      if (!controller.signal.aborted) setError(failure?.response?.status === 503
-        ? "저장소에 연결하지 못했습니다 GCS 인증과 읽기 권한을 확인해주세요"
-        : failure?.response?.status === 404 ? "저장소에서 ZIP 파일을 찾지 못했습니다 파일 수집 상태를 확인해주세요"
-        : failure?.response?.status === 403 ? "파일을 받을 관리자 권한이 없습니다"
-        : "ZIP을 받지 못했습니다 잠시 후 다시 시도해주세요");
-    } finally {
-      request.current = null;
-      if (!controller.signal.aborted) setDownloading(null);
-    }
-  }
-  function downloadButton(file) {
-    return <button type="button" className={styles.button} disabled={Boolean(downloading) || !file.download_available}
-      aria-label={`발행 ${file.registry_revision} ZIP 받기`} onClick={() => download(file)}>{downloading === file.file_id ? "받는 중…" : "ZIP 받기"}</button>;
-  }
   const data = resource.data;
   const file = data?.current_file;
   const messages = {
     no_release: "배포 버전을 선택하면 해당 버전의 참가자 파일이 연결됩니다",
     pending: "이 버전의 파일 수집 기록이 없습니다 CI 발행과 백엔드 수집 상태를 확인해주세요",
     none: "이 버전은 첨부파일 없이 발행됐습니다",
-    unavailable: "파일 정보는 등록됐지만 저장 경로가 없습니다 수집 상태를 확인해주세요",
+    disabled: "현재 설정 버전은 참가자에게 첨부파일을 제공하지 않습니다",
+    unavailable: "연결된 파일을 찾지 못했습니다 배포 파일 설정과 수집 상태를 확인해주세요",
   };
   return <>
     <AdminStatusMessage status={resource.status} error={resource.error} onRetry={resource.retry}/>
-    {error && <p role="alert" className={styles.errorNotice}>{error}</p>}
     {resource.status === "success" && <>
       <div className={styles.settingHeading}><h3 className={styles.sectionTitle}>참가자 첨부파일</h3>
-        {data.registry_revision != null && <span className={styles.secondary}>{data.release_version ? `설정 버전 ${data.release_version} · ` : ""}발행 {data.registry_revision}</span>}</div>
+        {data.release_version && <span className={styles.secondary}>사용 중인 설정 버전 {data.release_version}</span>}</div>
       <p className={styles.panelIntro}>prob/for_user 아래 파일을 묶은 ZIP입니다 참가자는 문제를 개방한 뒤 내려받을 수 있습니다</p>
       {data.status === "available" ? <div className={styles.attachmentCard}>
-        <div><strong>{file.file_name}</strong><span className={styles.secondary}>파일 {file.file_count}개 · {formatFileSize(file.file_size)}</span>
+        <div><strong>{file.file_name}</strong><span className={styles.secondary}>ZIP 발행 {file.registry_revision} · 파일 {file.file_count}개 · {formatFileSize(file.file_size)}</span>
           <span className={styles.secondary}>압축 해제 시 {formatFileSize(file.uncompressed_size_bytes)} · 소스 {file.source_sha.slice(0, 8)}</span></div>
-        {downloadButton(file)}
+        <AdminFileDownloadButton key={file.file_id} challengeId={challengeId} file={file}/>
       </div> : <p className={styles.fileNotice}>{messages[data.status] ?? "파일 정보를 확인해주세요"}</p>}
+      <p className={styles.helpText}>버전별 파일 연결은 배포 → 배포 파일에서 변경할 수 있습니다 실행 중인 참가자는 생성 당시 버전의 파일을 받습니다</p>
       <p className={styles.helpText}>저장소 설정: {data.storage.provider === "gcs" ? `GCS · ${data.storage.bucket}` : "로컬 파일 저장소"}</p>
       {data.history.length > 0 && <details className={styles.details}><summary>다른 발행 버전의 파일 ({data.history.length}건)</summary>
-        <p className={styles.helpText}>관리자 확인용입니다 참가자에게는 현재 선택된 버전의 파일만 표시됩니다</p>
+        <p className={styles.helpText}>관리자 확인용입니다 배포에서 파일을 연결하고 버전을 적용해야 참가자에게 표시됩니다</p>
         <div className={styles.tableWrap}><table className={styles.fileTable} aria-label="첨부파일 발행 이력">
           <thead><tr><th>발행 / 소스</th><th>파일</th><th>다운로드</th></tr></thead>
           <tbody>{data.history.map((item) => <tr key={item.file_id}><td>발행 {item.registry_revision}<span className={styles.secondary}>{item.source_sha.slice(0, 8)}</span></td>
             <td>{item.present ? `${item.file_count}개` : "파일 없음"}{item.present && <span className={styles.secondary}>{formatFileSize(item.file_size)}</span>}</td>
-            <td>{item.present ? downloadButton(item) : "—"}</td></tr>)}</tbody></table></div>
+            <td>{item.present ? <AdminFileDownloadButton challengeId={challengeId} file={item}/> : "없음"}</td></tr>)}</tbody></table></div>
         {data.history_has_more && <p className={styles.helpText}>최근 20건의 수집 기록을 표시합니다</p>}
       </details>}
     </>}
