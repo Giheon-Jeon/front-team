@@ -74,7 +74,7 @@ export default function AdminRepositoryEnvironmentImporter({ challengeId, releas
   }
 
   return <section className="space-y-4" aria-label="저장소 환경변수 가져오기">
-    <p className={styles.panelIntro}>출제자가 설정한 환경변수와 값을 불러옵니다 비밀값도 원본을 가져오며 화면에서만 가려집니다</p>
+    <p className={styles.panelIntro}>문제의 .env에 저장된 값을 불러옵니다 비밀값은 화면에서만 가려집니다</p>
     <div className="flex flex-wrap items-end gap-3">
       <label>컨테이너
         <select className={styles.select + " ml-3"} aria-label="저장소 적용 컨테이너" value={container} disabled={unavailable}
@@ -98,7 +98,7 @@ export default function AdminRepositoryEnvironmentImporter({ challengeId, releas
       {source.warnings.length > 0 && <details className={styles.details}><summary>직접 확인할 내용 {source.warnings.length}개</summary>
         <ul className="mt-2 space-y-1">{source.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul>
       </details>}
-      {rows.length === 0 ? <p className={styles.empty}>이 컨테이너에서 사용하는 환경변수 선언을 찾지 못했습니다</p> : <>
+      {rows.length === 0 ? <p className={styles.empty}>{sourceFiles.includes(`env/${container}.env`) ? "이 컨테이너의 .env에는 지정된 환경변수가 없습니다" : "이 컨테이너에서 사용하는 환경변수 선언을 찾지 못했습니다"}</p> : <>
         <datalist id="repository-secret-names">{[...new Set(secrets.map((secret) => secret.name))].map((name) => <option key={name} value={name}/>)}</datalist>
         <div className={styles.tableWrap}>
           <table className={styles.table + " min-w-[700px]"} aria-label="저장소 환경변수">

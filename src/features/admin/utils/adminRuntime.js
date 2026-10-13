@@ -64,7 +64,7 @@ export function buildDerivedSettings(draft, secrets) {
       if (Object.hasOwn(env, name) || Object.hasOwn(secret_env, name)) throw new Error(`${container.name}: ${name}이 중복됐습니다`);
       secret_env[name] = alias;
     }
-    if (Object.keys(env).length + Object.keys(secret_env).length > 32) throw new Error(`${container.name}: 환경변수는 합쳐서 32개까지 저장할 수 있습니다`);
+    if (Object.keys(env).length + Object.keys(secret_env).length > 128) throw new Error(`${container.name}: 환경변수는 합쳐서 128개까지 저장할 수 있습니다`);
     return { name: container.name, env, secret_env };
   });
   return { containers };

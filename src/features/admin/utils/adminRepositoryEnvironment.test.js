@@ -23,7 +23,9 @@ test("직접 입력한 값만 전달하고 기존 연결로 되돌리면 입력�
 
 test("빈 선택과 컨테이너 제한을 넘는 선택은 저장 전에 막는다", () => {
   assert.throws(() => repositoryEnvironmentRequest("web", "token", []));
-  assert.throws(() => repositoryEnvironmentRequest("web", "token", Array.from({ length: 33 }, (_, index) => ({ name: `KEY_${index}`, selected: true }))));
+  const rows = Array.from({ length: 128 }, (_, index) => ({ name: `KEY_${index}`, selected: true, kind: "env" }));
+  assert.equal(repositoryEnvironmentRequest("web", "token", rows).entries.length, 128);
+  assert.throws(() => repositoryEnvironmentRequest("web", "token", [...rows, { name: "EXTRA", selected: true }]));
 });
 
 test("출제자의 비밀값이 있으면 재입력 없이 원본값 사용을 요청한다", () => {
