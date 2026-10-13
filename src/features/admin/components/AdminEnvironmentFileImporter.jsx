@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { previewChallengeEnvironmentFile } from "../../../api/admin.js";
 import { isSuccess } from "../../../utils/response.js";
 import { environmentFileEntries, readEnvironmentFile } from "../utils/adminEnvironmentFile.js";
+import styles from "./AdminWorkspace.module.css";
 
-const BUTTON = "rounded border border-admin-divider px-3 py-2 text-sm disabled:opacity-50";
-const INPUT = "w-full rounded border border-admin-divider bg-white/60 px-2 py-2";
+const BUTTON = styles.button;
+const INPUT = styles.input;
 const ACTION = { add: "추가", update: "변경", keep: "유지" };
 
 export default function AdminEnvironmentFileImporter({ challengeId, release, secrets, busy, onSave }) {
@@ -87,10 +88,10 @@ export default function AdminEnvironmentFileImporter({ challengeId, release, sec
     } finally { submitting.current = false; }
   }
 
-  return <section className="mt-4 space-y-4 rounded-lg border border-admin-divider p-4" aria-label="환경변수 파일 가져오기">
+  return <section className={styles.importer + " space-y-4"} aria-label="환경변수 파일 가져오기">
     <div>
-      <h4 className="text-base">.env 가져오기</h4>
-      <p className="mt-1 text-admin-muted">파일에 있는 항목만 바꿉니다 빠진 항목과 다른 컨테이너의 설정은 유지합니다</p>
+      <h4 className="text-base">컨테이너 선택 → 파일 열기 → 내용 확인</h4>
+      <p className="mt-1 text-admin-muted">파일에 있는 항목만 바꿉니다 나머지 설정은 유지합니다</p>
     </div>
     <div className="grid gap-3 sm:grid-cols-2">
       <label>적용할 컨테이너
@@ -118,7 +119,7 @@ export default function AdminEnvironmentFileImporter({ challengeId, release, sec
         <p>{filename} · {rows.length}개 항목</p>
         <button type="button" className={BUTTON} disabled={unavailable} onClick={clear}>가져오기 취소</button>
       </div>
-      <p className="text-admin-muted">새 항목은 비밀값으로 분류합니다 공개해도 되는 값만 일반 설정으로 바꿔주세요</p>
+      <p className="text-admin-muted">새 항목은 비밀값으로 분류합니다 일반 설정에 해당하는 항목만 바꿔주세요</p>
       <datalist id="env-import-secret-names">{[...new Set(secrets.map((secret) => secret.name))].map((name) => <option key={name} value={name}/>)}</datalist>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[580px] text-left">
@@ -153,7 +154,7 @@ export default function AdminEnvironmentFileImporter({ challengeId, release, sec
       {review?.errors.length > 0 && <ul role="alert" className="space-y-1 text-admin-failed">{review.errors.map((message) => <li key={message}>{message}</li>)}</ul>}
       <div className="flex flex-wrap items-center gap-2">
         <button type="button" className={BUTTON} disabled={unavailable} onClick={check}>설정 확인</button>
-        <button type="button" className={BUTTON + " bg-admin-ink text-white"} disabled={unavailable || !review?.can_import} onClick={save}>.env 설정 버전 저장</button>
+        <button type="button" className={styles.primary} disabled={unavailable || !review?.can_import} onClick={save}>새 설정 버전 저장</button>
       </div>
       <p className="text-admin-muted">저장 후 ‘이 버전 사용’을 선택하면 새 인스턴스부터 적용됩니다</p>
     </>}

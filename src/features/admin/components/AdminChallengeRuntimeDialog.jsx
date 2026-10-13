@@ -6,10 +6,12 @@ import useAdminResource from "../hooks/useAdminResource.js";
 import { buildDerivedSettings, parseReleaseFile, releaseRequirements, releaseSettingsDraft, validateRuntimeSecret } from "../utils/adminRuntime.js";
 import AdminDialog from "./AdminDialog.jsx";
 import AdminEnvironmentFileImporter from "./AdminEnvironmentFileImporter.jsx";
+import AdminTabs from "./AdminTabs.jsx";
+import styles from "./AdminWorkspace.module.css";
 import { AdminBadge, AdminStatusMessage } from "./AdminLayout.jsx";
 
-const BUTTON = "rounded border border-admin-divider px-3 py-1.5 text-sm disabled:opacity-50";
-const INPUT = "w-full rounded border border-admin-divider bg-white/60 px-3 py-2";
+const BUTTON = styles.button;
+const INPUT = styles.input;
 
 async function loadRuntime(challengeId, config) {
   const [releases, secrets] = await Promise.all([getChallengeReleases(challengeId, config), getChallengeRuntimeSecrets(challengeId, config)]);
@@ -71,6 +73,9 @@ function RuntimeSettingsEditor({ release, secrets, busy, onSave }) {
 
 export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
   const [releaseId, setReleaseId] = useState("");
+  const [panel, setPanel] = useState("overview");
+  const [showSecretHistory, setShowSecretHistory] = useState(false);
+  const focusSecret = useRef(false);
   const [name, setName] = useState("flag");
   const [value, setValue] = useState("");
   const [upload, setUpload] = useState(null);
@@ -82,12 +87,20 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
   const fileSequence = useRef(0);
   const fileInput = useRef(null);
   const secretNameInput = useRef(null);
+  useEffect(() => {
+    if (panel === "secrets" && focusSecret.current) {
+      secretNameInput.current?.focus();
+      focusSecret.current = false;
+    }
+  }, [panel]);
   const runtime = useAdminResource((config) => loadRuntime(challenge.challenge_id, config), [challenge.challenge_id], "실행 설정을 불러오지 못했습니다");
   useEffect(() => () => { fileSequence.current += 1; }, []);
   const releases = runtime.data?.releases ?? [];
   const selected = releases.find((release) => release.release_id === releaseId) ?? releases.find((release) => release.is_current) ?? releases[0];
   const validationError = validateRuntimeSecret(name.trim(), value);
   const loading = runtime.status === "loading";
+  const storedSecrets = runtime.data?.secrets ?? [];
+  const visibleSecrets = showSecretHistory ? storedSecrets : storedSecrets.filter((secret) => secret.is_latest);
   const requirements = upload ? releaseRequirements(upload.artifact, runtime.data?.secrets ?? []) : null;
   const slugMismatch = Boolean(upload && challenge.challenge_slug && upload.artifact.challenge_slug !== challenge.challenge_slug);
 
@@ -137,101 +150,145 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
     event.preventDefault();
     if (!upload || slugMismatch || requirements.missingSecrets.length > 0) return;
     const saved = await mutate(() => registerChallengeRelease(challenge.challenge_id, { artifact: upload.artifact, note: "관리자 릴리스 파일 등록" }), "릴리스를 등록했습니다 내용을 확인한 뒤 사용할 버전을 선택해주세요");
-    if (saved) { setUpload(null); setReleaseId(saved.release_id ?? ""); if (fileInput.current) fileInput.current.value = ""; }
+    if (saved) { setUpload(null); setReleaseId(saved.release_id ?? ""); setPanel("overview"); if (fileInput.current) fileInput.current.value = ""; }
   }
 
   async function saveDerived(sourceId, settings) {
     const saved = await mutate(() => deriveChallengeRelease(challenge.challenge_id, sourceId, settings), "새 설정 버전을 저장했습니다 내용을 확인한 뒤 사용할 버전을 선택해주세요");
-    if (saved) setReleaseId(saved.release_id ?? "");
+    if (saved) { setReleaseId(saved.release_id ?? ""); setPanel("overview"); }
   }
 
   async function saveEnvironmentFile(sourceId, body) {
     const saved = await mutate(() => importChallengeEnvironmentFile(challenge.challenge_id, sourceId, body), ".env 설정 버전을 저장했습니다 내용을 확인한 뒤 이 버전 사용을 선택해주세요");
-    if (saved) setReleaseId(saved.release_id ?? "");
+    if (saved) { setReleaseId(saved.release_id ?? ""); setPanel("overview"); }
     return saved;
   }
 
-  return <AdminDialog title={challenge.title + " · 실행 설정"} onClose={onClose} busy={busy} wide>
-    <div className="space-y-5 font-song-myung text-sm">
-      <div className="flex items-center justify-between gap-3">
-        <p>기존 이미지를 유지하면서 문제별 환경변수와 비밀값 연결을 관리합니다</p>
-        <button type="button" className={BUTTON} onClick={runtime.retry} disabled={busy || loading}>설정 새로고침</button>
+  return <AdminDialog title={challenge.title + " · 실행 설정"} onClose={onClose} busy={busy} variant="workspace">
+    <AdminStatusMessage status={runtime.status} error={runtime.error} onRetry={runtime.retry}/>
+    {error && <p role="alert" className="mb-4 text-admin-failed">{error}</p>}
+    {notice && <p role="status" className={styles.notice}>{notice}</p>}
+    {runtime.status === "success" && <>
+      <div className={styles.versionBar}>
+        {selected ? <>
+          <label>설정 버전
+            <select aria-label="설정 버전" className={styles.select} value={selected.release_id} disabled={busy}
+              onChange={(event) => { setReleaseId(event.target.value); setConfirming(false); setPanel("overview"); }}>
+              {releases.map((release) => <option key={release.release_id} value={release.release_id}>버전 {release.version}{release.is_current ? " · 사용 중" : ""}</option>)}
+            </select>
+          </label>
+          <AdminBadge tone={selected.is_current ? "good" : "neutral"}>{selected.is_current ? "새 인스턴스에 적용 중" : "아직 적용하지 않음"}</AdminBadge>
+          {!selected.is_current && <button type="button" className={styles.primary}
+            disabled={busy || !selected.is_deployable || loading || selected.containers.some((container) => container.secret_bindings?.some((binding) => binding.status === "missing"))}
+            onClick={() => setConfirming(true)}>이 버전 사용</button>}
+        </> : <p className={styles.secondary}>등록된 실행 이미지가 없습니다</p>}
+        <button type="button" className={BUTTON} onClick={runtime.retry} disabled={busy || loading}>새로고침</button>
       </div>
-      <AdminStatusMessage status={runtime.status} error={runtime.error} onRetry={runtime.retry}/>
-      {error && <p role="alert" className="text-admin-failed">{error}</p>}
-      {notice && <p role="status">{notice}</p>}
-      {runtime.status === "success" && <>
-        <section className="rounded-lg border border-admin-divider p-4">
-          <h3 className="mb-3 text-base">실행 릴리스</h3>
-          {releases.length === 0 ? <p className="text-admin-muted">등록된 실행 릴리스가 없습니다 파일만 배포하는 문제라면 실행 릴리스가 필요하지 않습니다</p> : <>
-            {!runtime.data.current_release_id && <p className="mb-3 text-admin-muted">사용 중인 릴리스가 없습니다 등록된 내용부터 확인해주세요</p>}
-            <label className="block">릴리스 선택<select className={INPUT + " mt-1"} value={selected.release_id} disabled={busy} onChange={(event) => { setReleaseId(event.target.value); setConfirming(false); }}>
-              {releases.map((release) => <option key={release.release_id} value={release.release_id}>버전 {release.version} · 발행 {release.registry_revision}{release.is_current ? " · 사용 중" : ""}</option>)}
-            </select></label>
-            <div className="mt-3 flex flex-wrap items-center gap-3">
-              <AdminBadge tone={selected.is_current ? "good" : "neutral"}>{selected.is_current ? "새 인스턴스에 적용 중" : "등록됨"}</AdminBadge>
-              <span>실행 방식 {selected.runtime_type} · 격리 {selected.isolation_profile} · {selected.architecture}</span>
+      {confirming && selected && <div className={styles.confirmation}>
+        <p className="mb-3">새 인스턴스부터 버전 {selected.version}을 사용합니다 기존 인스턴스와 초기화에는 생성 당시 버전이 유지됩니다</p>
+        <button type="button" className={styles.primary} disabled={busy || loading}
+          onClick={() => mutate(() => activateChallengeRelease(challenge.challenge_id, selected.release_id), "새 인스턴스에 적용할 설정을 변경했습니다")}>이 버전 사용 확인</button>
+        <button type="button" className={BUTTON + " ml-2"} disabled={busy} onClick={() => setConfirming(false)}>취소</button>
+      </div>}
+      <AdminTabs idPrefix="runtime-settings" label="실행 설정 메뉴" value={panel} onChange={setPanel} disabled={busy}
+        items={[{ id: "overview", label: "설정 확인" }, { id: "environment", label: ".env로 수정" },
+          { id: "secrets", label: "비밀값 관리" }, { id: "image", label: "이미지 등록" }]}/>
+
+      <section role="tabpanel" id="runtime-settings-panel-overview" aria-labelledby="runtime-settings-tab-overview" hidden={panel !== "overview"} className={styles.panel}>
+        {selected ? <>
+          <p className={styles.panelIntro}>컨테이너에 전달할 값과 비밀값 연결입니다</p>
+          {!selected.is_deployable && <p className="mb-4 text-admin-failed">현재 실행 계약으로 사용할 수 없는 버전입니다</p>}
+          {selected.containers.map((container) => <section key={container.name} className={styles.containerCard}>
+            <div className={styles.containerHeader}>
+              <h3>{container.name}</h3>
+              <span>포트 {container.ports.map((port) => port.port + (port.public ? " 공개" : " 내부")).join(" · ") || "없음"}</span>
             </div>
-            {selected.resource_profile && <p className="mt-2 text-admin-muted">CPU {selected.resource_profile.cpu_millicores}m · 메모리 {selected.resource_profile.memory_mib}MiB · 임시 저장 {selected.resource_profile.ephemeral_storage_mib}MiB</p>}
-            {selected.healthcheck && <p className="mt-2">상태 확인 {selected.healthcheck.container}:{selected.healthcheck.port}{selected.healthcheck.path}</p>}
-            {selected.source_ref && <p className="mt-2 break-all text-admin-muted">출처 {selected.source_ref}</p>}
-            {selected.note && <p className="mt-2 break-all">{selected.note}</p>}
-            {selected.derived_from_release_id && <p className="mt-2 text-admin-muted">기존 릴리스의 이미지를 유지하고 주입 설정만 바꾼 버전입니다</p>}
-            <div className="mt-4 space-y-4">{selected.containers.map((container) => <section key={container.name} className="rounded border border-admin-divider/50 bg-white/30 p-3">
-              <h4 className="mb-2 font-kode-mono">{container.name}</h4>
-              <p className="break-all font-kode-mono text-xs">{container.image_ref}</p>
-              <p className="mt-2">포트 {container.ports.map((port) => port.port + (port.public ? " (공개)" : " (내부)")).join(", ") || "없음"}</p>
-              {Object.values(container.env_rules ?? {}).some((rule) => rule.required) && <p className="mt-2 text-admin-muted">필수 항목: {Object.entries(container.env_rules).filter(([, rule]) => rule.required).map(([name]) => name).join(", ")}</p>}
-              <h5 className="mb-1 mt-3">릴리스 주입 환경변수</h5>
-              {Object.keys(container.env ?? {}).length === 0 ? <p className="text-admin-muted">릴리스에서 추가로 주입하는 일반 환경변수가 없습니다 이미지 기본값은 별도로 확인해주세요</p> : <table className="w-full text-left"><thead><tr><th className="py-1 font-normal">이름</th><th className="py-1 font-normal">값</th></tr></thead><tbody>{Object.entries(container.env).map(([key, envValue]) => <tr key={key}><td className="py-1 font-kode-mono">{key}</td><td className="break-all py-1 font-kode-mono">{envValue}</td></tr>)}</tbody></table>}
-              <h5 className="mb-1 mt-3">비밀값 연결</h5>
-              {(container.secret_bindings ?? []).length === 0 ? <p className="text-admin-muted">이 릴리스에는 비밀값 연결이 없습니다</p> : <table className="w-full text-left"><thead><tr>{["주입 이름", "저장된 이름", "연결 버전", "상태"].map((label) => <th key={label} className="py-1 font-normal">{label}</th>)}</tr></thead><tbody>{container.secret_bindings.map((binding) => <tr key={binding.env_name}><td className="py-1 font-kode-mono">{binding.env_name}</td><td className="py-1 font-kode-mono">{binding.name ?? "-"}</td><td className="py-1">{binding.version ? "버전 " + binding.version : "-"}</td><td className="py-1"><AdminBadge tone={binding.status === "missing" ? "bad" : "good"}>{binding.status === "missing" ? "저장값 없음" : binding.is_latest ? "연결됨" : "이전 버전 연결"}</AdminBadge></td></tr>)}</tbody></table>}
-            </section>)}</div>
-            {!selected.is_current && <div className="mt-4">
-              {!selected.is_deployable && <p className="mb-2 text-admin-failed">현재 계약으로 실행할 수 없는 릴리스입니다</p>}
-              {confirming ? <div className="space-y-2"><p>새로 생성하는 인스턴스부터 버전 {selected.version}을 사용합니다 기존 인스턴스는 생성 당시 버전을 유지합니다</p><button type="button" className={BUTTON} disabled={busy || loading} onClick={() => mutate(() => activateChallengeRelease(challenge.challenge_id, selected.release_id), "사용할 릴리스를 변경했습니다")}>이 버전 사용 확인</button><button type="button" className={BUTTON + " ml-2"} disabled={busy} onClick={() => setConfirming(false)}>취소</button></div> : <button type="button" className={BUTTON} disabled={busy || !selected.is_deployable || loading || selected.containers.some((container) => container.secret_bindings?.some((binding) => binding.status === "missing"))} onClick={() => setConfirming(true)}>이 버전 사용</button>}
+            {Object.keys(container.env ?? {}).length + (container.secret_bindings ?? []).length === 0
+              ? <p className={styles.empty}>추가로 주입하는 값이 없습니다</p>
+              : <table className={styles.settingsTable} aria-label={container.name + " 환경변수"}>
+                <thead><tr><th>환경변수</th><th>값 또는 연결</th><th>구분</th></tr></thead>
+                <tbody>
+                  {Object.entries(container.env ?? {}).map(([key, envValue]) => <tr key={key}>
+                    <td className={styles.mono}>{key}</td><td className={styles.mono}>{envValue || "(빈 문자열)"}</td>
+                    <td><span className={styles.secondary}>일반{container.env_rules?.[key]?.required ? " · 필수" : ""}</span></td>
+                  </tr>)}
+                  {(container.secret_bindings ?? []).map((binding) => <tr key={binding.env_name}>
+                    <td className={styles.mono}>{binding.env_name}</td>
+                    <td>{binding.status === "missing" ? <AdminBadge tone="bad">저장값 없음</AdminBadge>
+                      : <><span className={styles.mono}>{binding.name}</span><span className={styles.secondary}>버전 {binding.version}{!binding.is_latest ? " · 이전 저장값 연결" : ""}</span></>}</td>
+                    <td><span className={styles.secondary}>비밀값{container.env_rules?.[binding.env_name]?.required ? " · 필수" : ""}</span></td>
+                  </tr>)}
+                </tbody>
+              </table>}
+          </section>)}
+          <button type="button" className={BUTTON} disabled={busy || !selected.is_deployable} onClick={() => setPanel("environment")}>.env로 설정 바꾸기</button>
+          <details className={styles.details}>
+            <summary>이미지·자원 상세</summary>
+            <dl>
+              <dt>실행 방식</dt><dd>{selected.runtime_type} · {selected.architecture} · {selected.isolation_profile}</dd>
+              <dt>발행 번호</dt><dd>{selected.registry_revision}</dd>
+              {selected.resource_profile && <><dt>자원</dt><dd>CPU {selected.resource_profile.cpu_millicores}m · 메모리 {selected.resource_profile.memory_mib}MiB · 임시 저장 {selected.resource_profile.ephemeral_storage_mib}MiB</dd></>}
+              {selected.healthcheck && <><dt>상태 확인</dt><dd>{selected.healthcheck.container}:{selected.healthcheck.port}{selected.healthcheck.path}</dd></>}
+              {selected.containers.map((container) => <div key={container.name} className="contents"><dt>{container.name} 이미지</dt><dd className={styles.mono}>{container.image_ref}</dd></div>)}
+              {selected.source_ref && <><dt>출처</dt><dd className={styles.mono}>{selected.source_ref}</dd></>}
+              {selected.note && <><dt>메모</dt><dd>{selected.note}</dd></>}
+            </dl>
+          </details>
+        </> : <div className={styles.empty}><p className="mb-4">실행할 이미지가 있는 문제라면 CI에서 받은 릴리스를 먼저 등록해주세요</p>
+          <button type="button" className={BUTTON} onClick={() => setPanel("image")}>이미지 등록으로 이동</button></div>}
+      </section>
+
+      <section role="tabpanel" id="runtime-settings-panel-environment" aria-labelledby="runtime-settings-tab-environment" hidden={panel !== "environment"} className={styles.panel}>
+        {selected?.is_deployable ? <>
+          <AdminEnvironmentFileImporter key={selected.release_id} challengeId={challenge.challenge_id} release={selected}
+            secrets={storedSecrets} busy={busy} onSave={(body) => saveEnvironmentFile(selected.release_id, body)}/>
+          <details className={styles.details}><summary>파일 없이 직접 편집</summary>
+            <RuntimeSettingsEditor key={selected.release_id} release={selected} secrets={storedSecrets} busy={busy} onSave={(settings) => saveDerived(selected.release_id, settings)}/>
+          </details>
+        </> : <p className={styles.empty}>사용할 수 있는 이미지 릴리스를 먼저 등록해주세요</p>}
+      </section>
+
+      <section role="tabpanel" id="runtime-settings-panel-secrets" aria-labelledby="runtime-settings-tab-secrets" hidden={panel !== "secrets"} className={styles.panel}>
+        <p className={styles.panelIntro}>값은 다시 표시하지 않습니다 새 값을 저장해도 기존 설정의 연결은 유지됩니다</p>
+        {storedSecrets.some((secret) => !secret.is_latest) && <label className="mb-3 flex items-center gap-2">
+          <input type="checkbox" checked={showSecretHistory} onChange={(event) => setShowSecretHistory(event.target.checked)}/>이전 버전도 보기</label>}
+        {visibleSecrets.length === 0 ? <p className={styles.empty}>저장된 비밀값이 없습니다</p> : <div className={styles.tableWrap}>
+          <table className={styles.table} aria-label="저장된 비밀값"><thead><tr><th>이름</th><th>버전</th><th>저장 시각</th></tr></thead>
+            <tbody>{visibleSecrets.map((secret) => <tr key={secret.secret_id}><td className={styles.mono}>{secret.name}</td>
+              <td>{secret.version}{secret.is_latest ? " · 최신" : ""}</td><td>{toKst(secret.created_at)}</td></tr>)}</tbody>
+          </table>
+        </div>}
+        <form onSubmit={saveSecret} className={styles.secretForm}>
+          <label>비밀값 이름<input ref={secretNameInput} value={name} maxLength={64} disabled={busy} onChange={(event) => setName(event.target.value)} className={INPUT} autoComplete="off"/></label>
+          <label>새 값<input type="password" value={value} disabled={busy} onChange={(event) => setValue(event.target.value)} className={INPUT} autoComplete="new-password"/></label>
+          <button type="submit" disabled={busy || Boolean(validationError)} className={styles.primary}>비밀값 저장</button>
+          {value && validationError && <p className="text-admin-muted sm:col-span-3">{validationError}</p>}
+        </form>
+      </section>
+
+      <section role="tabpanel" id="runtime-settings-panel-image" aria-labelledby="runtime-settings-tab-image" hidden={panel !== "image"} className={styles.panel}>
+        <p className={styles.panelIntro}>CI에서 발행한 JSON 파일을 등록합니다 환경변수만 바꿀 때는 ‘.env로 수정’을 사용해주세요</p>
+        <form onSubmit={saveRelease} className="space-y-4">
+          <label className={styles.fileBox}>릴리스 파일
+            <input ref={fileInput} type="file" accept=".json,application/json" disabled={busy} onChange={readFile}/>
+          </label>
+          {upload && <div className="space-y-3">
+            <p className={styles.title}>{upload.artifact.challenge_slug} · 발행 {upload.artifact.registry_revision}</p>
+            {slugMismatch && <p className="text-admin-failed">이 파일은 {challenge.challenge_slug} 문제의 릴리스가 아닙니다</p>}
+            {requirements.containers.map((container) => <div key={container.name} className={styles.containerCard}>
+              <div className={styles.containerHeader}><h3>{container.name}</h3></div>
+              <div className="p-4"><p>일반 환경변수: {container.envNames.join(", ") || "없음"}</p>
+                <p>비밀값 연결: {container.secretBindings.map(([envName, secretName]) => envName + " → " + secretName).join(", ") || "없음"}</p></div>
+            </div>)}
+            {requirements.missingSecrets.length > 0 && <div>
+              <p className="text-admin-failed">먼저 저장할 비밀값: {requirements.missingSecrets.join(", ")}</p>
+              <div className="mt-2 flex flex-wrap gap-2">{requirements.missingSecrets.map((secretName) => <button key={secretName} type="button" className={BUTTON}
+                onClick={() => { setName(secretName); focusSecret.current = true; setPanel("secrets"); }}>{secretName} 입력</button>)}</div>
             </div>}
-            {selected.is_deployable && <>
-              <AdminEnvironmentFileImporter key={selected.release_id} challengeId={challenge.challenge_id} release={selected}
-                secrets={runtime.data.secrets ?? []} busy={busy} onSave={(body) => saveEnvironmentFile(selected.release_id, body)}/>
-              <details className="mt-4"><summary className="cursor-pointer">직접 항목 편집</summary>
-                <RuntimeSettingsEditor key={selected.release_id} release={selected} secrets={runtime.data.secrets ?? []} busy={busy} onSave={(settings) => saveDerived(selected.release_id, settings)}/>
-              </details>
-            </>}
-          </>}
-        </section>
-        <section className="rounded-lg border border-admin-divider p-4">
-          <h3 className="mb-2 text-base">저장된 비밀값</h3>
-          <p className="mb-3 text-admin-muted">값은 다시 조회하지 않습니다 새 값을 저장해도 기존 릴리스의 연결 버전은 바뀌지 않습니다</p>
-          {(runtime.data.secrets ?? []).length === 0 ? <p className="mb-3">저장된 비밀값이 없습니다</p> : <table className="mb-4 w-full text-left"><thead><tr>{["이름", "버전", "저장 시각", "상태"].map((label) => <th key={label} className="py-2 font-normal">{label}</th>)}</tr></thead><tbody>{runtime.data.secrets.map((secret) => <tr key={secret.secret_id} className="border-t border-admin-divider/40"><td className="py-2 font-kode-mono">{secret.name}</td><td className="py-2">{secret.version}</td><td className="py-2">{toKst(secret.created_at)}</td><td className="py-2">{secret.is_latest ? "최신 저장값" : "이전 저장값"}</td></tr>)}</tbody></table>}
-          <form onSubmit={saveSecret} className="grid gap-3 sm:grid-cols-[1fr_2fr_auto]">
-            <label>비밀값 이름<input ref={secretNameInput} value={name} maxLength={64} disabled={busy} onChange={(event) => setName(event.target.value)} className={INPUT + " mt-1"} autoComplete="off"/></label>
-            <label>새 비밀값<input type="password" value={value} disabled={busy} onChange={(event) => setValue(event.target.value)} className={INPUT + " mt-1"} autoComplete="new-password"/></label>
-            <button type="submit" disabled={busy || Boolean(validationError)} className={BUTTON + " self-end"}>비밀값 저장</button>
-            {value && validationError && <p className="text-admin-muted sm:col-span-3">{validationError}</p>}
-          </form>
-        </section>
-        <section className="rounded-lg border border-admin-divider p-4">
-          <h3 className="mb-2 text-base">릴리스 등록</h3>
-          <p className="mb-3 text-admin-muted">아직 이미지 릴리스가 없다면 CI에서 받은 JSON을 등록해주세요 이미 등록된 이미지는 위에서 설정 버전을 만들 수 있습니다</p>
-          <form onSubmit={saveRelease} className="space-y-3"><label className="block">릴리스 파일<input ref={fileInput} type="file" accept=".json,application/json" disabled={busy} onChange={readFile} className="mt-1 block w-full"/></label>
-            {upload && <div className="space-y-2 rounded border border-admin-divider/50 p-3">
-              <p>{upload.artifact.challenge_slug} · 발행 {upload.artifact.registry_revision}</p>
-              {slugMismatch && <p className="text-admin-failed">이 파일은 {challenge.challenge_slug} 문제의 릴리스가 아닙니다</p>}
-              {requirements.containers.map((container) => <div key={container.name}>
-                <p className="font-kode-mono">{container.name}</p>
-                <p className="text-admin-muted">일반 환경변수 {container.envNames.join(", ") || "없음"}</p>
-                <p className="text-admin-muted">비밀값 연결 {container.secretBindings.map(([envName, secretName]) => `${envName} ← ${secretName}`).join(", ") || "없음"}</p>
-              </div>)}
-              {requirements.missingSecrets.length > 0 && <div>
-                <p className="text-admin-failed">먼저 저장할 비밀값: {requirements.missingSecrets.join(", ")}</p>
-                <div className="mt-2 flex flex-wrap gap-2">{requirements.missingSecrets.map((secretName) => <button key={secretName} type="button" className={BUTTON} onClick={() => { setName(secretName); secretNameInput.current?.focus(); }}>{secretName} 입력</button>)}</div>
-              </div>}
-            </div>}
-            <button type="submit" disabled={busy || !upload || slugMismatch || requirements.missingSecrets.length > 0} className={BUTTON}>릴리스 등록</button>
-          </form>
-        </section>
-      </>}
-    </div>
+          </div>}
+          <button type="submit" disabled={busy || !upload || slugMismatch || requirements.missingSecrets.length > 0} className={styles.primary}>이미지 릴리스 등록</button>
+        </form>
+      </section>
+    </>}
   </AdminDialog>;
 }
