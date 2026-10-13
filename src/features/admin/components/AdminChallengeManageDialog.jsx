@@ -25,19 +25,17 @@ export default function AdminChallengeManageDialog({ challenge, initialSection =
     return onChanged?.();
   }
 
-  return <AdminDialog title={title} onClose={onClose} busy={busy} variant="workspace">
-    <div className={styles.settingSummary}>
-      <span className={styles.mono}>{challenge.challenge_slug || "저장소 미연결"}</span>
-      <AdminBadge tone={challenge.is_published ? "good" : "neutral"}>{challenge.is_published ? "공개" : "비공개"}</AdminBadge>
-    </div>
-    <AdminTabs idPrefix="challenge-workspace" label="설정 구분" variant="sections" value={section} onChange={selectSection} disabled={busy}
+  return <AdminDialog title={title} subtitle={challenge.challenge_slug || "저장소 미연결"}
+    headerMeta={<AdminBadge tone={challenge.is_published ? "good" : "neutral"}>{challenge.is_published ? "공개" : "비공개"}</AdminBadge>}
+    onClose={onClose} busy={busy} variant="workspace">
+    <AdminTabs idPrefix="challenge-workspace" label="문제 관리" variant="primary" value={section} onChange={selectSection} disabled={busy}
       items={[
-        { id: "problem", label: "문제 설정", description: "제목 · 지문 · 채점 플래그" },
-        { id: "deployment", label: "배포 설정", description: "버전 · 참가자 파일 · 실행 환경" },
+        { id: "problem", label: "기본 정보" },
+        { id: "deployment", label: "배포 설정" },
       ]}/>
     <section role="tabpanel" id="challenge-workspace-panel-problem" aria-labelledby="challenge-workspace-tab-problem" hidden={section !== "problem"} className={styles.panel}>
       {opened.has("problem") && <AdminChallengeSettingsDialog challenge={challenge} embedded active={section === "problem"}
-        onBusyChange={setProblemBusy} onSaved={savedProblem} onOpenDeployment={() => selectSection("deployment")}/>}
+        onBusyChange={setProblemBusy} onSaved={savedProblem}/>}
     </section>
     <section role="tabpanel" id="challenge-workspace-panel-deployment" aria-labelledby="challenge-workspace-tab-deployment" hidden={section !== "deployment"} className={styles.panel}>
       {opened.has("deployment") && <AdminChallengeRuntimeDialog challenge={challenge} embedded

@@ -12,12 +12,12 @@ export default function AdminTabs({ idPrefix, label, items, value, onChange, dis
     onChange(items[next].id);
     event.currentTarget.parentElement.querySelectorAll('[role="tab"]')[next]?.focus();
   }
-  return <div role="tablist" aria-label={label} className={variant === "sections" ? styles.sectionTabs : styles.tabs}>
+  return <div role="tablist" aria-label={label} className={variant === "primary" ? styles.primaryTabs : styles.tabs}>
     {items.map((item, index) => <button key={item.id} type="button" role="tab"
       id={`${idPrefix}-tab-${item.id}`} aria-controls={`${idPrefix}-panel-${item.id}`}
       aria-selected={value === item.id} tabIndex={value === item.id ? 0 : -1} disabled={disabled}
       onClick={() => onChange(item.id)} onKeyDown={(event) => navigate(event, index)}>
-      {item.label}{item.description && <span className={styles.tabDescription}>{item.description}</span>}
+      {item.label}
     </button>)}
   </div>;
 }

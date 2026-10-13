@@ -310,7 +310,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
 
       <section role="tabpanel" id="runtime-settings-panel-secrets" aria-labelledby="runtime-settings-tab-secrets" hidden={panel !== "secrets"} className={styles.panel}>
         <p className={styles.panelIntro}>이 문제의 비밀값 보관함입니다 각 배포 버전은 연결한 값의 버전을 유지합니다</p>
-        <p className={styles.helpText}>채점용 원문은 문제 설정 → 채점 플래그에서 확인할 수 있습니다</p>
+        <p className={styles.helpText}>채점용 플래그 원문은 기본 정보에서 확인할 수 있습니다</p>
         {storedSecrets.some((secret) => !secret.is_latest) && <label className="mb-3 flex items-center gap-2">
           <input type="checkbox" checked={showSecretHistory} onChange={(event) => setShowSecretHistory(event.target.checked)}/>이전 버전도 보기</label>}
         {visibleSecrets.length === 0 ? <p className={styles.empty}>저장된 비밀값이 없습니다</p> : <div className={styles.tableWrap}>
