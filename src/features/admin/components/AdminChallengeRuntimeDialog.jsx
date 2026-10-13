@@ -72,7 +72,7 @@ function RuntimeSettingsEditor({ release, secrets, busy, onSave }) {
   </form>;
 }
 
-export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedded = false, onBusyChange }) {
+export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedded = false, onBusyChange, onChanged }) {
   const [releaseId, setReleaseId] = useState("");
   const [panel, setPanel] = useState("overview");
   const [environmentMethod, setEnvironmentMethod] = useState("repository");
@@ -119,6 +119,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
       setConfirming(false);
       const refreshed = await runtime.reload();
       setNotice(refreshed ? success : "저장은 처리됐지만 최신 상태를 조회하지 못했습니다");
+      await onChanged?.();
       return response.data.data ?? true;
     } catch (requestError) {
       setError(requestError?.response?.data?.message || requestError.message || "요청을 처리하지 못했습니다");
@@ -205,7 +206,12 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
 
       <section role="tabpanel" id="runtime-settings-panel-overview" aria-labelledby="runtime-settings-tab-overview" hidden={panel !== "overview"} className={styles.panel}>
         {selected ? <>
-          <p className={styles.panelIntro}>컨테이너에 전달할 값과 비밀값 연결입니다</p>
+          <dl className={styles.environmentSummary} aria-label="배포 환경 요약">
+            <div><dt>실행 환경</dt><dd>{selected.runtime_type} · {selected.architecture}<span>{selected.isolation_profile} 격리 · 컨테이너 {selected.containers.length}개</span></dd></div>
+            <div><dt>할당 자원</dt><dd>CPU {selected.resource_profile?.cpu_millicores}m · 메모리 {selected.resource_profile?.memory_mib}MiB<span>임시 저장 {selected.resource_profile?.ephemeral_storage_mib}MiB</span></dd></div>
+            <div><dt>주입 설정</dt><dd>환경변수 {selected.containers.reduce((sum, item) => sum + Object.keys(item.env ?? {}).length, 0)}개 · 비밀값 {selected.containers.reduce((sum, item) => sum + (item.secret_bindings?.length ?? 0), 0)}개<span>이미지 발행 {selected.registry_revision}</span></dd></div>
+          </dl>
+          <p className={styles.panelIntro}>컨테이너별 포트와 주입할 값입니다 비밀값은 저장된 이름과 버전으로 표시합니다</p>
           {!selected.is_deployable && <p className="mb-4 text-admin-failed">현재 실행 계약으로 사용할 수 없는 버전입니다</p>}
           {selected.containers.map((container) => <section key={container.name} className={styles.containerCard}>
             <div className={styles.containerHeader}>
@@ -269,7 +275,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
       </section>
 
       <section role="tabpanel" id="runtime-settings-panel-secrets" aria-labelledby="runtime-settings-tab-secrets" hidden={panel !== "secrets"} className={styles.panel}>
-        <p className={styles.panelIntro}>새 값을 저장해도 기존 설정의 연결은 유지됩니다 채점용 플래그 원문은 ‘플래그’ 메뉴에서 확인할 수 있습니다</p>
+        <p className={styles.panelIntro}>새 값을 저장해도 기존 설정의 연결은 유지됩니다 채점용 플래그 원문은 문제 설정의 ‘플래그’에서 확인할 수 있습니다</p>
         {storedSecrets.some((secret) => !secret.is_latest) && <label className="mb-3 flex items-center gap-2">
           <input type="checkbox" checked={showSecretHistory} onChange={(event) => setShowSecretHistory(event.target.checked)}/>이전 버전도 보기</label>}
         {visibleSecrets.length === 0 ? <p className={styles.empty}>저장된 비밀값이 없습니다</p> : <div className={styles.tableWrap}>
@@ -311,5 +317,5 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
       </section>
     </>}
   </>;
-  return embedded ? content : <AdminDialog title={challenge.title + " · 실행 설정"} onClose={onClose} busy={busy} variant="workspace">{content}</AdminDialog>;
+  return embedded ? content : <AdminDialog title={challenge.title + " · 배포"} onClose={onClose} busy={busy} variant="workspace">{content}</AdminDialog>;
 }

@@ -8,6 +8,7 @@ import AdminPagination from "../components/AdminPagination.jsx";
 import AdminDialog from "../components/AdminDialog.jsx";
 import AdminChallengeCreateDialog from "../components/AdminChallengeCreateDialog.jsx";
 import AdminChallengeSettingsDialog from "../components/AdminChallengeSettingsDialog.jsx";
+import AdminChallengeRuntimeDialog from "../components/AdminChallengeRuntimeDialog.jsx";
 import AdminTabs from "../components/AdminTabs.jsx";
 import styles from "../components/AdminWorkspace.module.css";
 import { ADMIN_CHALLENGE_CATEGORIES } from "../utils/adminValidation.js";
@@ -15,6 +16,15 @@ import useAdminResource from "../hooks/useAdminResource.js";
 
 const BUTTON = styles.button;
 const SELECT = styles.select;
+
+function DeploymentSummary({ deployment }) {
+  if (!deployment) return <span className={styles.secondary}>실행 설정 없음</span>;
+  const runtime = { KUBERNETES: "Kubernetes", DOCKER: "Docker", VM: "VM" }[deployment.runtime_type] ?? deployment.runtime_type;
+  return <div className={styles.deploymentSummary}>
+    <span>{deployment.is_current ? `v${deployment.version} 적용 중` : `v${deployment.version} 미적용`} · {runtime} · {deployment.architecture}</span>
+    <span>컨테이너 {deployment.containers.length}개 · CPU {deployment.resource_profile.cpu_millicores}m · {deployment.resource_profile.memory_mib}MiB</span>
+  </div>;
+}
 
 function InstancesSection() {
   const [filter, setFilter] = useState("");
@@ -88,6 +98,7 @@ export default function AdminChallengesPage() {
   const [tab, setTab] = useState("challenges");
   const [creating, setCreating] = useState(false);
   const [runtimeChallenge, setRuntimeChallenge] = useState(null);
+  const [settingsChallenge, setSettingsChallenge] = useState(null);
   const [page, setPage] = useState(1);
   const [category, setCategory] = useState("");
   const [sort, setSort] = useState("running");
@@ -116,7 +127,7 @@ export default function AdminChallengesPage() {
     <AdminTabs idPrefix="challenge-management" label="문제 관리 메뉴" value={tab} onChange={setTab} disabled={busy}
       items={[{ id: "challenges", label: "문제 목록" }, { id: "instances", label: "인스턴스" }]}/>
     <section role="tabpanel" id="challenge-management-panel-challenges" aria-labelledby="challenge-management-tab-challenges" hidden={tab !== "challenges"} className={styles.panel}>
-    <p className={styles.panelIntro}>문제를 선택해 제목·지문·플래그·파일과 실행 환경을 확인합니다</p>
+    <p className={styles.panelIntro}>문제 설정에서 지문·플래그·첨부파일을, 배포에서 실행 환경을 관리합니다</p>
     <div className={styles.toolbar}>
       <label>분야 <select value={category} className={SELECT} onChange={(event) => { setCategory(event.target.value); setPage(1); }}>
         <option value="">전체</option>{ADMIN_CHALLENGE_CATEGORIES.map((value) => <option key={value}>{value}</option>)}
@@ -132,13 +143,15 @@ export default function AdminChallengesPage() {
     <AdminStatusMessage status={challenges.status} error={challenges.error} onRetry={challenges.retry}/>
     {notice && <p role="status" className="my-3 text-sm">{notice}</p>}
     {challenges.status === "success" && <div className={styles.tableWrap}>
-      <table className={styles.table} aria-label="문제 목록"><thead><tr>{["문제", "배점", "해결 팀", "인스턴스", "공개 상태", "설정"].map((text) => <th key={text}>{text}</th>)}</tr></thead>
+      <table className={styles.table} aria-label="문제 목록"><thead><tr>{["문제", "배점 · 풀이", "인스턴스", "공개 상태", "문제 설정", "배포"].map((text) => <th key={text}>{text}</th>)}</tr></thead>
         <tbody>{(challenges.data?.challenges ?? []).map((challenge) => <tr key={challenge.challenge_id} className="border-t border-admin-divider/40">
           <td><span className={styles.title}>{challenge.title}</span><span className={styles.secondary}>{challenge.category} · {challenge.difficulty}</span></td>
-          <td>{challenge.score}</td><td>{challenge.solved_team_count}</td>
+          <td>{challenge.score}점<span className={styles.secondary}>{challenge.solved_team_count}팀 해결</span></td>
           <td>{challenge.running_instance_count} {challenge.failed_instance_count > 0 && <span className="text-admin-failed">(실패 {challenge.failed_instance_count})</span>}</td>
           <td><button type="button" disabled={busy} aria-label={challenge.title + " 공개 상태 변경"} onClick={() => { setSelected(challenge); setReason(""); setNotice(""); }}><AdminBadge tone={challenge.is_published ? "good" : "neutral"}>{challenge.is_published ? "공개" : "비공개"}</AdminBadge></button></td>
-          <td><button type="button" className={BUTTON} disabled={busy} aria-label={challenge.title + " 문제 설정"} onClick={() => setRuntimeChallenge(challenge)}>문제 설정</button></td>
+          <td><button type="button" className={BUTTON} disabled={busy} aria-label={challenge.title + " 문제 설정"} onClick={() => setSettingsChallenge(challenge)}>문제 설정</button></td>
+          <td className={styles.deploymentCell}><button type="button" className={BUTTON} disabled={busy} aria-label={challenge.title + " 배포 설정"} onClick={() => setRuntimeChallenge(challenge)}>배포 설정</button>
+            <DeploymentSummary deployment={challenge.deployment}/></td>
         </tr>)}</tbody>
       </table>
       {challenges.data?.challenges?.length === 0 && <p className="p-4 text-center">표시할 문제가 없습니다</p>}
@@ -165,6 +178,7 @@ export default function AdminChallengesPage() {
         if (!refreshed) setNotice("등록은 처리됐지만 최신 목록을 조회하지 못했습니다");
       }}
     />}
-    {runtimeChallenge && <AdminChallengeSettingsDialog key={runtimeChallenge.challenge_id} challenge={runtimeChallenge} onClose={() => setRuntimeChallenge(null)} onSaved={challenges.reload}/>}
+    {settingsChallenge && <AdminChallengeSettingsDialog key={settingsChallenge.challenge_id} challenge={settingsChallenge} onClose={() => setSettingsChallenge(null)} onSaved={challenges.reload}/>}
+    {runtimeChallenge && <AdminChallengeRuntimeDialog key={runtimeChallenge.challenge_id} challenge={runtimeChallenge} onClose={() => setRuntimeChallenge(null)} onChanged={challenges.reload}/>}
   </AdminLayout>;
 }

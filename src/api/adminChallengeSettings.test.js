@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import apiClient from "./client.js";
-import { getAdminChallenge, updateAdminChallenge, getAdminChallengeFlag, revealAdminChallengeFlag, getAdminChallengeFiles } from "./admin.js";
+import { getAdminChallenge, updateAdminChallenge, getAdminChallengeFlag, revealAdminChallengeFlag, getAdminChallengeFiles, downloadAdminChallengeFile, getAdminChallengeRepositoryFiles } from "./admin.js";
 import { challengeDetailsDraft, challengeDetailsChanges } from "../features/admin/utils/adminChallengeSettings.js";
 
 test("editing a statement sends only changed basic fields and keeps grading and runtime settings out", () => {
@@ -28,16 +28,23 @@ test("challenge settings use admin routes, explicit flag reveal, and cancellatio
     await getAdminChallengeFiles("challenge-a", { signal });
     await revealAdminChallengeFlag("challenge-a", { signal });
     await updateAdminChallenge("challenge-a", { title: "새 제목", description: "새 지문" });
+    await getAdminChallengeRepositoryFiles("challenge-a", { signal });
+    await downloadAdminChallengeFile("challenge-a", "file-b", { signal });
     assert.deepEqual(requests.map(({ method, url }) => [method, url]), [
       ["get", "/admin/challenges/challenge-a"], ["get", "/admin/challenges/challenge-a/flag"],
       ["get", "/admin/challenges/challenge-a/files"], ["post", "/admin/challenges/challenge-a/flag/reveal"],
       ["patch", "/admin/challenges/challenge-a"],
+      ["get", "/admin/challenges/challenge-a/repository-files"],
+      ["get", "/admin/challenges/challenge-a/files/file-b/download"],
     ]);
     assert.ok(requests.slice(0, 4).every((request) => request.signal === signal));
     assert.deepEqual(JSON.parse(requests[3].data), {});
     assert.deepEqual(JSON.parse(requests[4].data), { title: "새 제목", description: "새 지문" });
     assert.equal(requests[3].timeout, 15000);
     assert.equal(requests[4].timeout, 15000);
+    assert.equal(requests[6].timeout, 60000);
+    assert.equal(requests[6].responseType, "blob");
+    assert.equal(requests[6].signal, signal);
   } finally {
     apiClient.defaults.adapter = originalAdapter;
     if (originalStorage) Object.defineProperty(globalThis, "localStorage", originalStorage);
