@@ -158,9 +158,6 @@ export default function IntroGuidePage() {
         aria-labelledby="rules-title"
       >
         <h2 id="rules-title">경기 규칙</h2>
-        <p className="document-note">
-          현재 기획 기준이며 공개 전 최종 운영규정 확인이 필요합니다
-        </p>
         <details className="rule-detail">
           <summary>보드와 문제 선택</summary>
           <div>
@@ -272,8 +269,12 @@ export default function IntroGuidePage() {
           세부 품목과 교환 기준, 운영 시간은 추후 안내합니다
         </p>
         <p>
-          동아리 부스에서는 카페, 추리 체험, 단어 게임과 보안 퀴즈 등 현장
+          동아리 부스에서는 카페, 미니 체육대회, 단어 게임과 보안 퀴즈 등 현장
           프로그램을 준비하고 있습니다
+        </p>
+        <p>
+          SWING의 해킹스타 선수권대회에서는 달리기 게임, 자석 양궁, 미니 컬링
+          세 종목을 즐길 수 있습니다
         </p>
         <Link className="text-link" to={ROUTES.intro + "#booths"}>
           동아리별 부스 보기
@@ -354,11 +355,8 @@ export default function IntroGuidePage() {
             </p>
           </details>
           <details>
-            <summary>AI와 외부 도구를 사용해도 되나요?</summary>
-            <p>
-              AI와 자동화 도구, 팀 밖 협업의 허용 범위는 최종 운영규정에서
-              안내합니다
-            </p>
+            <summary>AI를 사용해도 되나요?</summary>
+            <p>네, 문제 풀이에 AI를 사용할 수 있습니다</p>
           </details>
         </div>
       </section>

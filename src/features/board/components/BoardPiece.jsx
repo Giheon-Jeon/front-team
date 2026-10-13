@@ -2,7 +2,7 @@ import { memo } from "react";
 import { getBoardCellPosition } from "../utils/boardData.js";
 import styles from "./BoardScreen.module.css";
 
-export default memo(function BoardPiece({ position }) {
+export default memo(function BoardPiece({ position, transitionMs }) {
   if (position == null) return null;
   const coordinates = getBoardCellPosition(position);
   return <img
@@ -10,7 +10,7 @@ export default memo(function BoardPiece({ position }) {
     alt={`내 팀 말 (현재 ${position}번 칸)`}
     data-board-piece={position}
     draggable={false}
-    style={{ left: `${coordinates.x}%`, top: `${coordinates.y}%` }}
+    style={{ left: `${coordinates.x}%`, top: `${coordinates.y}%`, "--piece-transition": transitionMs == null ? undefined : `${transitionMs}ms` }}
     className={styles.boardPiece}
   />;
 });

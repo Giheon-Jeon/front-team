@@ -69,6 +69,27 @@ test("개요 다음에 참가 신청을 배치하고 현장 안내는 부스 뒤
     "sponsors",
   ]);
 });
+
+test("후원사는 HSPACE, 시야인사이트, 몬스터 에너지 순서로 표시한다", () => {
+  const sponsors = main.match(/<section id="sponsors"[\s\S]*?<\/section>/)?.[0];
+  assert.ok(sponsors);
+  const names = [...sponsors.matchAll(/<img\b[^>]*alt="([^"]+)"/g)]
+    .map((match) => match[1]);
+  assert.deepEqual(names, ["HSPACE", "시야인사이트", "MONSTER ENERGY"]);
+});
+
+test("모바일 후원 배치는 마지막 몬스터 에너지만 전체 너비를 사용한다", () => {
+  const css = readFileSync(new URL("./intro.css", import.meta.url), "utf8");
+  const fullRowSponsors = [];
+  postcss.parse(css).walkRules((rule) => {
+    if (!rule.selector.startsWith(".msg-intro .sponsor--")) return;
+    rule.walkDecls("grid-column", (decl) => {
+      if (decl.value === "1 / -1") fullRowSponsors.push(rule.selector);
+    });
+  });
+  assert.deepEqual(fullRowSponsors, [".msg-intro .sponsor--monster"]);
+});
+
 test("신청과 현장 안내, 상세 안내와 FAQ에 무료 참가비를 표시한다", () => {
   assert.match(main, /참가비 무료/);
   assert.match(main, /<dt>참가비<\/dt><dd>무료<\/dd>/);
@@ -76,6 +97,19 @@ test("신청과 현장 안내, 상세 안내와 FAQ에 무료 참가비를 표�
   assert.match(guide, /참가비는 무료입니다/);
   assert.doesNotMatch(main + guide, /참가비[^<]*(?:추후|미정|접수 공지)/);
 });
+test("FAQ는 문제 풀이에 AI를 사용할 수 있다고 명확히 안내한다", () => {
+  const faq = guide.match(/<details>[\s\S]*?<\/details>/g)
+    .find((item) => item.includes("<summary>AI를 사용해도 되나요?</summary>"));
+  assert.ok(faq, "AI 사용 여부를 안내하는 질문이 있어야 한다");
+  assert.match(faq, /<p>네, 문제 풀이에 AI를 사용할 수 있습니다<\/p>/);
+  assert.doesNotMatch(faq, /최종 운영규정|팀 밖 협업|자동화 도구/);
+});
+
+test("공개 경기 규칙에는 기획 단계의 검토 요청 문구를 표시하지 않는다", () => {
+  assert.match(guide, /<h2 id="rules-title">경기 규칙<\/h2>/);
+  assert.doesNotMatch(guide, /현재 기획 기준|공개 전 최종 운영규정 확인이 필요/);
+});
+
 test("신청 자격과 내부, 외부 선발 기준을 유지한다", () => {
   for (const html of [main, guide]) {
     assert.match(html, /대회 당일 만 19세 이상인 학부 재학생·휴학생/);
@@ -109,18 +143,25 @@ test("메인과 상세 안내의 150만원 시상과 외부 3위 10만원이 일
     /외부 트랙<\/th><td>50만원<\/td><td>30만원<\/td><td>10만원<\/td>/,
   );
 });
-test("로그인은 기존 경로를 사용하고 참가 신청은 지정한 폼을 새 창으로 연다", () => {
+test("로그인은 기존 경로를 사용하고 참가 신청은 HSPACE 주소를 새 창으로 연다", () => {
   for (const html of [main, guide]) {
     assert.match(html, /class="header-login" href="\/login"[^>]*>LOGIN<\/a>/);
     assert.doesNotMatch(html, /aria-disabled="true"|LOGIN 준비 중/);
     for (const tag of html.match(/<a\b[^>]*>/g)) {
       if (tag.includes('target="_blank"'))
         assert.match(tag, /rel="noopener noreferrer"/);
-      if (tag.includes('aria-label="참가 신청 새 창"'))
-        assert.match(tag, /href="https:\/\/forms.gle\/mZQoNZkUM5mSj7XE6"/);
     }
-    assert.doesNotMatch(html, /<form|<dialog|<iframe|javascript:/);
+    const applyLinks = html.match(/<a\b[^>]*aria-label="참가 신청 새 창"[^>]*>/g) || [];
+    assert.ok(applyLinks.length > 0, "참가 신청 버튼이 있어야 한다");
+    for (const tag of applyLinks) {
+      assert.match(tag, /href="https:\/\/hspace\.io\/u\/2026-msgctf"/);
+      assert.match(tag, /target="_blank"/);
+      assert.match(tag, /rel="noopener noreferrer"/);
+    }
+    assert.doesNotMatch(html, /href="https:\/\/(?:forms\.gle|docs\.google\.com\/forms)/);
+    assert.doesNotMatch(html, /<form|<dialog|javascript:/);
   }
+  assert.doesNotMatch(guide, /<iframe/);
 });
 test("화면에서 쓰는 모든 원본 이미지가 저장소 안에 있고 링크된 섹션이 존재한다", () => {
   const root = new URL("../../../", import.meta.url);
@@ -138,14 +179,19 @@ test("화면에서 쓰는 모든 원본 이미지가 저장소 안에 있고 링
       );
     }
 });
-test("다람쥐 세 자세는 눈과 팔다리 털색을 맞춘 이미지를 원래 순서로 표시한다", () => {
-  const images = [...main.matchAll(/src="(\/assets\/intro\/mascot-dice-[^"]+)"/g)]
-    .map((match) => match[1]);
-  assert.deepEqual(images, [
-    "/assets/intro/mascot-dice-ready-v3.png",
-    "/assets/intro/mascot-dice-throw-v3.png",
-    "/assets/intro/mascot-dice-land-v4.png",
-  ]);
+test("홍보페이지의 다람쥐 대신 실제 도로 지도를 하나만 지연 로딩한다", () => {
+  assert.match(main, /<aside class="venue-summary" aria-labelledby="venue-summary-title">/);
+  assert.match(main, /<h3 id="venue-summary-title">오시는 길<\/h3>/);
+  assert.match(main, /1호선 종각역/);
+  assert.match(main, /도보 2분/);
+  assert.doesNotMatch(main, /mascot-dice-|mascot-sequence|venue-route/);
+  const frames = main.match(/<iframe\b[^>]*>/g);
+  assert.equal(frames.length, 1);
+  assert.match(frames[0], /src="https:\/\/www\.google\.com\/maps\/embed\?pb=/);
+  assert.match(frames[0], /title="교원챌린지홀 주변 도로와 행사장 위치 지도"/);
+  assert.match(frames[0], /loading="lazy"/);
+  assert.match(frames[0], /referrerPolicy="strict-origin-when-cross-origin"/i);
+  assert.doesNotMatch(main, /maps\/api\/js|maps\/embed\/v1|YOUR_API_KEY/);
 });
 test("수정한 주사위 이미지는 투명 정사각형 크기와 기존 파일 용량 이내를 유지한다", () => {
   const root = new URL("../../../", import.meta.url);
@@ -181,16 +227,42 @@ test("인트로 CSS는 게임 페이지에 적용되는 전역 선택자를 추�
       match[1],
     );
 });
-test("모션 버튼은 텍스트 대신 아이콘을 쓰고 두 곳 모두 접근성 이름이 있다", () => {
+test("장소 안내에는 불필요한 모션 버튼을 두지 않고 전체 화면 모션 제어만 유지한다", () => {
   const buttons = main.match(
     /<button\b[^>]*class="[^"]*motion-control"[\s\S]*?<\/button>/g,
   );
-  assert.equal(buttons.length, 2);
+  assert.equal(buttons.length, 1);
   for (const button of buttons) {
     assert.match(button, /aria-label="화면 모션 일시정지"/);
     assert.match(button, /motion-pause/);
     assert.match(button, /motion-play/);
   }
+});
+
+test("Aegis 주최 동아리와 부스 안내는 캐시 버전을 붙인 공식 로고를 함께 쓴다", () => {
+  assert.equal(
+    (main.match(/src="\/assets\/intro\/club-aegis\.svg\?v=bca7b7bc"/g) || []).length,
+    2,
+  );
+  assert.doesNotMatch(main, /src="\/assets\/intro\/club-aegis\.svg"/);
+});
+
+test("SWING 부스와 상세 안내는 변경된 해킹스타 선수권대회 세 종목을 보여 준다", () => {
+  const boothSection = main.match(/<section id="booths"[\s\S]*?<\/section>/)?.[0];
+  assert.ok(boothSection);
+  const boothCards = boothSection.match(/<article>[\s\S]*?<\/article>/g);
+  assert.equal(boothCards.length, 6);
+  const swingCard = boothCards.find((card) => /booth-club">SWING<\/p>/.test(card));
+  assert.ok(swingCard);
+  assert.match(swingCard, /src="\/assets\/intro\/club-swing.svg"/);
+  assert.match(swingCard, /<h3>해킹스타 선수권대회<\/h3>/);
+  assert.match(swingCard, /<p>달리기 게임, 자석 양궁, 미니 컬링<\/p>/);
+  for (const html of [main, guide]) {
+    for (const text of ["해킹스타 선수권대회", "달리기 게임", "자석 양궁", "미니 컬링"])
+      assert.ok(html.includes(text), text);
+    assert.doesNotMatch(html, /대저택 살인사건|범인을 찾는 추리 체험|카페, 추리 체험/);
+  }
+  assert.match(guide, /카페, 미니 체육대회, 단어 게임과 보안 퀴즈/);
 });
 
 test("첫 화면은 경량 로고를 우선 받고 글꼴 원본과 무거운 배경은 읽지 않는다", () => {

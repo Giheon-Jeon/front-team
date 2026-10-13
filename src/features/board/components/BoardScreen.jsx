@@ -33,6 +33,7 @@ export default function BoardScreen({
   diceStatus,
   currentCell,
   displayPosition,
+  pieceTransitionMs,
   pendingRoll,
   pendingChanceChoice,
   cellEvent,
@@ -40,7 +41,6 @@ export default function BoardScreen({
   awaitingDiscard,
   ownedChanceCards,
   cellStatesByIndex,
-  selectedCell,
   openedChallenges = [],
   openedChallengesLoading = false,
   openedChallengesError = "",
@@ -69,7 +69,6 @@ export default function BoardScreen({
   onSpinRoulette,
   onRetryChanceDraw,
   onCloseCellEvent,
-  onClearSelectedCell,
   onOpenChallengeDetail,
   onCancelAirportDestination,
 }) {
@@ -81,6 +80,7 @@ export default function BoardScreen({
   };
   const openListView = useRef(normalizeBoardListView(initialOpenListView));
   const [isBoardZoomed, setIsBoardZoomed] = useState(false);
+  const [inspectedCell, setInspectedCell] = useState(null);
   const zoomBeforeTrainSelection = useRef(null);
   const [isLineSummaryOpen, setIsLineSummaryOpen] = useState(false);
   const [selectedLineId, setSelectedLineId] = useState(null);
@@ -262,6 +262,7 @@ export default function BoardScreen({
             </button>
           </div>
         </div>
+        {inspectedCell && <p className={styles.mobileCellInfo} role="status">{inspectedCell.cellIndex}번 · 유형 {inspectedCell.type} · 난이도 {inspectedCell.difficulty || "—"}</p>}
         <div
           id={boardRegionId}
           ref={boardViewport}
@@ -278,11 +279,13 @@ export default function BoardScreen({
               cellStatesByIndex={cellStatesByIndex}
               consumedCellIndexes={myBoard?.consumedCellIndexes ?? []}
               piecePosition={displayPosition}
+              pieceTransitionMs={pieceTransitionMs}
               trainTravel={{ ...trainTravel, onProgress: followTrain, onStart: trainWhistle.play, onStop: trainWhistle.stop }}
               startRewardEvent={startRewardEvent}
               canRoll={canRoll}
               isRolling={isMutating}
               onRollDice={onRollDice}
+              onInspectCell={setInspectedCell}
               onSelectCell={(cellIndex) => {
                 if (isMutating || trainTravel.journey) return;
                 setIsOpenListVisible(false);
@@ -307,7 +310,7 @@ export default function BoardScreen({
         </div>
       </div>
 
-      <ChanceCardSummary
+      {!isOpenListVisible && <ChanceCardSummary
         cards={ownedChanceCards}
         cells={cells}
         consumedCellIndexes={myBoard?.consumedCellIndexes ?? []}
@@ -317,7 +320,7 @@ export default function BoardScreen({
           Boolean(pendingRoll) || diceStatus?.blockedReason === "PENDING_CONFIRM"
         }
         onUseCard={onUseChanceCard}
-      />
+      />}
 
       {isOpenListVisible && (
         <OpenChallengesSidePanel
@@ -361,7 +364,6 @@ export default function BoardScreen({
           ownedChanceCards={ownedChanceCards}
           awaitingDiscard={awaitingDiscard}
           blockedReason={diceStatus?.blockedReason}
-          selectedCell={selectedCell}
           isMutating={isMutating}
           isAirportSelecting={isAirportSelecting}
           isLoading={isLoading}
@@ -376,7 +378,6 @@ export default function BoardScreen({
           onCloseCellEvent={closeCellEvent}
           isRouletteOpen={isRouletteOpen}
           onReopenRoulette={() => setDismissedRouletteToken(null)}
-          onClearSelectedCell={onClearSelectedCell}
           isChallengeSelectionOpen={isChallengeSelectionOpen}
           onCloseChallengeSelection={() => setDismissedSelectionKey(selectionKey)}
           onReopenChallengeSelection={() => setDismissedSelectionKey(null)}

@@ -125,7 +125,7 @@ test("금액 표시와 무료 참가비, 공개 링크를 확인한다", () => {
   assert.equal(eventConfig.participationFee, "무료");
   assert.equal(
     eventConfig.registrationUrl,
-    "https://forms.gle/mZQoNZkUM5mSj7XE6",
+    "https://hspace.io/u/2026-msgctf",
   );
   assert.equal(eventConfig.contactEmail, "msgctf@gmail.com");
 });

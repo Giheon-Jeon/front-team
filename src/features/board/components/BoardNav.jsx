@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useRef } from "react";
 import { performLogout } from "../../../api/auth.js";
 import { ROUTES } from "../../../routes/routePaths.js";
 import styles from "./BoardScreen.module.css";
@@ -27,7 +28,8 @@ const BUTTONS = [
     to: ROUTES.mypage,
     label: "마이 페이지",
     mobileLabel: "마이페이지",
-    src: "/assets/board/nav-mypage.png",
+    // 흰 테두리를 지운 뒤에도 브라우저가 예전 이미지를 캐시로 보여줘 주소에 버전을 붙였다
+    src: "/assets/board/nav-mypage.png?v=2",
     mobileImageWidth: "256.41%",
     mobileImageAnchor: "translate(-50%, -48%)",
     box: { left: 82.09 - NAV_SHIFT, top: 2.54, width: 9.88, height: 11.68 },
@@ -59,10 +61,17 @@ const BUTTONS = [
 
 export default function BoardNav() {
   const navigate = useNavigate();
+  const mobileMenu = useRef(null);
+  const closeMenu = () => { if (mobileMenu.current) mobileMenu.current.open = false; };
 
   return (
     <>
       <nav className={styles.mobileNav} aria-label="대회 메뉴">
+        <Link to={ROUTES.mypage} className={styles.mobileNavPrimary}>마이페이지</Link>
+        <Link to={ROUTES.leaderboard} className={styles.mobileNavPrimary}>순위</Link>
+        <details ref={mobileMenu} className={styles.mobileMenu} onKeyDown={event => { if (event.key === "Escape") { closeMenu(); mobileMenu.current?.querySelector("summary")?.focus(); } }}>
+          <summary aria-label="대회 전체 메뉴"><span aria-hidden="true">☰</span> 메뉴</summary>
+          <div className={styles.mobileMenuItems} onClick={closeMenu}>
         {BUTTONS.map((button) => {
           const content = <>
             <span className={styles.mobileNavIcon} aria-hidden="true">
@@ -81,6 +90,8 @@ export default function BoardNav() {
         })}
         <Link to={ROUTES.koth}>KoTH</Link>
         <Link to={ROUTES.signatures}>동아리 부스</Link>
+          </div>
+        </details>
       </nav>
       <div className={styles.desktopOnly}>
       {BUTTONS.map((button) => (

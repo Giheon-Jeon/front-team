@@ -39,7 +39,7 @@ import {
   unwrapBoardResponse,
 } from "../utils/boardData.js";
 
-const MOVEMENT_STEP_MS = 180;
+import { BOARD_PIECE_TRANSITION_MS, getBoardMovementTiming } from "../utils/boardMovementTiming.js";
 
 function wait(milliseconds) {
   return new Promise((resolve) => {
@@ -48,6 +48,7 @@ function wait(milliseconds) {
 }
 
 export default function useBoardController() {
+  const [pieceTransitionMs, setPieceTransitionMs] = useState(BOARD_PIECE_TRANSITION_MS);
   const mountedRef = useRef(false);
   const mutationLockRef = useRef(false);
   const mutationKeysRef = useRef(new Map());
@@ -71,7 +72,6 @@ export default function useBoardController() {
   const [cellEvent, setCellEvent] = useState(null);
   const [startRewardEvent, setStartRewardEvent] = useState(null);
   const [awaitingDiscard, setAwaitingDiscard] = useState(false);
-  const [selectedCellIndex, setSelectedCellIndex] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isMutating, setIsMutating] = useState(false);
   const [error, setError] = useState(null);
@@ -158,13 +158,18 @@ export default function useBoardController() {
     };
   }, [load]);
 
-  const animateMovement = useCallback(async (movementPath) => {
+  const animateMovement = useCallback(async (movementPath, { previousPosition, accelerateStart = false } = {}) => {
     if (!Array.isArray(movementPath)) return;
-
-    for (const cellIndex of movementPath) {
-      if (!mountedRef.current) return;
-      setDisplayPosition(cellIndex);
-      await wait(MOVEMENT_STEP_MS);
+    const timing = getBoardMovementTiming(previousPosition, movementPath, accelerateStart);
+    if (mountedRef.current) setPieceTransitionMs(timing.transitionMs);
+    try {
+      for (const cellIndex of movementPath) {
+        if (!mountedRef.current) return;
+        setDisplayPosition(cellIndex);
+        await wait(timing.stepMs);
+      }
+    } finally {
+      if (mountedRef.current) setPieceTransitionMs(BOARD_PIECE_TRANSITION_MS);
     }
   }, []);
 
@@ -257,7 +262,7 @@ export default function useBoardController() {
             unwrapBoardResponse(await rollDice({ idempotencyKey })),
           );
           await onDiceResult?.(rollResult);
-          await animateMovement(rollResult.movementPath);
+          await animateMovement(rollResult.movementPath, { previousPosition: rollResult.previousPosition, accelerateStart: true });
 
           if (rollResult.pendingConfirm) {
             if (mountedRef.current) setPendingRoll(rollResult);
@@ -286,7 +291,7 @@ export default function useBoardController() {
           const confirmResult = adaptMovementResult(
             unwrapBoardResponse(await confirmDice({ idempotencyKey })),
           );
-          await animateMovement(confirmResult.movementPath);
+          await animateMovement(confirmResult.movementPath, { previousPosition: confirmResult.previousPosition, accelerateStart: true });
           if (mountedRef.current) setPendingRoll(null);
           showStartReward(confirmResult, idempotencyKey);
           await syncProgress();
@@ -565,14 +570,6 @@ export default function useBoardController() {
     [myBoard?.cellStates],
   );
 
-  const selectedCell = useMemo(
-    () =>
-      boardDefinition?.cells.find(
-        (cell) => cell.cellIndex === selectedCellIndex,
-      ) ?? null,
-    [boardDefinition?.cells, selectedCellIndex],
-  );
-
   const lineProgress = useMemo(
     () => getBoardLineProgress(boardDefinition?.cells, cellStatesByIndex),
     [boardDefinition?.cells, cellStatesByIndex],
@@ -584,6 +581,7 @@ export default function useBoardController() {
     diceStatus,
     currentCell,
     displayPosition,
+    pieceTransitionMs,
     pendingRoll,
     pendingChanceChoice,
     cellEvent,
@@ -597,7 +595,6 @@ export default function useBoardController() {
     openedChallengesError,
     reloadOpenedChallenges,
     openedChallengesByCell,
-    selectedCell,
     isLoading,
     isMutating,
     error: error ?? deadlineError,
@@ -612,8 +609,6 @@ export default function useBoardController() {
     discardChance: handleDiscardChance,
     spinRoulette: handleSpinRoulette,
     closeCellEvent: () => setCellEvent(null),
-    selectCell: setSelectedCellIndex,
-    clearSelectedCell: () => setSelectedCellIndex(null),
     clearError: () => { setError(null); setDeadlineError(null); },
   };
 }

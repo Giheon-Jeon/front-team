@@ -1,6 +1,6 @@
 import { eventConfig } from "../config/eventConfig.js";
 import { getEventLabels } from "../utils/eventData.js";
-import MascotSequence from "./MascotSequence.jsx";
+import VenueSummary from "./VenueSummary.jsx";
 
 export default function EventOverview() {
   const labels = getEventLabels(eventConfig.event);
@@ -33,28 +33,12 @@ export default function EventOverview() {
               </dd>
             </div>
             <div>
-              <dt>장소</dt>
-              <dd>
-                {eventConfig.venue}
-                <p className="venue-address">{eventConfig.venueAddress}</p>
-                <nav className="venue-map-links" aria-label="대회장 지도">
-                  {eventConfig.venueMapLinks.map(({ label, url }) => (
-                    <a
-                      key={label}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={`${eventConfig.venue} 위치 ${label}에서 보기 (새 탭)`}
-                    >
-                      {label}
-                    </a>
-                  ))}
-                </nav>
-              </dd>
+              <dt>대회 장소</dt>
+              <dd>{eventConfig.venue}</dd>
             </div>
           </dl>
         </div>
-        <MascotSequence />
+        <VenueSummary />
       </div>
     </section>
   );

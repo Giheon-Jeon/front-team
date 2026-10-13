@@ -652,7 +652,8 @@
 }
 .msg-intro .overview-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
   align-items: start;
   column-gap: var(--space-6);
   row-gap: var(--space-4);
@@ -734,13 +735,59 @@
   white-space: nowrap;
   color: var(--muted);
 }
-.msg-intro .overview-copy .venue-address {
+.msg-intro .venue-summary {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  min-width: 0;
+  padding-left: var(--space-4);
+  border-left: 1px solid var(--line);
+}
+.msg-intro .venue-summary h3 {
+  font-size: 30px;
+  line-height: 1.35;
+}
+.msg-intro .venue-map {
+  height: 200px;
+  margin: 16px 0;
+  background: #ebe8e2;
+}
+.msg-intro .venue-map iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.msg-intro .venue-details {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  align-content: start;
+  gap: var(--space-3);
+}
+.msg-intro .venue-location,
+.msg-intro .venue-access {
+  min-width: 0;
+}
+.msg-intro .venue-summary .venue-name {
+  margin: 0;
+  color: var(--fg);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.msg-intro .venue-summary .venue-address {
   margin-top: 6px;
   color: var(--muted);
   font-size: clamp(14px, 1.4vw, 16px);
   font-weight: 400;
   line-height: 1.65;
   word-break: keep-all;
+}
+.msg-intro .venue-transit {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.65;
 }
 .msg-intro .venue-map-links {
   display: flex;
@@ -751,6 +798,7 @@
 .msg-intro .venue-map-links a {
   display: inline-flex;
   align-items: center;
+  gap: 8px;
   min-height: 44px;
   color: var(--accent);
   font-size: 14px;
@@ -764,6 +812,17 @@
 .msg-intro .venue-map-links a:hover {
   color: var(--fg);
   text-decoration-color: currentColor;
+}
+.msg-intro .venue-map-links a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+.msg-intro .venue-map-links svg {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
 }
 .msg-intro .overview-visual {
   min-width: 0;
@@ -1689,13 +1748,38 @@
   }
   .msg-intro .overview-layout {
     gap: var(--space-4);
-    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto;
   }
   .msg-intro .overview-intro {
     font-size: 18px;
   }
   .msg-intro .overview-intro strong {
     font-size: 28px;
+  }
+  .msg-intro .overview-copy {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .msg-intro .venue-summary {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: var(--space-2) var(--space-4);
+    padding: var(--space-3) 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+  .msg-intro .venue-summary h3 {
+    grid-column: 1 / -1;
+  }
+  .msg-intro .venue-map {
+    margin: 0;
+  }
+  .msg-intro .venue-details {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
   }
   .msg-intro .overview-copy .event-facts > div {
     grid-template-columns: 80px minmax(0, 1fr);
@@ -1911,7 +1995,8 @@
     width: calc(100% - 48px);
   }
   .msg-intro .overview-layout {
-    grid-template-columns: minmax(0, 1fr) clamp(96px, 28vw, 176px);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
     column-gap: var(--space-2);
     row-gap: var(--space-3);
     margin-top: var(--space-4);
@@ -1925,7 +2010,29 @@
   }
   .msg-intro .overview-copy {
     grid-column: 1 / -1;
+    grid-row: 2;
     width: 100%;
+  }
+  .msg-intro .venue-summary {
+    grid-column: 1;
+    grid-row: 3;
+    display: block;
+    padding: var(--space-3) 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+  .msg-intro .venue-summary h3 {
+    font-size: 26px;
+  }
+  .msg-intro .venue-map {
+    height: 200px;
+    margin: 16px 0;
+  }
+  .msg-intro .venue-details {
+    gap: var(--space-1);
+  }
+  .msg-intro .venue-summary .venue-name {
+    font-size: 20px;
   }
   .msg-intro .section-intro {
     font-size: 17px;
@@ -2200,7 +2307,7 @@
   .msg-intro .sponsor--hspace .sponsor-logo {
     width: 92px;
   }
-  .msg-intro .sponsor--siya {
+  .msg-intro .sponsor--monster {
     grid-column: 1 / -1;
     min-height: 0;
   }

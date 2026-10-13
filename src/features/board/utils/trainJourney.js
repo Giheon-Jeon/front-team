@@ -54,7 +54,8 @@ export function createTrainJourney(result) {
     const after = samples[Math.min(samples.length - 1, index + 1)];
     sample.heading = -Math.atan2((after.y - before.y) / TRAIN_FLOOR_PROJECTION, after.x - before.x);
   });
-  return { cells, samples, distance: samples.at(-1).distance, duration: Math.min(4400, 2200 + (cells.length - 1) * 85) };
+  // 도착 페이드 260ms를 포함해 긴 경로도 약 3초 안에 끝낸다.
+  return { cells, samples, distance: samples.at(-1).distance, duration: Math.min(2740, 2200 + (cells.length - 1) * 15) };
 }
 
 function sampleDistance(journey, distance) {
