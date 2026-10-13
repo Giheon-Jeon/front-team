@@ -144,7 +144,9 @@ export default function AdminChallengesPage() {
       <table className={styles.table} aria-label="문제 목록"><thead><tr>{["문제", "배점 · 풀이", "인스턴스", "공개 상태", "배포 상태", "관리"].map((text) => <th key={text}>{text}</th>)}</tr></thead>
         <tbody>{(challenges.data?.challenges ?? []).map((challenge) => <tr key={challenge.challenge_id} className="border-t border-admin-divider/40">
           <td><span className={styles.title}>{challenge.title}</span><span className={styles.secondary}>{challenge.category} · {challenge.difficulty}</span></td>
-          <td>{challenge.score}점<span className={styles.secondary}>{challenge.solved_team_count}팀 해결</span></td>
+          <td>{challenge.score}점<button type="button" className={styles.solveCountLink} disabled={busy}
+            aria-label={`${challenge.title} 풀이 기록 ${challenge.solved_team_count}팀`}
+            onClick={() => setEditing({ challenge, section: "solves" })}>{challenge.solved_team_count}팀 해결</button></td>
           <td>{challenge.running_instance_count} {challenge.failed_instance_count > 0 && <span className="text-admin-failed">(실패 {challenge.failed_instance_count})</span>}</td>
           <td><button type="button" disabled={busy} aria-label={challenge.title + " 공개 상태 변경"} onClick={() => { setSelected(challenge); setReason(""); setNotice(""); }}><AdminBadge tone={challenge.is_published ? "good" : "neutral"}>{challenge.is_published ? "공개" : "비공개"}</AdminBadge></button></td>
           <td className={styles.deploymentCell}><DeploymentSummary deployment={challenge.deployment}/></td>

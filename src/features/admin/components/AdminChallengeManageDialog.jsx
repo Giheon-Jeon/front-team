@@ -3,6 +3,7 @@ import AdminDialog from "./AdminDialog.jsx";
 import AdminTabs from "./AdminTabs.jsx";
 import AdminChallengeSettingsDialog from "./AdminChallengeSettingsDialog.jsx";
 import AdminChallengeRuntimeDialog from "./AdminChallengeRuntimeDialog.jsx";
+import AdminChallengeSolvesPanel from "./AdminChallengeSolvesPanel.jsx";
 import { AdminBadge } from "./AdminLayout.jsx";
 import styles from "./AdminWorkspace.module.css";
 
@@ -32,6 +33,7 @@ export default function AdminChallengeManageDialog({ challenge, initialSection =
       items={[
         { id: "problem", label: "기본 정보" },
         { id: "deployment", label: "배포 설정" },
+        { id: "solves", label: "풀이 기록" },
       ]}/>
     <section role="tabpanel" id="challenge-workspace-panel-problem" aria-labelledby="challenge-workspace-tab-problem" hidden={section !== "problem"} className={styles.panel}>
       {opened.has("problem") && <AdminChallengeSettingsDialog challenge={challenge} embedded active={section === "problem"}
@@ -40,6 +42,9 @@ export default function AdminChallengeManageDialog({ challenge, initialSection =
     <section role="tabpanel" id="challenge-workspace-panel-deployment" aria-labelledby="challenge-workspace-tab-deployment" hidden={section !== "deployment"} className={styles.panel}>
       {opened.has("deployment") && <AdminChallengeRuntimeDialog challenge={challenge} embedded
         onBusyChange={setDeploymentBusy} onChanged={onChanged}/>}
+    </section>
+    <section role="tabpanel" id="challenge-workspace-panel-solves" aria-labelledby="challenge-workspace-tab-solves" hidden={section !== "solves"} className={styles.panel}>
+      {opened.has("solves") && <AdminChallengeSolvesPanel challengeId={challenge.challenge_id}/>}
     </section>
   </AdminDialog>;
 }
