@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { activateChallengeRelease, deriveChallengeRelease, getChallengeReleases, getChallengeRuntimeSecrets, importChallengeEnvironmentFile, registerChallengeRelease, registerChallengeRuntimeSecret } from "../../../api/admin.js";
+import { activateChallengeRelease, deriveChallengeRelease, getChallengeReleases, getChallengeRuntimeSecrets, importChallengeEnvironmentFile, importChallengeRepositoryEnvironment, registerChallengeRelease, registerChallengeRuntimeSecret } from "../../../api/admin.js";
 import { isSuccess } from "../../../utils/response.js";
 import { toKst } from "../../../utils/time.js";
 import useAdminResource from "../hooks/useAdminResource.js";
 import { buildDerivedSettings, parseReleaseFile, releaseRequirements, releaseSettingsDraft, validateRuntimeSecret } from "../utils/adminRuntime.js";
 import AdminDialog from "./AdminDialog.jsx";
 import AdminEnvironmentFileImporter from "./AdminEnvironmentFileImporter.jsx";
+import AdminRepositoryEnvironmentImporter from "./AdminRepositoryEnvironmentImporter.jsx";
 import AdminTabs from "./AdminTabs.jsx";
 import styles from "./AdminWorkspace.module.css";
 import { AdminBadge, AdminStatusMessage } from "./AdminLayout.jsx";
@@ -74,6 +75,7 @@ function RuntimeSettingsEditor({ release, secrets, busy, onSave }) {
 export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
   const [releaseId, setReleaseId] = useState("");
   const [panel, setPanel] = useState("overview");
+  const [environmentMethod, setEnvironmentMethod] = useState("repository");
   const [showSecretHistory, setShowSecretHistory] = useState(false);
   const focusSecret = useRef(false);
   const [name, setName] = useState("flag");
@@ -164,6 +166,12 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
     return saved;
   }
 
+  async function saveRepositoryEnvironment(sourceId, body) {
+    const saved = await mutate(() => importChallengeRepositoryEnvironment(challenge.challenge_id, sourceId, body), "저장소 설정으로 새 버전을 저장했습니다 내용을 확인한 뒤 이 버전 사용을 선택해주세요");
+    if (saved) { setReleaseId(saved.release_id ?? ""); setPanel("overview"); }
+    return saved;
+  }
+
   return <AdminDialog title={challenge.title + " · 실행 설정"} onClose={onClose} busy={busy} variant="workspace">
     <AdminStatusMessage status={runtime.status} error={runtime.error} onRetry={runtime.retry}/>
     {error && <p role="alert" className="mb-4 text-admin-failed">{error}</p>}
@@ -191,7 +199,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
         <button type="button" className={BUTTON + " ml-2"} disabled={busy} onClick={() => setConfirming(false)}>취소</button>
       </div>}
       <AdminTabs idPrefix="runtime-settings" label="실행 설정 메뉴" value={panel} onChange={setPanel} disabled={busy}
-        items={[{ id: "overview", label: "설정 확인" }, { id: "environment", label: ".env로 수정" },
+        items={[{ id: "overview", label: "설정 확인" }, { id: "environment", label: "환경변수 수정" },
           { id: "secrets", label: "비밀값 관리" }, { id: "image", label: "이미지 등록" }]}/>
 
       <section role="tabpanel" id="runtime-settings-panel-overview" aria-labelledby="runtime-settings-tab-overview" hidden={panel !== "overview"} className={styles.panel}>
@@ -221,7 +229,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
                 </tbody>
               </table>}
           </section>)}
-          <button type="button" className={BUTTON} disabled={busy || !selected.is_deployable} onClick={() => setPanel("environment")}>.env로 설정 바꾸기</button>
+          <button type="button" className={BUTTON} disabled={busy || !selected.is_deployable} onClick={() => setPanel("environment")}>환경변수 수정</button>
           <details className={styles.details}>
             <summary>이미지·자원 상세</summary>
             <dl>
@@ -240,11 +248,22 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
 
       <section role="tabpanel" id="runtime-settings-panel-environment" aria-labelledby="runtime-settings-tab-environment" hidden={panel !== "environment"} className={styles.panel}>
         {selected?.is_deployable ? <>
+          <div className="mb-5 flex flex-wrap gap-2" role="group" aria-label="환경변수 입력 방법">
+            {[{ id: "repository", label: "저장소에서 가져오기" }, { id: "file", label: ".env 파일" }, { id: "manual", label: "직접 입력" }].map((method) =>
+              <button key={method.id} type="button" aria-pressed={environmentMethod === method.id} className={environmentMethod === method.id ? styles.primary : BUTTON}
+                disabled={busy} onClick={() => setEnvironmentMethod(method.id)}>{method.label}</button>)}
+          </div>
+          <div hidden={environmentMethod !== "repository"}>
+            <AdminRepositoryEnvironmentImporter key={selected.release_id} challengeId={challenge.challenge_id} release={selected}
+              secrets={storedSecrets} busy={busy} onSave={(body) => saveRepositoryEnvironment(selected.release_id, body)}/>
+          </div>
+          <div hidden={environmentMethod !== "file"}>
           <AdminEnvironmentFileImporter key={selected.release_id} challengeId={challenge.challenge_id} release={selected}
             secrets={storedSecrets} busy={busy} onSave={(body) => saveEnvironmentFile(selected.release_id, body)}/>
-          <details className={styles.details}><summary>파일 없이 직접 편집</summary>
+          </div>
+          <div hidden={environmentMethod !== "manual"}>
             <RuntimeSettingsEditor key={selected.release_id} release={selected} secrets={storedSecrets} busy={busy} onSave={(settings) => saveDerived(selected.release_id, settings)}/>
-          </details>
+          </div>
         </> : <p className={styles.empty}>사용할 수 있는 이미지 릴리스를 먼저 등록해주세요</p>}
       </section>
 
@@ -267,7 +286,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
       </section>
 
       <section role="tabpanel" id="runtime-settings-panel-image" aria-labelledby="runtime-settings-tab-image" hidden={panel !== "image"} className={styles.panel}>
-        <p className={styles.panelIntro}>CI에서 발행한 JSON 파일을 등록합니다 환경변수만 바꿀 때는 ‘.env로 수정’을 사용해주세요</p>
+        <p className={styles.panelIntro}>CI에서 발행한 JSON 파일을 등록합니다 환경변수만 바꿀 때는 ‘환경변수 수정’을 사용해주세요</p>
         <form onSubmit={saveRelease} className="space-y-4">
           <label className={styles.fileBox}>릴리스 파일
             <input ref={fileInput} type="file" accept=".json,application/json" disabled={busy} onChange={readFile}/>

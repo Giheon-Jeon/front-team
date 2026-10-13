@@ -16,6 +16,12 @@
 
 ## 변경 순서
 
+환경변수 수정에서는 저장소에서 가져오기·.env 파일·직접 입력 중 하나를 선택합니다
+저장소 방식은 문제의 env/컨테이너이름.env.example만 읽습니다
+컨테이너를 고르고 불러온 뒤 필요한 값을 채워 설정 확인 → 새 설정 버전 저장 순서로 진행합니다
+플래그·비밀번호·키는 템플릿에서 비워두고 화면에서 입력하거나 저장된 비밀값을 연결합니다
+새 버전을 저장하면 설정 확인으로 돌아오며 적용은 별도로 선택합니다
+
 1) 필요한 비밀값을 이름과 함께 저장합니다
 2) CI에서 받은 실행 릴리스 JSON을 등록합니다
 3) 환경변수와 비밀값 연결 버전을 확인합니다
@@ -33,6 +39,9 @@
 
 | API | 용도 |
 | --- | --- |
+| GET /admin/challenges/{challenge_id}/releases/{release_id}/repository_environment?container=web | 컨테이너의 .env.example 조회 |
+| POST /admin/challenges/{challenge_id}/releases/{release_id}/repository_environment/preview | 선택 항목 검사 |
+| POST /admin/challenges/{challenge_id}/releases/{release_id}/repository_environment/import | 비밀값·새 설정 버전 저장 |
 | GET /admin/challenges/{challenge_id}/releases | 릴리스와 컨테이너별 secret_bindings 조회 |
 | GET /admin/challenges/{challenge_id}/runtime-secrets | 비밀값 이름과 버전 조회 |
 | POST /admin/challenges/{challenge_id}/runtime-secrets | 비밀값 새 버전 저장 |

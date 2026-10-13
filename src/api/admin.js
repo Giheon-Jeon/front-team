@@ -224,6 +224,18 @@ export function importChallengeEnvironmentFile(challengeId, releaseId, body) {
   return apiClient.post(`/admin/challenges/${challengeId}/releases/${releaseId}/environment_files/import`, body, MUTATION_CONFIG);
 }
 
+export function getChallengeRepositoryEnvironment(challengeId, releaseId, container) {
+  return apiClient.get(`/admin/challenges/${challengeId}/releases/${releaseId}/repository_environment`, { params: { container } });
+}
+
+export function previewChallengeRepositoryEnvironment(challengeId, releaseId, body) {
+  return apiClient.post(`/admin/challenges/${challengeId}/releases/${releaseId}/repository_environment/preview`, body, MUTATION_CONFIG);
+}
+
+export function importChallengeRepositoryEnvironment(challengeId, releaseId, body) {
+  return apiClient.post(`/admin/challenges/${challengeId}/releases/${releaseId}/repository_environment/import`, body, MUTATION_CONFIG);
+}
+
 export function getChallengeRuntimeSecrets(challengeId, config) {
   return apiClient.get(`/admin/challenges/${challengeId}/runtime-secrets`, config);
 }
