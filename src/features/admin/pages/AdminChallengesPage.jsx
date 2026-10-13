@@ -7,7 +7,7 @@ import AdminLayout, { AdminBadge, AdminStatusMessage } from "../components/Admin
 import AdminPagination from "../components/AdminPagination.jsx";
 import AdminDialog from "../components/AdminDialog.jsx";
 import AdminChallengeCreateDialog from "../components/AdminChallengeCreateDialog.jsx";
-import AdminChallengeRuntimeDialog from "../components/AdminChallengeRuntimeDialog.jsx";
+import AdminChallengeSettingsDialog from "../components/AdminChallengeSettingsDialog.jsx";
 import AdminTabs from "../components/AdminTabs.jsx";
 import styles from "../components/AdminWorkspace.module.css";
 import { ADMIN_CHALLENGE_CATEGORIES } from "../utils/adminValidation.js";
@@ -116,7 +116,7 @@ export default function AdminChallengesPage() {
     <AdminTabs idPrefix="challenge-management" label="문제 관리 메뉴" value={tab} onChange={setTab} disabled={busy}
       items={[{ id: "challenges", label: "문제 목록" }, { id: "instances", label: "인스턴스" }]}/>
     <section role="tabpanel" id="challenge-management-panel-challenges" aria-labelledby="challenge-management-tab-challenges" hidden={tab !== "challenges"} className={styles.panel}>
-    <p className={styles.panelIntro}>문제를 선택해 공개 상태와 실행 설정을 관리합니다</p>
+    <p className={styles.panelIntro}>문제를 선택해 제목·지문·플래그·파일과 실행 환경을 확인합니다</p>
     <div className={styles.toolbar}>
       <label>분야 <select value={category} className={SELECT} onChange={(event) => { setCategory(event.target.value); setPage(1); }}>
         <option value="">전체</option>{ADMIN_CHALLENGE_CATEGORIES.map((value) => <option key={value}>{value}</option>)}
@@ -138,7 +138,7 @@ export default function AdminChallengesPage() {
           <td>{challenge.score}</td><td>{challenge.solved_team_count}</td>
           <td>{challenge.running_instance_count} {challenge.failed_instance_count > 0 && <span className="text-admin-failed">(실패 {challenge.failed_instance_count})</span>}</td>
           <td><button type="button" disabled={busy} aria-label={challenge.title + " 공개 상태 변경"} onClick={() => { setSelected(challenge); setReason(""); setNotice(""); }}><AdminBadge tone={challenge.is_published ? "good" : "neutral"}>{challenge.is_published ? "공개" : "비공개"}</AdminBadge></button></td>
-          <td><button type="button" className={BUTTON} disabled={busy} aria-label={challenge.title + " 실행 설정"} onClick={() => setRuntimeChallenge(challenge)}>실행 설정</button></td>
+          <td><button type="button" className={BUTTON} disabled={busy} aria-label={challenge.title + " 문제 설정"} onClick={() => setRuntimeChallenge(challenge)}>문제 설정</button></td>
         </tr>)}</tbody>
       </table>
       {challenges.data?.challenges?.length === 0 && <p className="p-4 text-center">표시할 문제가 없습니다</p>}
@@ -165,6 +165,6 @@ export default function AdminChallengesPage() {
         if (!refreshed) setNotice("등록은 처리됐지만 최신 목록을 조회하지 못했습니다");
       }}
     />}
-    {runtimeChallenge && <AdminChallengeRuntimeDialog key={runtimeChallenge.challenge_id} challenge={runtimeChallenge} onClose={() => setRuntimeChallenge(null)}/>}
+    {runtimeChallenge && <AdminChallengeSettingsDialog key={runtimeChallenge.challenge_id} challenge={runtimeChallenge} onClose={() => setRuntimeChallenge(null)} onSaved={challenges.reload}/>}
   </AdminLayout>;
 }

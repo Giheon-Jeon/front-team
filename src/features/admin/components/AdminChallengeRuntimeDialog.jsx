@@ -72,7 +72,7 @@ function RuntimeSettingsEditor({ release, secrets, busy, onSave }) {
   </form>;
 }
 
-export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
+export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedded = false, onBusyChange }) {
   const [releaseId, setReleaseId] = useState("");
   const [panel, setPanel] = useState("overview");
   const [environmentMethod, setEnvironmentMethod] = useState("repository");
@@ -84,6 +84,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  useEffect(() => { onBusyChange?.(busy); }, [busy, onBusyChange]);
   const [confirming, setConfirming] = useState(false);
   const pending = useRef(false);
   const fileSequence = useRef(0);
@@ -172,7 +173,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
     return saved;
   }
 
-  return <AdminDialog title={challenge.title + " · 실행 설정"} onClose={onClose} busy={busy} variant="workspace">
+  const content = <>
     <AdminStatusMessage status={runtime.status} error={runtime.error} onRetry={runtime.retry}/>
     {error && <p role="alert" className="mb-4 text-admin-failed">{error}</p>}
     {notice && <p role="status" className={styles.notice}>{notice}</p>}
@@ -268,7 +269,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
       </section>
 
       <section role="tabpanel" id="runtime-settings-panel-secrets" aria-labelledby="runtime-settings-tab-secrets" hidden={panel !== "secrets"} className={styles.panel}>
-        <p className={styles.panelIntro}>값은 다시 표시하지 않습니다 새 값을 저장해도 기존 설정의 연결은 유지됩니다</p>
+        <p className={styles.panelIntro}>새 값을 저장해도 기존 설정의 연결은 유지됩니다 채점용 플래그 원문은 ‘플래그’ 메뉴에서 확인할 수 있습니다</p>
         {storedSecrets.some((secret) => !secret.is_latest) && <label className="mb-3 flex items-center gap-2">
           <input type="checkbox" checked={showSecretHistory} onChange={(event) => setShowSecretHistory(event.target.checked)}/>이전 버전도 보기</label>}
         {visibleSecrets.length === 0 ? <p className={styles.empty}>저장된 비밀값이 없습니다</p> : <div className={styles.tableWrap}>
@@ -309,5 +310,6 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
         </form>
       </section>
     </>}
-  </AdminDialog>;
+  </>;
+  return embedded ? content : <AdminDialog title={challenge.title + " · 실행 설정"} onClose={onClose} busy={busy} variant="workspace">{content}</AdminDialog>;
 }

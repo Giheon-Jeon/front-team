@@ -112,7 +112,7 @@
 .overlay { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 20px; background: #16171380; }
 .dialog { display: flex; flex-direction: column; width: min(1020px, 100%); max-height: calc(100dvh - 40px); border: 1px solid #d8d1c5; border-radius: 14px; background: #fffdf9; box-shadow: 0 18px 70px #0003; }
 .dialogHeader { display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 28px; border-bottom: 1px solid var(--admin-line); }
-.dialogHeader h2 { font-size: 20px; font-weight: 600; line-height: 1.4; }
+.dialogHeader h2 { font-size: 20px; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; min-width: 0; }
 .dialogBody { overflow-y: auto; min-height: 0; padding: 24px 28px 28px; }
 .dialog button:focus-visible,
 .dialog input:focus-visible,
@@ -152,6 +152,33 @@
 .importer > div:first-child h4 { font-weight: 600; }
 .importer details { border-top: 1px solid var(--admin-line); border-bottom: 1px solid var(--admin-line); padding: 12px 0; }
 .importer p { line-height: 1.7; }
+.settingSummary { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.settingHeading { display: flex; align-items: baseline; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
+.settingHeading h3 { margin-bottom: 0; }
+.challengeForm { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.challengeForm label { display: grid; gap: 8px; font-weight: 500; }
+.challengeForm input, .challengeForm select, .statementInput { width: 100%; font-weight: 400; }
+.fullWidth, .formFooter { grid-column: 1 / -1; }
+.statementInput { resize: vertical; min-height: 170px; padding: 12px 14px; line-height: 1.8; border: 1px solid var(--admin-line); border-radius: 7px; background: white; }
+.dialog textarea:focus-visible { outline: 2px solid #8b6230; outline-offset: 3px; }
+.helpText { font-size: 12px; line-height: 1.7; color: var(--admin-subtle); font-weight: 400; margin-top: 10px; }
+.formFooter { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-top: 1px solid var(--admin-line); padding-top: 18px; }
+.flagBox { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px; background: #f7f5f0; border: 1px solid var(--admin-line); border-radius: 9px; margin-bottom: 10px; }
+.flagValue { font-family: ui-monospace, monospace; overflow-wrap: anywhere; white-space: pre-wrap; min-width: 0; }
+.flagBox button { flex-shrink: 0; }
+.errorNotice { margin: 12px 0; color: #a53e2d; }
+.fileNotice { padding: 12px 14px; margin-bottom: 18px; border: 1px solid #d9c69e; border-radius: 7px; background: #fcf7ed; color: #755b27; font-size: 13px; }
+.fileSearch { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 220px; }
+.fileSearch input { flex: 1; min-width: 0; }
+.fileTable { width: 100%; text-align: left; border-collapse: collapse; table-layout: fixed; }
+.fileTable th { color: var(--admin-subtle); font-weight: 500; font-size: 12px; }
+.fileTable th, .fileTable td { padding: 12px 16px; border-bottom: 1px solid var(--admin-line); vertical-align: top; }
+.fileTable th:nth-child(2) { width: 120px; }
+.fileTable th:last-child { width: 100px; }
+.filePath { display: block; font-size: 12px; color: var(--admin-subtle); overflow-wrap: anywhere; margin-top: 4px; }
+.fileTable .title, .fileLink { overflow-wrap: anywhere; font-weight: 500; }
+.fileLink { text-decoration: underline; text-underline-offset: 3px; }
+.filePagination { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 16px; }
 @media (max-width: 767px) {
   .workspace main { padding: 18px !important; }
   .toolbar { gap: 10px; }
@@ -171,4 +198,9 @@
   .settingsTable th, .settingsTable td { padding: 10px; }
   .details dl { grid-template-columns: 1fr; gap: 4px; }
   .details dd { margin-bottom: 10px; }
+  .challengeForm { grid-template-columns: 1fr; gap: 16px; }
+  .fileTable th, .fileTable td { padding: 10px 6px; font-size: 12px; }
+  .fileTable th:nth-child(2) { width: 76px; }
+  .fileTable th:last-child { width: 62px; }
+  .fileSearch { min-width: 0; width: 100%; }
 }

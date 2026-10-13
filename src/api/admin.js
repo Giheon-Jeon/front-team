@@ -2,6 +2,26 @@ import apiClient from "./client.js";
 
 const MUTATION_CONFIG = { timeout: 15000, timeoutErrorMessage: "요청 결과를 확인하지 못했습니다. 최신 상태를 조회한 뒤 확인하세요" };
 
+export function getAdminChallenge(challengeId, config) {
+  return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}`, config);
+}
+
+export function updateAdminChallenge(challengeId, changes) {
+  return apiClient.patch(`/admin/challenges/${encodeURIComponent(challengeId)}`, changes, MUTATION_CONFIG);
+}
+
+export function getAdminChallengeFlag(challengeId, config) {
+  return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}/flag`, config);
+}
+
+export function revealAdminChallengeFlag(challengeId, config) {
+  return apiClient.post(`/admin/challenges/${encodeURIComponent(challengeId)}/flag/reveal`, {}, { ...MUTATION_CONFIG, ...config });
+}
+
+export function getAdminChallengeFiles(challengeId, config) {
+  return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}/files`, config);
+}
+
 // board.js createBoardIdempotencyKey와 동일한 패턴. 관리자 API 중에는 마일리지
 // 지급/회수만 Idempotency-Key 헤더가 필수(README 8절) - 재시도 시 호출부에서
 // 같은 키를 그대로 넘겨야 중복 지급이 막힌다.
