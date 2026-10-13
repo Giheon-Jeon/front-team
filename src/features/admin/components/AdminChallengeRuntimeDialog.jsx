@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { activateChallengeRelease, deriveChallengeRelease, getChallengeReleases, getChallengeRuntimeSecrets, importChallengeEnvironmentFile, importChallengeRepositoryEnvironment, registerChallengeRelease, registerChallengeRuntimeSecret, configureChallengeReleaseFiles } from "../../../api/admin.js";
 import AdminReleaseFilesEditor from "./AdminReleaseFilesEditor.jsx";
+import AdminDeploymentTestPanel from "./AdminDeploymentTestPanel.jsx";
 import AdminCollectedFilesPanel, { RepositoryFilesDetails } from "./AdminCollectedFilesPanel.jsx";
 import AdminActiveFlagBindings from "./AdminActiveFlagBindings.jsx";
 import { isSuccess } from "../../../utils/response.js";
@@ -75,7 +76,7 @@ function RuntimeSettingsEditor({ release, secrets, busy, onSave }) {
   </form>;
 }
 
-export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedded = false, onBusyChange, onChanged }) {
+export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedded = false, active = true, onBusyChange, onChanged }) {
   const [releaseId, setReleaseId] = useState("");
   const [panel, setPanel] = useState("overview");
   const [environmentMethod, setEnvironmentMethod] = useState("repository");
@@ -87,7 +88,9 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
   const [upload, setUpload] = useState(null);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [saving, setBusy] = useState(false);
+  const [testBusy, setTestBusy] = useState(false);
+  const busy = saving || testBusy;
   useEffect(() => { onBusyChange?.(busy); }, [busy, onBusyChange]);
   const [confirming, setConfirming] = useState(false);
   const pending = useRef(false);
@@ -217,7 +220,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
         <button type="button" className={BUTTON + " ml-2"} disabled={busy} onClick={() => setConfirming(false)}>취소</button>
       </div>}
       <AdminTabs idPrefix="runtime-settings" label="배포 설정 메뉴" value={panel} onChange={setPanel} disabled={busy}
-        items={[{ id: "overview", label: "버전 정보" }, { id: "files", label: "참가자 파일" }, { id: "environment", label: "환경변수" },
+        items={[{ id: "overview", label: "버전 정보" }, { id: "test", label: "배포 테스트" }, { id: "files", label: "참가자 파일" }, { id: "environment", label: "환경변수" },
           { id: "secrets", label: "비밀값" }, { id: "image", label: "이미지 등록" }]}/>
 
       <section role="tabpanel" id="runtime-settings-panel-overview" aria-labelledby="runtime-settings-tab-overview" hidden={panel !== "overview"} className={styles.panel}>
@@ -279,6 +282,12 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
             <button type="button" className={BUTTON} onClick={() => setPanel("files")}>참가자 파일 보기</button>
             <button type="button" className={BUTTON} onClick={() => setPanel("image")}>이미지 등록</button>
           </div></div>}
+      </section>
+
+      <section role="tabpanel" id="runtime-settings-panel-test" aria-labelledby="runtime-settings-tab-test" hidden={panel !== "test"} className={styles.panel}>
+        {panel === "test" && active && (selected
+          ? <AdminDeploymentTestPanel challengeId={challenge.challenge_id} release={selected} onBusyChange={setTestBusy}/>
+          : <p className={styles.empty}>실행할 배포 버전을 먼저 등록해주세요</p>)}
       </section>
 
       <section role="tabpanel" id="runtime-settings-panel-files" aria-labelledby="runtime-settings-tab-files" hidden={panel !== "files"} className={styles.panel}>

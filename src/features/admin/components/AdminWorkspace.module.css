@@ -1,3 +1,35 @@
+.deploymentTest { min-width: 0; }
+.testHeading { display: flex; justify-content: space-between; gap: 20px; align-items: center; }
+.testHeading h3 { margin-bottom: 4px; font-family: "Song Myung", serif; font-size: 20px; font-weight: 400; }
+.testHint { font-size: 12px; color: var(--admin-subtle); margin: 8px 0 16px; }
+.testSteps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 24px 0; padding: 18px; background: var(--admin-tint); border-radius: 3px; list-style: none; }
+.testSteps li { display: flex; align-items: center; gap: 9px; color: var(--admin-subtle); font-size: 13px; }
+.testSteps li > span { display: grid; place-items: center; flex-shrink: 0; width: 28px; height: 28px; border: 1px solid var(--admin-line); border-radius: 50%; }
+.testSteps li[data-state="current"] { color: var(--admin-accent); font-weight: 600; }
+.testSteps li[data-state="failed"] { color: #8c3526; }
+.testSteps li[data-state="failed"] > span { border-color: #b86546; background: #f4dfd3; }
+.testSteps li[data-state="current"] > span { background: var(--admin-accent); border-color: var(--admin-accent); color: var(--admin-paper); }
+.testSteps li[data-state="done"] > span { color: #436347; border-color: #799276; background: #eef2e5; }
+.testSteps small { display: block; font-size: 11px; font-weight: 400; }
+.testResult { padding: 20px; background: var(--admin-paper); border: 1px solid var(--admin-line); border-radius: 3px; }
+.testResultHeader { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; }
+.testResultHeader button { margin-left: auto; }
+.testTimes { display: flex; flex-wrap: wrap; gap: 14px 40px; margin-bottom: 18px; font-size: 12px; }
+.testTimes dt { color: var(--admin-subtle); margin-bottom: 3px; }
+.testEndpoint { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding-top: 14px; margin-top: 14px; border-top: 1px solid var(--admin-line); }
+.testEndpoint > div { min-width: 0; }
+.testEndpoint > div:last-child { display: flex; gap: 8px; align-items: center; }
+.testEndpoint strong { font-size: 13px; }
+.testEndpoint code { display: block; overflow-wrap: anywhere; font-size: 12px; margin-top: 4px; }
+.testError { margin: 12px 0; padding: 12px 14px; color: #8c3526; background: #f4dfd3; border-left: 3px solid #b86546; overflow-wrap: anywhere; }
+.testFooter { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px; font-size: 12px; color: var(--admin-subtle); }
+@media (max-width: 640px) {
+  .testHeading { align-items: start; flex-direction: column; gap: 10px; }
+  .testHeading > button { width: 100%; }
+  .testSteps { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 14px; gap: 16px 10px; }
+  .testResult { padding: 14px; }
+  .testFooter { flex-wrap: wrap; }
+}
 .workspace,
 .dialog {
   --admin-text: #513719;

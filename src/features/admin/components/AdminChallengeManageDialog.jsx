@@ -40,7 +40,7 @@ export default function AdminChallengeManageDialog({ challenge, initialSection =
         onBusyChange={setProblemBusy} onSaved={savedProblem}/>}
     </section>
     <section role="tabpanel" id="challenge-workspace-panel-deployment" aria-labelledby="challenge-workspace-tab-deployment" hidden={section !== "deployment"} className={styles.panel}>
-      {opened.has("deployment") && <AdminChallengeRuntimeDialog challenge={challenge} embedded
+      {opened.has("deployment") && <AdminChallengeRuntimeDialog challenge={challenge} embedded active={section === "deployment"}
         onBusyChange={setDeploymentBusy} onChanged={onChanged}/>}
     </section>
     <section role="tabpanel" id="challenge-workspace-panel-solves" aria-labelledby="challenge-workspace-tab-solves" hidden={section !== "solves"} className={styles.panel}>

@@ -2,6 +2,19 @@ import apiClient from "./client.js";
 
 const MUTATION_CONFIG = { timeout: 15000, timeoutErrorMessage: "요청 결과를 확인하지 못했습니다. 최신 상태를 조회한 뒤 확인하세요" };
 
+export function getAdminDeploymentTests(challengeId, config) {
+  return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}/deployment_tests`, config);
+}
+
+export function startAdminDeploymentTest(challengeId, releaseId, requestId) {
+  return apiClient.post(`/admin/challenges/${encodeURIComponent(challengeId)}/releases/${encodeURIComponent(releaseId)}/deployment_tests`,
+    { request_id: requestId }, MUTATION_CONFIG);
+}
+
+export function stopAdminDeploymentTest(challengeId, testId) {
+  return apiClient.delete(`/admin/challenges/${encodeURIComponent(challengeId)}/deployment_tests/${encodeURIComponent(testId)}`, MUTATION_CONFIG);
+}
+
 export function getAdminChallenge(challengeId, config) {
   return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}`, config);
 }
