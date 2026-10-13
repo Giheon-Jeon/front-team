@@ -84,7 +84,7 @@ export default function AdminDeploymentTestPanel({ challengeId, release, onBusyC
   const otherActive = active && active.release_id !== release?.release_id;
   const endpoints = mapInstanceEndpoints(latest);
   const disabledReason = !release?.is_deployable ? "실행할 수 있는 배포 버전을 먼저 등록해주세요"
-    : release.runtime_type !== "KUBERNETES" ? "현재 테스트 실행은 Kubernetes 배포 버전을 지원합니다"
+    : !["KUBERNETES", "DOCKER"].includes(release.runtime_type) ? "VM 배포 테스트는 아직 지원하지 않습니다"
       : release.containers.some((container) => container.secret_bindings?.some((binding) => binding.status === "missing"))
         ? "연결되지 않은 비밀값을 먼저 저장해주세요" : "";
 
