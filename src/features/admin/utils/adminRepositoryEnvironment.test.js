@@ -25,3 +25,16 @@ test("빈 선택과 컨테이너 제한을 넘는 선택은 저장 전에 막는
   assert.throws(() => repositoryEnvironmentRequest("web", "token", []));
   assert.throws(() => repositoryEnvironmentRequest("web", "token", Array.from({ length: 33 }, (_, index) => ({ name: `KEY_${index}`, selected: true }))));
 });
+
+test("출제자의 비밀값이 있으면 재입력 없이 원본값 사용을 요청한다", () => {
+  const rows = repositoryEnvironmentRows([
+    { name: "DB_PASS", kind: "secret", selected: true, required: true, has_value: true,
+      use_existing: false, secret_name: "db_pass", secret_id: "previous-version" },
+  ]);
+  assert.equal(rows[0].mode, "repository");
+  const body = repositoryEnvironmentRequest("db", "pinned-source", rows);
+  assert.deepEqual(body.overrides, {});
+  assert.equal(body.entries[0].use_existing, false);
+  assert.equal(body.entries[0].secret_id, undefined);
+  assert.equal(body.entries[0].value, undefined);
+});

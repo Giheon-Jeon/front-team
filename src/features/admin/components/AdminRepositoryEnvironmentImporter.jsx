@@ -15,6 +15,7 @@ export default function AdminRepositoryEnvironmentImporter({ challengeId, releas
   const requestId = useRef(null);
   const submitting = useRef(false);
   const unavailable = busy || working;
+  const sourceFiles = source?.source_files ?? [];
   useEffect(() => () => { sequence.current += 1; }, []);
 
   function clear() {
@@ -73,7 +74,7 @@ export default function AdminRepositoryEnvironmentImporter({ challengeId, releas
   }
 
   return <section className="space-y-4" aria-label="저장소 환경변수 가져오기">
-    <p className={styles.panelIntro}>컨테이너의 .env.example을 불러옵니다 필요한 값을 채운 뒤 저장해주세요</p>
+    <p className={styles.panelIntro}>출제자가 설정한 환경변수와 값을 불러옵니다 비밀값도 원본을 가져오며 화면에서만 가려집니다</p>
     <div className="flex flex-wrap items-end gap-3">
       <label>컨테이너
         <select className={styles.select + " ml-3"} aria-label="저장소 적용 컨테이너" value={container} disabled={unavailable}
@@ -89,20 +90,26 @@ export default function AdminRepositoryEnvironmentImporter({ challengeId, releas
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p>{rows.filter((row) => row.selected).length} / {rows.length}개 선택</p>
         {source.source_url ? <a href={source.source_url} target="_blank" rel="noreferrer" className={styles.secondary}>확인한 소스 · {source.source_revision.slice(0, 8)}</a>
-          : <span className={styles.secondary}>로컬 템플릿 · {source.source_revision.slice(0, 8)}</span>}
+          : <span className={styles.secondary}>로컬 원본 · {source.source_revision.slice(0, 8)}</span>}
       </div>
-      <p className={styles.secondary}>{source.template_path} · 빈 항목은 값을 입력하거나 저장된 비밀값을 연결해주세요</p>
+      <details className={styles.details}><summary>불러온 원본 파일 {sourceFiles.length}개</summary>
+        <ul className="mt-2 space-y-1">{sourceFiles.map((path) => <li key={path} className={styles.mono}>{path}</li>)}</ul>
+      </details>
       {source.warnings.length > 0 && <details className={styles.details}><summary>직접 확인할 내용 {source.warnings.length}개</summary>
         <ul className="mt-2 space-y-1">{source.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul>
       </details>}
-      {rows.length === 0 ? <p className={styles.empty}>이 컨테이너의 .env.example에는 주입할 환경변수가 없습니다</p> : <>
+      {rows.length === 0 ? <p className={styles.empty}>이 컨테이너에서 사용하는 환경변수 선언을 찾지 못했습니다</p> : <>
         <datalist id="repository-secret-names">{[...new Set(secrets.map((secret) => secret.name))].map((name) => <option key={name} value={name}/>)}</datalist>
         <div className={styles.tableWrap}>
           <table className={styles.table + " min-w-[700px]"} aria-label="저장소 환경변수">
             <thead><tr>{["가져오기", "이름", "종류", "값 또는 연결", "필수"].map((label) => <th key={label}>{label}</th>)}</tr></thead>
             <tbody>{rows.map((row) => <tr key={row.name}>
               <td><input type="checkbox" aria-label={`${row.name} 가져오기`} checked={row.selected} disabled={unavailable} onChange={(event) => change(row.name, { selected: event.target.checked })}/></td>
-              <td className={styles.mono}>{row.name}</td>
+              <td><span className={styles.mono}>{row.name}</span>
+                {row.resolution !== "configured" && <span className={styles.secondary}>
+                  {{ code_default: "코드 기본값", author_example: "출제자 예시 값", needs_value: "원본에서 값 확인 필요", conflict: "원본 값 확인 필요" }[row.resolution]}
+                </span>}
+              </td>
               <td><select aria-label={`${row.name} 종류`} className={styles.select} value={row.kind} disabled={unavailable || row.locked_secret}
                 onChange={(event) => change(row.name, { kind: event.target.value, mode: "repository", override: undefined })}>
                 <option value="env">일반 설정</option><option value="secret">비밀값</option>
@@ -115,9 +122,10 @@ export default function AdminRepositoryEnvironmentImporter({ challengeId, releas
                     <select aria-label={`${row.name} 값 선택`} className={styles.select + " w-full"} value={row.mode} disabled={unavailable}
                       onChange={(event) => change(row.name, { mode: event.target.value, override: event.target.value === "manual" ? "" : undefined })}>
                       <option value="existing">저장된 비밀값 사용</option>
-                      <option value="repository" disabled={!row.has_value}>저장소 값 사용</option>
+                      <option value="repository" disabled={!row.has_value}>출제자 원본값 사용</option>
                       <option value="manual">새 값 입력</option>
                     </select>
+                    {row.mode === "repository" && <span className={styles.secondary}>원본값을 그대로 저장합니다</span>}
                     {row.mode === "manual" && <input type="password" aria-label={`${row.name} 새 값`} className={styles.input} autoComplete="new-password"
                       value={row.override ?? ""} disabled={unavailable} onChange={(event) => change(row.name, { override: event.target.value })}/>}
                     <input aria-label={`${row.name} 비밀값 이름`} className={styles.input} list="repository-secret-names" value={row.secret_name}
