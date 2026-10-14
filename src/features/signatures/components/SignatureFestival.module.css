@@ -518,6 +518,71 @@
   text-decoration: underline;
   text-underline-offset: 6px;
 }
+/* PC는 전체 폭의 광장 배경과 부스별 원화 영역을 분리한다.
+   부스 sprite는 기존 모바일과 같은 영역이며 원본 영역 비율(1.5 × 2.9 / 3.85)을 유지한다. */
+@media (min-width: 901px) and (min-height: 650px) {
+  .scene {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 12px;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    aspect-ratio: auto;
+    padding: 14px 3vw 12px;
+    background: url("/assets/login/background-plaza.png") center / cover no-repeat;
+  }
+  .festivalHeader {
+    position: static;
+    padding-top: 24px;
+  }
+  .festivalHeader h1 {
+    font-size: clamp(36px, 3.3vw, 58px);
+  }
+  .festivalHeader > span {
+    margin-top: 8px;
+  }
+  .booths {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 14px 3vw;
+    min-height: 0;
+    align-items: center;
+    justify-items: center;
+  }
+  .boothPosition,
+  .boothPosition[data-booth] {
+    position: relative;
+    inset: auto;
+    width: min(100%, calc((100dvh - 200px) * 0.5649));
+    height: auto;
+    aspect-ratio: 1.12987;
+    background-image: url("/assets/signatures/club-festival-v1.webp");
+    background-size: 385% 290%;
+    background-position: 5% 31%;
+    border-radius: 5px;
+  }
+  .boothPosition[data-booth="1"] { background-position: 50% 31%; }
+  .boothPosition[data-booth="2"] { background-position: 95% 31%; }
+  .boothPosition[data-booth="3"] { background-position: 5% 80%; }
+  .boothPosition[data-booth="4"] { background-position: 50% 80%; }
+  .boothPosition[data-booth="5"] { background-position: 95% 80%; }
+  .brandName { font-size: clamp(16px, 1.45vw, 24px); }
+  .sceneFooter {
+    position: static;
+    margin: 0;
+  }
+  .sceneNotice { top: 16%; }
+  .boothCaption { padding: 6px 4px; }
+  .university,
+  .enterLabel { font-size: clamp(12px, 0.9vw, 15px); }
+  .enterLabel { margin-top: 3px; }
+  .boothPosition:nth-child(n+4) .boothSign {
+    top: 39%;
+  }
+}
+
 @media (max-width: 900px) {
   .scene {
     aspect-ratio: auto;
