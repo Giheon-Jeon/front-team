@@ -1,6 +1,19 @@
 import apiClient from "./client.js";
 
 const MUTATION_CONFIG = { timeout: 15000, timeoutErrorMessage: "요청 결과를 확인하지 못했습니다. 최신 상태를 조회한 뒤 확인하세요" };
+const PUBLICATION_CONFIG = { timeout: 120000, timeoutErrorMessage: "발행본 처리 결과를 확인하지 못했습니다 같은 요청으로 다시 시도해주세요" };
+
+export function getPublishedChallenges(page = 1, config) {
+  return apiClient.get("/admin/published_challenges", { ...PUBLICATION_CONFIG, ...config, params: { page } });
+}
+
+export function previewPublishedChallenge(artifactId, config) {
+  return apiClient.post("/admin/published_challenges/preview", { artifact_id: artifactId }, { ...PUBLICATION_CONFIG, ...config });
+}
+
+export function importPublishedChallenge(body, idempotencyKey) {
+  return apiClient.post("/admin/published_challenges/import", body, { ...idKey("publication", idempotencyKey), ...PUBLICATION_CONFIG });
+}
 
 export function getAdminDeploymentTests(challengeId, config) {
   return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}/deployment_tests`, config);

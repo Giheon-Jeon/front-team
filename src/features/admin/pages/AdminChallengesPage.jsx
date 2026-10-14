@@ -8,6 +8,7 @@ import AdminPagination from "../components/AdminPagination.jsx";
 import AdminDialog from "../components/AdminDialog.jsx";
 import AdminChallengeCreateDialog from "../components/AdminChallengeCreateDialog.jsx";
 import AdminChallengeManageDialog from "../components/AdminChallengeManageDialog.jsx";
+import AdminPublicationImportDialog from "../components/AdminPublicationImportDialog.jsx";
 import AdminTabs from "../components/AdminTabs.jsx";
 import styles from "../components/AdminWorkspace.module.css";
 import { ADMIN_CHALLENGE_CATEGORIES } from "../utils/adminValidation.js";
@@ -96,6 +97,7 @@ function InstancesSection() {
 export default function AdminChallengesPage() {
   const [tab, setTab] = useState("challenges");
   const [creating, setCreating] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [editing, setEditing] = useState(null);
   const [page, setPage] = useState(1);
   const [category, setCategory] = useState("");
@@ -133,9 +135,10 @@ export default function AdminChallengesPage() {
       <label>정렬 <select value={sort} className={SELECT} onChange={(event) => { setSort(event.target.value); setPage(1); }}>
         <option value="running">실행 수</option><option value="title">이름</option><option value="score">배점</option>
       </select></label>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <button type="button" onClick={challenges.retry} disabled={busy || challenges.status === "loading"} className={BUTTON}>새로고침</button>
-        <button type="button" onClick={() => setCreating(true)} disabled={busy} className={styles.primary}>문제 등록</button>
+        <button type="button" onClick={() => setCreating(true)} disabled={busy} className={BUTTON}>직접 등록</button>
+        <button type="button" onClick={() => setImporting(true)} disabled={busy} className={styles.primary}>GitHub에서 가져오기</button>
       </div>
     </div>
     <AdminStatusMessage status={challenges.status} error={challenges.error} onRetry={challenges.retry}/>
@@ -177,7 +180,12 @@ export default function AdminChallengesPage() {
         if (!refreshed) setNotice("등록은 처리됐지만 최신 목록을 조회하지 못했습니다");
       }}
     />}
-    {editing && <AdminChallengeManageDialog key={editing.challenge.challenge_id} challenge={editing.challenge} initialSection={editing.section}
+    {importing && <AdminPublicationImportDialog onClose={() => setImporting(false)} onImported={challenges.reload}
+      onOpenSettings={(challenge) => {
+        setImporting(false);
+        setEditing({ challenge, section: challenge.release_id ? "deployment" : "problem", releaseId: challenge.release_id });
+      }}/>}
+    {editing && <AdminChallengeManageDialog key={editing.challenge.challenge_id} challenge={editing.challenge} initialSection={editing.section} initialReleaseId={editing.releaseId}
       onClose={() => setEditing(null)} onChanged={challenges.reload}/>}
   </AdminLayout>;
 }

@@ -76,8 +76,8 @@ function RuntimeSettingsEditor({ release, secrets, busy, onSave }) {
   </form>;
 }
 
-export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedded = false, active = true, onBusyChange, onChanged }) {
-  const [releaseId, setReleaseId] = useState("");
+export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedded = false, active = true, initialReleaseId = "", onBusyChange, onChanged }) {
+  const [releaseId, setReleaseId] = useState(initialReleaseId);
   const [panel, setPanel] = useState("overview");
   const [environmentMethod, setEnvironmentMethod] = useState("repository");
   const [showSecretHistory, setShowSecretHistory] = useState(false);

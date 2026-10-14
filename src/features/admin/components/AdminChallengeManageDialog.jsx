@@ -7,7 +7,7 @@ import AdminChallengeSolvesPanel from "./AdminChallengeSolvesPanel.jsx";
 import { AdminBadge } from "./AdminLayout.jsx";
 import styles from "./AdminWorkspace.module.css";
 
-export default function AdminChallengeManageDialog({ challenge, initialSection = "problem", onClose, onChanged }) {
+export default function AdminChallengeManageDialog({ challenge, initialSection = "problem", initialReleaseId, onClose, onChanged }) {
   const [section, setSection] = useState(initialSection);
   const [opened, setOpened] = useState(() => new Set([initialSection]));
   const [title, setTitle] = useState(challenge.title);
@@ -40,7 +40,7 @@ export default function AdminChallengeManageDialog({ challenge, initialSection =
         onBusyChange={setProblemBusy} onSaved={savedProblem}/>}
     </section>
     <section role="tabpanel" id="challenge-workspace-panel-deployment" aria-labelledby="challenge-workspace-tab-deployment" hidden={section !== "deployment"} className={styles.panel}>
-      {opened.has("deployment") && <AdminChallengeRuntimeDialog challenge={challenge} embedded active={section === "deployment"}
+      {opened.has("deployment") && <AdminChallengeRuntimeDialog challenge={challenge} initialReleaseId={initialReleaseId} embedded active={section === "deployment"}
         onBusyChange={setDeploymentBusy} onChanged={onChanged}/>}
     </section>
     <section role="tabpanel" id="challenge-workspace-panel-solves" aria-labelledby="challenge-workspace-tab-solves" hidden={section !== "solves"} className={styles.panel}>
