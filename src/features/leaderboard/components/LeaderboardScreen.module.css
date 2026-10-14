@@ -202,16 +202,18 @@
 .refreshControls button { padding-right: 0; }
 .refreshControls svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 
-.tableContainer { width: 100%; overflow: hidden; }
-.rankingGrid { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 18px; font-weight: 400; font-variant-numeric: tabular-nums; }
+.tableContainer { width: 100%; min-width: 0; }
+.rankingGrid { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 16px; font-weight: 400; font-variant-numeric: tabular-nums; }
 .rankingGrid col { width: var(--column-width); }
-.rankingGrid th, .rankingGrid td { box-sizing: border-box; min-width: 0; padding: 0 10px; overflow: hidden; text-align: center; vertical-align: middle; }
+.rankingGrid th, .rankingGrid td { box-sizing: border-box; min-width: 0; padding: 6px 4px; overflow-wrap: anywhere; text-align: center; vertical-align: middle; }
 .rankingGrid thead th { height: 36px; border-bottom: 1px solid rgb(131 81 37 / 45%); font-family: "Libre Caslon Text", Georgia, serif; font-size: 18px; font-weight: 400; color: #794519; }
 .rankingGrid tbody tr { height: 43px; }
 .rankingGrid tbody th, .rankingGrid tbody td { border-bottom: 1px solid rgb(145 92 43 / 16%); }
 .rankingGrid th + th, .rankingGrid th + td, .rankingGrid td + th, .rankingGrid td + td { border-left: 1px solid rgb(145 92 43 / 16%); }
-.rankingGrid .teamNameCell { padding-inline: 16px; text-align: left; font-weight: 400; }
-.cellValue { display: block; width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rankingGrid .teamNameCell { padding-inline: 10px; text-align: left; font-weight: 400; }
+.cellValue { display: block; width: 100%; min-width: 0; overflow-wrap: anywhere; line-height: 1.4; }
+.teamNameCell .cellValue { word-break: keep-all; }
+.mobileCellLabel { display: none; }
 .cellValue:focus-visible { outline: 1px solid #8d4f1c; outline-offset: 2px; }
 .pointCell { color: #985608; font-weight: 600; }
 .rankingGrid .rankCell { padding: 0; font-size: 25px; color: #704823; }
@@ -288,19 +290,48 @@
   .pageTotal { font-size: 14px; }
   .refreshControls { font-size: 14px; gap: 4px; flex-wrap: wrap; }
   .refreshControls time { display: none; }
-  .tableContainer { overflow-x: auto; overscroll-behavior-x: contain; }
-  .rankingGrid { width: 1244px; font-size: 14px; }
-  .rankingGrid col:first-child { width: 48px; }
-  .rankingGrid col:nth-child(2) { width: 128px; }
-  .rankingGrid col:nth-child(3) { width: 100px; }
-  .rankingGrid col:nth-child(4) { width: 72px; }
-  .rankingGrid col:nth-child(n+5):nth-child(-n+12) { width: 88px; }
-  .rankingGrid col:nth-last-child(-n+2) { width: 96px; }
-  .rankingGrid thead th { height: 44px; font-size: 15px; }
+  .rankingGrid { width: 100%; font-size: clamp(10px, 1.2vw, 13px); }
+  .rankingGrid col:first-child { width: 5%; }
+  .rankingGrid col:nth-child(2) { width: 20%; }
+  .rankingGrid col:nth-child(3) { width: 12%; }
+  .rankingGrid col:nth-child(n+5):nth-child(-n+12) { width: 5.25%; }
+  .rankingGrid th, .rankingGrid td { padding-inline: 2px; }
+  .rankingGrid thead th { height: 44px; font-size: clamp(9px, 1.2vw, 13px); }
   .rankingGrid tbody tr { height: 52px; }
-  .rankingGrid .teamNameCell { position: sticky; left: 0; z-index: 1; background: #eddbb6; }
+  .rankingGrid .teamNameCell { padding-inline: 6px; }
+  .rankArtwork { width: min(100%, 44px); height: 34px; }
   .rankingGrid .tableState { font-size: 16px; text-align: left; padding: 24px; }
   .refreshNote { position: static; width: auto; margin: 0; font-size: 14px; line-height: 1.6; }
+}
+
+@media (max-width: 767px) {
+  .rankingGrid,
+  .rankingGrid tbody { display: block; width: 100%; }
+  .rankingGrid colgroup { display: none; }
+  /* 표 헤더는 접근성 트리에 남기고 각 셀에 시각적인 분야 라벨을 표시한다. */
+  .rankingGrid thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .rankingGrid tbody { display: grid; gap: 16px; }
+  .rankingGrid tbody tr {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    height: auto;
+    padding: 12px 8px;
+    border: 1px solid #ac8757;
+    border-radius: 4px;
+    background: rgb(255 244 217 / 25%);
+  }
+  .rankingGrid tbody th,
+  .rankingGrid tbody td { padding: 10px 4px; border: 0; font-size: 13px; }
+  .rankingGrid .rankCell { grid-column: 1; display: grid; align-items: center; font-size: 22px; }
+  .rankingGrid .teamNameCell { grid-column: 2 / -1; padding: 8px; font-size: 15px; }
+  .rankingGrid td[data-column] { border-top: 1px solid rgb(145 92 43 / 22%); }
+  .rankingGrid td[data-column="teamScore"],
+  .rankingGrid td[data-column="solveCount"],
+  .rankingGrid td[data-column="kothScore"],
+  .rankingGrid td[data-column="signatureScore"] { grid-column: span 2; }
+  .mobileCellLabel { display: block; margin-bottom: 6px; font-size: 11px; font-weight: 400; color: #794519; }
+  .rankingGrid td[data-column="teamScore"] .cellValue { font-size: 17px; }
+  .rankingGrid .tableState { grid-column: 1 / -1; height: auto; padding: 24px 8px; }
 }
 
 @media (max-width: 400px) {

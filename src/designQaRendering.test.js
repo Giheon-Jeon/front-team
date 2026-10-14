@@ -264,17 +264,42 @@ test("반응형 로그인도 입력 라벨, 자동 완성, 요청 중 잠금과 
   assert.match(html, /role="alert"[^>]*>입력 정보를 확인해 주세요/);
 });
 
-test("리더보드 표는 가로 탐색이 가능하며 긴 팀명과 원래 1~3위 이미지를 유지한다", () => {
+test("리더보드 표는 모든 열과 긴 팀명, 원래 1~3위 이미지를 유지한다", () => {
   const name = "아주긴팀이름".repeat(12);
   const html = render("Leaderboard", {
     teams: [], leaderboardStatus: "empty", rankingStatus: "success",
     rankings: [1, 2, 3].map((rank) => ({ key: `${rank}`, rank, teamName: name, teamScore: 100, solveCount: 2, categoryScores: [], signatureScore: 30 })),
   });
-  assert.match(html, /tabindex="0" role="region" aria-label="팀 순위표 가로 스크롤"/);
+  assert.match(html, /tabindex="0" role="region" aria-label="팀 순위표"/);
   assert.match(html, new RegExp(`title="${name}"`));
   for (const rank of [1, 2, 3]) assert.match(html, new RegExp(`aria-label="${rank}위"`));
   assert.equal((html.match(/class="[^"]*rankArtwork/g) || []).length, 3);
   assert.match(html, />CLUB<\/th>/);
+  for (const label of ["Point", "Solves", "MISC", "WEB", "FOR", "REV", "PWN", "CRY", "OSINT", "WEB3", "KoTH", "CLUB"]) {
+    assert.ok(html.includes(`aria-hidden="true">${label}</span>`));
+  }
+  assert.equal((html.match(/scope="col"/g) || []).length, 14);
+});
+
+test("순위표는 고정 픽셀 너비 대신 비율을 사용하고 모바일 모든 분야를 여러 줄로 표시한다", () => {
+  const root = css("features/leaderboard/components/LeaderboardScreen.module.css");
+  assert.ok(declarations(root, ".rankingGrid").some(([key, value]) => key === "width" && value === "100%"));
+  root.walkRules(rule => {
+    if (rule.selector === ".tableContainer") {
+      rule.walkDecls("overflow-x", () => assert.fail("표를 좌우 스크롤하거나 숨기지 않는다"));
+    }
+  });
+  const mobile = root.nodes.find(node => node.type === "atrule" && node.params === "(max-width: 767px)");
+  assert.ok(declarations(mobile, ".rankingGrid tbody tr").some(([key, value]) => key === "grid-template-columns" && value === "repeat(4, minmax(0, 1fr))"));
+  assert.ok(declarations(mobile, ".mobileCellLabel").some(([key, value]) => key === "display" && value === "block"));
+  const html = render("Leaderboard", {
+    teams: [], leaderboardStatus: "empty", rankingStatus: "success",
+    rankings: [{ key: "all-fields", rank: 1, teamName: "전체 점수 확인", teamScore: 1234567.89,
+      solveCount: 123, categoryScores: [11, 22, 33, 44, 55, 66, 77, 88], kothScore: 999.99, signatureScore: 1234.56 }],
+  });
+  for (const value of ["11", "22", "33", "44", "55", "66", "77", "88", "999.99", "1,234.56", "1,234,567.89"]) {
+    assert.ok(html.includes(`>${value}</span>`));
+  }
 });
 
 test("규칙 문단은 원문을 유지하고 한 줄 고정과 항목별 절대 좌표를 사용하지 않는다", () => {
