@@ -237,13 +237,13 @@ test("특수칸이나 미소속 칸을 건너뛰는 연결은 만들지 않고 3
   for (const indexes of [null, [], [0], [37], [2,2], ["2"]]) assert.deepEqual(getBoardLineAccentSegments(indexes), []);
 });
 
-test("시각 구간 내부의 특수칸은 rail만 이어 지나가며 독점 대상이나 판정은 바꾸지 않는다", () => {
+test("특수칸에서는 같은 라인 rail을 나누고 독점 대상이나 판정은 바꾸지 않는다", () => {
   const indexes = [13,14,15,17,18];
   for (const type of ["ROULETTE", "CHANCE", "AIRPORT"]) {
     const cells = indexes.map(cellIndex => ({ cellIndex, type: "CHALLENGE" })).concat({ cellIndex: 16, type });
-    const [segment] = getBoardLineAccentSegments(indexes, cells);
-    assert.deepEqual(segment.cellIndexes, indexes);
-    assert.equal(getBoardLineAccentSegments(indexes, cells).length, 1);
+    const segments = getBoardLineAccentSegments(indexes, cells);
+    assert.deepEqual(segments.flatMap(segment => segment.cellIndexes), indexes);
+    assert.equal(segments.length, 2);
     assert.deepEqual(prepareBoardLines([sample({ cellIndexes: indexes, solvedCellIndexes: indexes, isCompleted: true })], cells)[0].cellIndexes, indexes);
   }
   assert.equal(getBoardLineAccentSegments(indexes, [{ cellIndex: 16, type: "CHALLENGE" }]).length, 2);

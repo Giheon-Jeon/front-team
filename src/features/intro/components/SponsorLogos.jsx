@@ -9,22 +9,6 @@ export default function SponsorLogos() {
         <h2 id="sponsors-title">후원</h2>
         <div className="sponsor-lineup">
           <a
-            className="sponsor sponsor--monster"
-            href="https://www.monsterenergy.com/ko-kr/"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="몬스터 에너지 공식 사이트 새 창"
-          >
-            <img
-              className="sponsor-logo"
-              src="/assets/intro/monster-energy-logo.png"
-              width="700"
-              height="316"
-              alt="MONSTER ENERGY"
-              loading="lazy"
-            />
-          </a>
-          <a
             className="sponsor sponsor--hspace"
             href="https://hspace.io/"
             target="_blank"
@@ -48,6 +32,22 @@ export default function SponsorLogos() {
               loading="lazy"
             />
           </figure>
+          <a
+            className="sponsor sponsor--monster"
+            href="https://www.monsterenergy.com/ko-kr/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="몬스터 에너지 공식 사이트 새 창"
+          >
+            <img
+              className="sponsor-logo"
+              src="/assets/intro/monster-energy-logo.png"
+              width="700"
+              height="316"
+              alt="MONSTER ENERGY"
+              loading="lazy"
+            />
+          </a>
         </div>
       </div>
     </section>

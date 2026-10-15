@@ -35,8 +35,8 @@ export default function BoothLineup() {
             />
             <p className="booth-club">SWING</p>
           </div>
-          <h3>대저택 살인사건</h3>
-          <p>단서를 모아 범인을 찾는 추리 체험</p>
+          <h3>해킹스타 선수권대회</h3>
+          <p>달리기 게임, 자석 양궁, 미니 컬링</p>
         </article>
         <article>
           <div className="booth-host">
@@ -83,7 +83,7 @@ export default function BoothLineup() {
         <article>
           <div className="booth-host">
             <img
-              src="/assets/intro/club-aegis.svg"
+              src="/assets/intro/club-aegis.svg?v=bca7b7bc"
               width="64"
               height="48"
               alt=""

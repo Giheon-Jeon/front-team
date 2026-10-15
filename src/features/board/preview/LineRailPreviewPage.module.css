@@ -1,0 +1,15 @@
+.page { min-height: 100vh; background: #21150d; color: #f8ead0; padding: 12px; }
+.page header { text-align: center; }
+.page h1 { font-size: 20px; margin: 0; }
+.page p { font-size: 12px; margin: 5px 0 10px; }
+.stage { position: relative; width: min(100%, calc((100vh - 235px) * 16 / 9)); aspect-ratio: 16 / 9; margin: auto; }
+.background { position: absolute; width: 100%; height: 100%; }
+/* 실제 BoardTrack과 같은 1920×1080 무대 좌표. 원판/음영/rail이 함께 축소된다. */
+.track { position: absolute; left: 23.33%; top: 26.76%; width: 49.53%; height: 66.11%; }
+.controls { max-width: 1100px; margin: 12px auto 0; }
+.presets { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.controls button, .controls select { color: #f8ead0; background: #48311e; border: 1px solid #ac8755; padding: 6px 8px; font: inherit; font-size: 12px; }
+.lines { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+.lines label { display: grid; gap: 6px; font-size: 12px; border-top: 4px solid var(--accent); padding-top: 5px; }
+.lines select { width: 100%; }
+@media (max-width: 700px) { .stage { width: 100%; } .lines { grid-template-columns: repeat(2, minmax(0, 1fr)); } .page h1 { font-size: 17px; } }

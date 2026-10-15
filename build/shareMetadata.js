@@ -20,7 +20,7 @@ const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
 })[character]);
 
-export function createShareMetadata(publicSiteUrl = "https://msg2.mjsec.kr") {
+export function createShareMetadata(publicSiteUrl = "https://msgctf.kr") {
   const site = new URL(publicSiteUrl);
   if (site.protocol !== "https:" || site.username || site.password ||
     site.pathname !== "/" || site.search || site.hash) {

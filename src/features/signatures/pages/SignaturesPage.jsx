@@ -7,7 +7,7 @@ import ClubBrand from "../components/ClubBrand.jsx";
 import BoothAchievement from "../components/BoothAchievement.jsx";
 import styles from "../components/SignatureFestival.module.css";
 
-function FestivalBooth({ club, status }) {
+function FestivalBooth({ club, status, onPreview }) {
   const ready = status === "success";
   const available = ready && club.problems.length > 0;
   const progress = getBoothProgress(club, status);
@@ -56,7 +56,11 @@ function FestivalBooth({ club, status }) {
       data-booth={club.position}
       data-progress={complete ? "complete" : visited ? "partial" : "open"}
     >
-      {available ? (
+      {onPreview ? (
+        <button type="button" className={styles.booth} onClick={onPreview} aria-label={club.name + " 샘플 문제 메뉴 열기"}>
+          {contents}
+        </button>
+      ) : available ? (
         <Link
           to={ROUTES.signatureClub(club.clubId)}
           className={styles.booth}
@@ -87,7 +91,7 @@ function FestivalBooth({ club, status }) {
   );
 }
 
-export function SignatureFestivalScreen({ state }) {
+export function SignatureFestivalScreen({ state, onPreviewMjsec }) {
   const { booths, otherClubs } = buildFestivalBooths(state.data);
   return (
     <main className={styles.festivalPage} aria-label="동아리 축제장">
@@ -115,7 +119,7 @@ export function SignatureFestivalScreen({ state }) {
           aria-busy={state.status === "loading"}
         >
           {booths.map((club) => (
-            <FestivalBooth key={club.key} club={club} status={state.status} />
+            <FestivalBooth key={club.key} club={club} status={state.status} onPreview={club.key === "mjsec" ? onPreviewMjsec : undefined} />
           ))}
         </ul>
         <footer className={styles.sceneFooter}>

@@ -49,7 +49,8 @@ export function adaptBoardDefinition(data) {
           cellIndex: cell.cell_index,
           type: cell.type,
           difficulty: cell.difficulty,
-          lineNumber: cell.line_number ?? null,
+          lineNumber: cell.type === "CHALLENGE" && ![1, 7, 16, 21, 25, 30].includes(cell.cell_index)
+            ? cell.line_number ?? null : null,
           name: cell.name,
         }))
       : [],

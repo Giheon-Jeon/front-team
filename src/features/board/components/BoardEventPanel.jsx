@@ -222,7 +222,6 @@ export default function BoardEventPanel({
   ownedChanceCards,
   awaitingDiscard,
   blockedReason,
-  selectedCell,
   isMutating,
   isAirportSelecting,
   isLoading,
@@ -237,7 +236,6 @@ export default function BoardEventPanel({
   onCloseCellEvent,
   isRouletteOpen = true,
   onReopenRoulette,
-  onClearSelectedCell,
   isChallengeSelectionOpen = true,
   onCloseChallengeSelection,
   onReopenChallengeSelection,
@@ -338,24 +336,6 @@ export default function BoardEventPanel({
 
   // 기차여행 목적지 선택(Figma 555:342)은 BoardScreen의 AirportTravelOverlay가 맡는다.
   if (isAirportSelecting) return null;
-
-  if (selectedCell) {
-    return (
-      <PanelShell
-        title={`${selectedCell.cellIndex}번 칸`}
-        onClose={onClearSelectedCell}
-      >
-        <dl className="my-[0.45cqw] grid grid-cols-[auto_1fr] gap-x-[0.7cqw] gap-y-[0.25cqw] text-[0.72cqw]">
-          <dt className="font-bold">이름</dt>
-          <dd>{selectedCell.name || "-"}</dd>
-          <dt className="font-bold">종류</dt>
-          <dd>{selectedCell.type}</dd>
-          <dt className="font-bold">난이도</dt>
-          <dd>{selectedCell.difficulty || "-"}</dd>
-        </dl>
-      </PanelShell>
-    );
-  }
 
   // active_challenge 존재 여부가 아니라 blockedReason(=diceStatus.timer_running
   // 기반)으로 "진행 중인 문제"를 판정한다. active_challenge는 15분 제한시간이

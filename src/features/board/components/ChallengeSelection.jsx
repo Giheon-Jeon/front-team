@@ -213,7 +213,6 @@ export default function ChallengeSelection({ candidates, isMutating, onOpenChall
             crumbling={openingId !== null && openingId !== candidate.challengeId}
             opening={openingId === candidate.challengeId} onChoose={openChallenge} />)}
         </div>
-        <img className={styles.squirrel} src="/assets/board/selection-squirrel-refined.webp" alt="" aria-hidden="true" draggable={false} />
         {(requestError || errorMessage) && <p className={styles.feedback} role="alert">{requestError || errorMessage}</p>}
         <p className={styles.srOnly} role="status">{busy ? "선택한 문제를 열고 있습니다" : ""}</p>
       </div>

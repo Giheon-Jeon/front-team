@@ -68,8 +68,7 @@ export default function BoardPage() {
     }
   };
 
-  // 이미 문제를 오픈해둔 칸을 다시 클릭하면 칸 정보 패널 대신 바로 문제
-  // 상세로 재진입한다(README 2절 opened_challenges 기준).
+  // 칸 클릭은 공항 목적지 선택과 열린 문제 상세 재진입에만 사용한다.
   const handleSelectCell = (cellIndex, view) => {
     if (board.isMutating) return;
     if (isAirportSelecting) {
@@ -86,7 +85,6 @@ export default function BoardPage() {
       openChallengeDetail(opened.challengeId, view);
       return;
     }
-    board.selectCell(cellIndex);
   };
 
   return (
@@ -96,6 +94,7 @@ export default function BoardPage() {
       diceStatus={board.diceStatus}
       currentCell={board.currentCell}
       displayPosition={board.displayPosition}
+      pieceTransitionMs={board.pieceTransitionMs}
       pendingRoll={board.pendingRoll}
       pendingChanceChoice={board.pendingChanceChoice}
       cellEvent={board.cellEvent}
@@ -104,7 +103,6 @@ export default function BoardPage() {
       ownedChanceCards={board.ownedChanceCards}
       cellStatesByIndex={board.cellStatesByIndex}
       lineProgress={board.lineProgress}
-      selectedCell={board.selectedCell}
       openedChallenges={board.openedChallenges}
       openedChallengesLoading={board.isLoading || board.openedChallengesLoading}
       openedChallengesError={board.openedChallengesError}
@@ -144,7 +142,6 @@ export default function BoardPage() {
       onRetryChanceDraw={(eventToken) => board.drawChance(eventToken)}
       onCloseCellEvent={board.closeCellEvent}
       onSelectCell={handleSelectCell}
-      onClearSelectedCell={board.clearSelectedCell}
     />
   );
 }

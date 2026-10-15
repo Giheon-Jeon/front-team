@@ -1,4 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import useMobileBoardOverlay from "../hooks/useMobileBoardOverlay.js";
 import { formatOpenChallengeNumber } from "../utils/boardOverlays.js";
 import { normalizeBoardListView, selectBoardChallenges } from "../utils/boardChallengeList.js";
 import { INSTANCE_STATUS_LABEL } from "../../../constants/enums.js";
@@ -39,6 +41,8 @@ export default function OpenChallengesSidePanel({
   challenges, onSelectChallenge, onClose, children, initialView, onViewChange,
   loading = false, error = "", onRetry, instanceInfo,
 }) {
+  const panelRef = useRef(null);
+  const isMobile = useMobileBoardOverlay(panelRef);
   const closeButton = useRef(null);
   const scrollBody = useRef(null);
   const restored = useRef(false);
@@ -65,12 +69,15 @@ export default function OpenChallengesSidePanel({
     }
   }, [loading, instanceInfo?.loading, challenges]);
   useEffect(() => { closeButton.current?.focus({ preventScroll: true }); }, []);
-  return (
+  const panel = (
     <aside
+      ref={panelRef}
+      role={isMobile ? "dialog" : undefined}
+      aria-modal={isMobile ? true : undefined}
       id="board-open-challenges-panel"
       aria-label="열린 문제"
       onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); onClose(); } }}
-      className={`${styles.openPanel} absolute left-[2.45%] top-[calc(var(--open-toggle-top,17.9%)+6%)] z-40 h-[calc(97%-var(--open-toggle-top,17.9%)-6%)] w-[18.4%]`}
+      className={`${styles.openPanel} absolute left-[2.45%] top-[calc(var(--open-toggle-top,17.9%)+6%)] z-40 h-[calc(92%-var(--open-toggle-top,17.9%)-6%)] w-[18.4%]`}
     >
       <img
         src="/assets/board/open-challenges-panel.webp"
@@ -78,7 +85,11 @@ export default function OpenChallengesSidePanel({
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 h-full w-full object-fill"
       />
+      {/* 원본의 종이/장식 부분만 재사용해 제목은 그대로 두고 장식선을 조금 내린다. */}
+      <span className={styles.openPaperGap} aria-hidden="true"><img src="/assets/board/open-challenges-panel.webp" alt="" /></span>
+      <span className={styles.openPaperDivider} aria-hidden="true"><img src="/assets/board/open-challenges-panel.webp" alt="" /></span>
       {/* 데스크톱은 패널 이미지에 제목이 그려져 있어 모바일에서만 보이는 제목 */}
+      <div className={styles.openPanelHeader}>
       <h2 className={styles.mobileOpenTitle}>열린 문제</h2>
 
       {/* 아이콘(26px) 가장자리가 안쪽 테두리선(위 y=81, 오른쪽 x=509 / 554x1664 기준)에서 위·오른쪽 모두 16px */}
@@ -91,6 +102,7 @@ export default function OpenChallengesSidePanel({
       >
         <img src="/assets/board/icon-close-round.png" alt="" aria-hidden="true" className="h-full w-full object-contain" />
       </button>
+      </div>
 
       <div className={styles.openPanelBody} ref={scrollBody}
         onScroll={(event) => { if (restored.current) saveView({ ...currentView.current, scrollTop: event.currentTarget.scrollTop }); }}
@@ -174,4 +186,5 @@ export default function OpenChallengesSidePanel({
       </div>
     </aside>
   );
+  return isMobile ? createPortal(<div className={styles.mobileOpenOverlay}>{panel}</div>, document.body) : panel;
 }

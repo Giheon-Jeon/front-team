@@ -81,7 +81,7 @@ test("카드 선택은 보드를 없애지 않고 전체 화면을 반투명하�
   assert.equal(scene["min-height"], "100%");
   assert.equal(scene["container-type"], "inline-size");
   assert.equal(properties(".selection").width, "var(--choice-width)");
-  assert.equal(properties(".selection")["aspect-ratio"], "782 / 314");
+  assert.equal(properties(".selection")["aspect-ratio"], undefined, "장식용 다람쥐 공간을 포함한 고정 비율을 남기지 않는다");
   const source = readFileSync(new URL("../components/ChallengeSelection.jsx", import.meta.url), "utf8");
   assert.match(source, /createPortal\(content, document.body\)/);
   assert.doesNotMatch(source, /bg-1920x1080|sceneBackdrop/);

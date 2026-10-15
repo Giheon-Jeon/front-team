@@ -39,25 +39,23 @@
 }
 @keyframes choice-darken { from { opacity: 0; } to { opacity: 1; } }
 
-/* Figma 104:502, 1920×1080: cards start at (596, 482), (805, 460), (1038, 481).
-   The 782×314 group also includes the original close button and squirrel. */
+/* 기존 금테 카드 에셋을 유지하고 장식용 오른쪽 예약 공간 없이 중앙에 배치한다. */
 .selection {
   position: relative;
   width: var(--choice-width);
   flex-shrink: 0;
-  aspect-ratio: 782 / 314;
   container-type: inline-size;
   font-family: "Alegreya", "Board Choice Korean", serif;
   font-weight: 500;
   font-synthesis: none;
 }
-.cards { position: absolute; inset: 0 auto 0 0; width: 80.690537%; }
+.cards { position: relative; width: 100%; display: flex; justify-content: center; align-items: center; gap: 3cqw; }
 .card {
-  position: absolute;
-  left: 0;
-  top: 14.968153%;
-  width: 29.793978%;
-  height: 80.573248%;
+  position: relative;
+  width: calc((100% - 6cqw) / 3);
+  height: auto;
+  aspect-ratio: 188 / 253;
+  flex-shrink: 0;
   padding: 0;
   border: 0;
   border-radius: 7%;
@@ -70,8 +68,6 @@
   touch-action: pan-y;
   -webkit-tap-highlight-color: transparent;
 }
-.card[data-tone="1"] { left: 33.122029%; top: 7.961783%; width: 33.597464%; height: 92.038217%; }
-.card[data-tone="2"] { left: 70.047544%; top: 14.649682%; width: 29.952456%; }
 .card::before {
   content: "";
   position: absolute;
@@ -84,9 +80,6 @@
   pointer-events: none;
   transition: transform 200ms ease, opacity 200ms ease;
 }
-.cards[data-count="1"] .card { left: 35.103011%; }
-.cards[data-count="2"] .card:first-child { left: 16.561014%; }
-.cards[data-count="2"] .card:nth-child(2) { left: 49.683043%; }
 .cardDeal, .cardFace, .cardSurface { position: absolute; inset: 0; display: block; }
 .cardDeal { transform-origin: 50% 85%; animation: card-deal 440ms cubic-bezier(.2,.7,.25,1) var(--deal-delay, 0ms) both; }
 .cardFace {
@@ -214,7 +207,7 @@
   font-size: 4.092072cqw;
   line-height: 1.375;
 }
-.card[data-tone="1"] .category { top: 20.761246%; font-size: 4.603581cqw; }
+.card[data-tone="1"] .category { top: 20.761246%; }
 .card[data-tone="2"] .category { top: 20.948617%; }
 .titleArea {
   position: absolute;
@@ -245,20 +238,20 @@
 }
 .card[data-tone="1"] .titleArea { top: 43.16782%; }
 .card[data-tone="2"] .titleArea { top: 44.322134%; }
-.card[data-tone="1"] .title { max-width: 100%; font-size: max(16px, 3.069054cqw); line-height: 1.375; }
+.card[data-tone="1"] .title { max-width: 100%; }
 .card[data-tone="2"] .title { max-width: 100%; }
 .card[data-long-title="true"] .titleArea { top: 39%; height: 52%; left: 10%; width: 80%; }
 .card[data-long-title="true"] .title { max-width: 100%; line-height: 1.3; }
 .card .category[data-long="true"] { top: 22%; font-size: max(14px, 2.7cqw); white-space: nowrap; }
 .close {
   position: absolute;
-  left: 83.248082%;
-  top: 0;
+  right: 0;
+  top: -56px;
   z-index: 2;
   display: grid;
   place-items: center;
-  width: 4.731458%;
-  height: 10.828025%;
+  width: 32px;
+  height: 30px;
   padding: 0;
   border: 0;
   background: none;
@@ -266,16 +259,6 @@
 }
 .close::before { content: ""; position: absolute; inset: -12px; min-width: 44px; min-height: 44px; }
 .close img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
-.squirrel {
-  position: absolute;
-  left: 84%;
-  top: 21%;
-  width: 15.35%;
-  height: auto;
-  filter: drop-shadow(0 5px 3px #21100680);
-  pointer-events: none;
-  user-select: none;
-}
 .card:focus { outline: none; }
 .close:focus-visible, .reopen:focus-visible { outline: 2px solid #ffe7a5; outline-offset: 5px; }
 .card:not(:disabled):focus-visible .cardFace {
@@ -307,7 +290,7 @@
   transform: translate3d(0, -20px, 0) scale(1.065);
 }
 .close:disabled { opacity: .5; cursor: wait; }
-.feedback { position: absolute; top: calc(100% + 20px); left: 0; width: 80.690537%; margin: 0; padding: 12px; color: #ffe4c5; background: #392014ed; font: 14px/1.6 "Pretendard", sans-serif; text-align: center; }
+.feedback { position: relative; width: 100%; margin: 24px 0 0; padding: 12px; color: #ffe4c5; background: #392014ed; font: 14px/1.6 "Pretendard", sans-serif; text-align: center; }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
 .reopen { position: absolute; left: 48%; top: 34%; z-index: 30; transform: translateX(-50%); min-height: 44px; padding: 10px 28px; border: 1px solid #cba460; border-radius: 3px; background: #4b2819; color: #ffedc5; box-shadow: inset 0 0 0 3px #28160d, inset 0 0 0 4px #ae864a, 0 4px 12px #21140b80; font: 18px/1.5 "Board Choice Korean", serif; cursor: pointer; }
 
@@ -325,7 +308,6 @@
   .cards, .cards[data-count="1"], .cards[data-count="2"] { position: relative; width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: center; gap: 22px 18px; }
   .card, .card[data-tone="1"], .card[data-tone="2"], .cards[data-count="1"] .card, .cards[data-count="2"] .card { position: relative; inset: auto; width: 100%; height: auto; aspect-ratio: 188 / 253; }
   .cards[data-count="2"] .card:first-child, .cards[data-count="2"] .card:nth-child(2) { left: auto; }
-  .card[data-tone="1"] { scale: 1.035; aspect-ratio: 212 / 289; }
   .cards[data-count="3"] .card:last-child, .cards[data-count="1"] .card { grid-column: 1 / -1; justify-self: center; width: calc((100% - 18px) / 2); }
   .category, .card[data-tone="1"] .category { font-size: clamp(22px, 7cqw, 30px); }
   .title, .card[data-tone="1"] .title { font-size: clamp(14px, 4.6cqw, 19px); }
@@ -335,7 +317,6 @@
   .card[data-long-title="true"] .title { max-width: 100%; }
   .category[data-long="true"], .card[data-tone="1"] .category[data-long="true"] { font-size: clamp(14px, 4.5cqw, 20px); }
   .close { left: auto; top: -80px; right: 0; width: 32px; height: 30px; }
-  .squirrel { display: none; }
   .feedback { position: static; width: 100%; margin-top: 20px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -359,7 +340,7 @@
   .card, .reopen { border: 2px solid ButtonText; }
   .card:focus-visible { outline: 3px solid Highlight; outline-offset: 3px; }
   .cardSurface { mask-image: none; }
-  .artwork, .squirrel, .pickEffects, .card::before, .cardSurface::before, .cardSurface::after { display: none; }
+  .artwork, .pickEffects, .card::before, .cardSurface::before, .cardSurface::after { display: none; }
   .category { background: none; -webkit-text-fill-color: ButtonText; }
   .title { color: ButtonText; text-shadow: none; }
 }
