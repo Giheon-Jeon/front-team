@@ -55,6 +55,11 @@
 후원 로고 반영이 후원사 승인 절차 완료를 뜻하지는 않음
 후원사 브랜드 가이드 PDF와 개인 연락처는 저장소에 넣지 않음
 
+후원사 순서는 HSPACE, 시야인사이트, 몬스터 에너지, AhnLab
+PC는 4열, 모바일은 2열로 배치하며 로고 원본의 색과 비율을 유지
+안랩은 공식 사이트의 SVG를 로컬 파일로 보관하고 지연 로딩
+[안랩 로고 원본](https://cloudimg.ccs.ahnlab.com/img_upload/assets/images/ko/logo-ahnlab-black2.svg)
+
 ## 확인 방법
 
 npm ci로 설치하고 npm run dev로 실행

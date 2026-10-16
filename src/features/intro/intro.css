@@ -1582,7 +1582,7 @@
 }
 .msg-intro .sponsor-lineup {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: center;
   gap: var(--space-6);
   margin-top: var(--space-4);
@@ -1608,6 +1608,11 @@
 .msg-intro .sponsor--siya .sponsor-logo {
   width: 310px;
   max-height: none;
+}
+.msg-intro .sponsor--ahnlab .sponsor-logo {
+  width: 220px;
+  padding: 14px 18px;
+  background: #fff;
 }
 .msg-intro .site-footer {
   background: #111211;
@@ -2380,10 +2385,6 @@
   }
   .msg-intro .sponsor--hspace .sponsor-logo {
     width: 92px;
-  }
-  .msg-intro .sponsor--monster {
-    grid-column: 1 / -1;
-    min-height: 0;
   }
   .msg-intro .sponsor--siya .sponsor-logo {
     width: min(100%, 310px);

@@ -70,24 +70,52 @@ test("개요 다음에 참가 신청을 배치하고 현장 안내는 부스 뒤
   ]);
 });
 
-test("후원사는 HSPACE, 시야인사이트, 몬스터 에너지 순서로 표시한다", () => {
+test("기존 후원사 순서는 유지하고 안랩을 마지막에 추가한다", () => {
   const sponsors = main.match(/<section id="sponsors"[\s\S]*?<\/section>/)?.[0];
   assert.ok(sponsors);
   const names = [...sponsors.matchAll(/<img\b[^>]*alt="([^"]+)"/g)]
     .map((match) => match[1]);
-  assert.deepEqual(names, ["HSPACE", "시야인사이트", "MONSTER ENERGY"]);
+  assert.deepEqual(names, ["HSPACE", "시야인사이트", "MONSTER ENERGY", "AhnLab"]);
 });
 
-test("모바일 후원 배치는 마지막 몬스터 에너지만 전체 너비를 사용한다", () => {
+test("후원사는 PC 네 열, 모바일 두 열로 배치하며 특정 로고가 한 줄을 차지하지 않는다", () => {
   const css = readFileSync(new URL("./intro.css", import.meta.url), "utf8");
   const fullRowSponsors = [];
+  const gridColumns = [];
   postcss.parse(css).walkRules((rule) => {
+    if (rule.selector === ".msg-intro .sponsor-lineup") {
+      rule.walkDecls("grid-template-columns", (decl) => {
+        gridColumns.push({
+          media: rule.parent.type === "atrule" ? rule.parent.params : null,
+          value: decl.value,
+        });
+      });
+    }
     if (!rule.selector.startsWith(".msg-intro .sponsor--")) return;
     rule.walkDecls("grid-column", (decl) => {
       if (decl.value === "1 / -1") fullRowSponsors.push(rule.selector);
     });
   });
-  assert.deepEqual(fullRowSponsors, [".msg-intro .sponsor--monster"]);
+  assert.deepEqual(fullRowSponsors, []);
+  assert.deepEqual(gridColumns, [
+    { media: null, value: "repeat(4, minmax(0, 1fr))" },
+    { media: "(max-width: 680px)", value: "1fr 1fr" },
+  ]);
+});
+
+test("안랩 로고는 로컬 SVG를 지연 로딩하고 공식 사이트를 새 창으로 연결한다", () => {
+  const sponsor = main.match(/<a\b[^>]*class="sponsor sponsor--ahnlab"[\s\S]*?<\/a>/)?.[0];
+  assert.ok(sponsor);
+  assert.match(sponsor, /href="https:\/\/www\.ahnlab\.com\/ko"/);
+  assert.match(sponsor, /rel="noopener noreferrer"/);
+  assert.match(sponsor, /target="_blank"/);
+  assert.match(sponsor, /src="\/assets\/intro\/ahnlab-logo\.svg"/);
+  assert.match(sponsor, /alt="AhnLab"/);
+  assert.match(sponsor, /loading="lazy"/);
+  const logo = readFileSync(new URL("../../../public/assets/intro/ahnlab-logo.svg", import.meta.url), "utf8");
+  assert.match(logo, /viewBox="0 0 113 27"/);
+  assert.equal((logo.match(/fill="#154087"/g) || []).length, 6);
+  assert.doesNotMatch(logo, /<script|<image|<foreignObject/);
 });
 
 test("신청과 현장 안내, 상세 안내와 FAQ에 무료 참가비를 표시한다", () => {
