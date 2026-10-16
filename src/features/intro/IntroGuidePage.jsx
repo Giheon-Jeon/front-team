@@ -3,7 +3,7 @@ import { ROUTES } from "../../routes/routePaths.js";
 import { eventConfig } from "./config/eventConfig.js";
 import { getEventLabels } from "./utils/eventData.js";
 import ApplyLink from "./components/ApplyLink.jsx";
-import { PrizeTotal, PrizeList } from "./components/Prizes.jsx";
+import { PrizeTotal, PrizeList, SpecialAwards } from "./components/Prizes.jsx";
 
 export default function IntroGuidePage() {
   const labels = getEventLabels(eventConfig.event);
@@ -115,9 +115,10 @@ export default function IntroGuidePage() {
           <p>
             총상금 <PrizeTotal as="strong" />
           </p>
+          <SpecialAwards />
           <PrizeList table />
         </div>
-        <p>부상, 시상 일정과 수상 조건은 확정 후 공개합니다</p>
+        <p>시상 일정은 별도로 안내합니다</p>
       </section>
       <section
         id="venue"

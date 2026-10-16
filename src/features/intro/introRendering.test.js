@@ -135,13 +135,31 @@ test("올해 모집 인원과 작년 실적을 분리하고 원본 포스터를 
   assert.match(main, /\/assets\/intro\/msg-ctf-2025-poster.png/);
   assert.doesNotMatch(main, /192/);
 });
-test("메인과 상세 안내의 150만원 시상과 외부 3위 10만원이 일치한다", () => {
-  assert.match(main, /150만원/);
-  assert.match(guide, /150만원/);
+test("메인과 상세 안내의 총 200만원 시상과 기존 트랙별 상금이 일치한다", () => {
+  for (const html of [main, guide]) {
+    assert.match(html, /data-prize-total=""[^>]*>200만원</);
+    assert.doesNotMatch(html, /150만원/);
+  }
+  assert.match(
+    guide,
+    /내부 트랙<\/th><td>30만원<\/td><td>20만원<\/td><td>10만원<\/td>/,
+  );
   assert.match(
     guide,
     /외부 트랙<\/th><td>50만원<\/td><td>30만원<\/td><td>10만원<\/td>/,
   );
+});
+test("안랩 대표상은 별도 시상으로 표시하며 수상 대상을 임의로 정하지 않는다", () => {
+  for (const html of [main, guide]) {
+    const awards = html.match(/<article class="special-award"[^>]*>[\s\S]*?<\/article>/g);
+    assert.equal(awards?.length, 1);
+    assert.match(awards[0], /aria-label="안랩 대표상"/);
+    assert.match(awards[0], /<h3>안랩 대표상<\/h3>/);
+    assert.match(awards[0], /안랩 대표 명의 상장 수여/);
+    assert.match(awards[0], /<strong>50만원<\/strong>/);
+    assert.match(awards[0], /수상 기준은 추후 안내합니다/);
+    assert.doesNotMatch(awards[0], /전체 1위|종합 1위|대상|외부 트랙|내부 트랙/);
+  }
 });
 test("로그인은 기존 경로를 사용하고 참가 신청은 HSPACE 주소를 새 창으로 연다", () => {
   for (const html of [main, guide]) {

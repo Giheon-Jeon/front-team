@@ -928,6 +928,47 @@
   color: var(--muted);
   font-size: 15px;
 }
+.msg-intro .special-awards {
+  margin-bottom: var(--space-6);
+}
+.msg-intro .special-award {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-block: 1px solid #a98b61;
+}
+.msg-intro .special-award + .special-award {
+  margin-top: var(--space-3);
+}
+.msg-intro .special-award h3 {
+  font-family: var(--body);
+  font-size: 26px;
+  font-weight: 700;
+}
+.msg-intro .special-award-copy p {
+  margin-top: var(--space-1);
+  color: var(--muted);
+  font-size: 16px;
+}
+.msg-intro .special-award .special-award-amount {
+  margin: 0;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.msg-intro .special-award-amount strong {
+  font-size: 46px;
+  font-weight: 550;
+  line-height: 1.3;
+  letter-spacing: -0.05em;
+}
+.msg-intro .special-award .special-award-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
 .msg-intro .prize-showcase {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1024,10 +1065,23 @@
   margin-top: 22px;
   margin-bottom: 20px;
 }
-.msg-intro .guide-prizes strong {
+.msg-intro .guide-prizes > p > [data-prize-total] {
   margin-left: 12px;
   color: var(--accent);
   font-weight: 500;
+}
+.msg-intro .guide-prizes .special-awards {
+  margin-top: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+.msg-intro .guide-prizes .special-award {
+  padding-inline: 0;
+}
+.msg-intro .guide-prizes .special-award h3 {
+  font-size: 22px;
+}
+.msg-intro .guide-prizes .special-award-amount strong {
+  font-size: 32px;
 }
 .msg-intro .recruitment-count {
   font-size: 14px;
@@ -2104,6 +2158,26 @@
   }
   .msg-intro .prize-total .prize-caption {
     font-size: 14px;
+  }
+  .msg-intro .special-awards {
+    margin-bottom: var(--space-4);
+  }
+  .msg-intro .special-award {
+    padding-inline: 0;
+    gap: 10px var(--space-2);
+  }
+  .msg-intro .special-award h3,
+  .msg-intro .guide-prizes .special-award h3 {
+    font-size: 21px;
+  }
+  .msg-intro .special-award-copy p {
+    font-size: 14px;
+  }
+  .msg-intro .special-award-amount strong {
+    font-size: 34px;
+  }
+  .msg-intro .special-award .special-award-note {
+    font-size: 13px;
   }
   .msg-intro .prize-showcase {
     grid-template-columns: 1fr;
