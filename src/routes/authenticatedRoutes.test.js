@@ -51,7 +51,8 @@ test("홍보와 참가 안내, 로그인 외 모든 등록 경로에 서버 인�
   renderToStaticMarkup(createElement(StaticRouter, { location: "/board" }, createElement(InspectRoutes)));
   assert.ok(paths.length >= 25);
   for (const route of paths) {
-    if (["/", "/guide", "/login", "*"].includes(route.path)) assert.equal(route.protected, false, route.path);
+    // API와 분리된 개발 전용 디자인 미리보기는 인증/게임 상태를 읽지 않는다.
+    if (["/", "/guide", "/login", "*", "/dev/golden-key-preview"].includes(route.path)) assert.equal(route.protected, false, route.path);
     else assert.equal(route.protected, true, route.path);
     if (route.path.startsWith("/admin")) assert.equal(route.admin, true, route.path);
   }
