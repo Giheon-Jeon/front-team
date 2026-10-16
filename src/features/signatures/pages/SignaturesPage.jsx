@@ -7,17 +7,18 @@ import ClubBrand from "../components/ClubBrand.jsx";
 import BoothAchievement from "../components/BoothAchievement.jsx";
 import styles from "../components/SignatureFestival.module.css";
 
-function FestivalBooth({ club, status, onPreview }) {
+function FestivalBooth({ club, status, onPreview, compact = false }) {
   const ready = status === "success";
   const available = ready && club.problems.length > 0;
   const progress = getBoothProgress(club, status);
   const { complete, visited } = progress;
+  const linkClass = compact ? styles.mobileBoothLink : styles.booth;
   const contents = (
     <>
       <span className={styles.boothSign}>
         <ClubBrand name={club.name} />
       </span>
-      {visited && (
+      {visited && !compact && (
         <>
           <span className={styles.boothGlow} aria-hidden="true" />
           {complete && (
@@ -52,18 +53,19 @@ function FestivalBooth({ club, status, onPreview }) {
   );
   return (
     <li
-      className={styles.boothPosition}
-      data-booth={club.position}
+      className={compact ? styles.mobileBooth : styles.boothPosition}
+      data-booth={compact ? undefined : club.position}
+      data-directory-booth={compact ? club.position : undefined}
       data-progress={complete ? "complete" : visited ? "partial" : "open"}
     >
       {onPreview ? (
-        <button type="button" className={styles.booth} onClick={onPreview} aria-label={club.name + " 샘플 문제 메뉴 열기"}>
+        <button type="button" className={linkClass} onClick={onPreview} aria-label={club.name + " 샘플 문제 메뉴 열기"}>
           {contents}
         </button>
       ) : available ? (
         <Link
           to={ROUTES.signatureClub(club.clubId)}
-          className={styles.booth}
+          className={linkClass}
           aria-label={
             club.name + " 부스 들어가기" + (complete ? " 풀이 완료" : "")
           }
@@ -74,7 +76,7 @@ function FestivalBooth({ club, status, onPreview }) {
         <button
           type="button"
           disabled
-          className={styles.booth + " " + styles.unavailable}
+          className={linkClass + " " + styles.unavailable}
           aria-label={
             club.name +
             (status === "error"
@@ -95,7 +97,7 @@ export function SignatureFestivalScreen({ state, onPreviewMjsec }) {
   const { booths, otherClubs } = buildFestivalBooths(state.data);
   return (
     <main className={styles.festivalPage} aria-label="동아리 축제장">
-      <div className={styles.scene}>
+      <div className={styles.festivalLayout}>
         <nav className={styles.navigation} aria-label="부스 화면 이동">
           <Link to={ROUTES.board}>← 보드로 돌아가기</Link>
           <Link to={ROUTES.boardChallenges}>JEOPARDY →</Link>
@@ -113,15 +115,19 @@ export function SignatureFestivalScreen({ state, onPreviewMjsec }) {
             </button>
           </div>
         )}
-        <ul
-          className={styles.booths}
-          aria-label="동아리 부스 선택"
-          aria-busy={state.status === "loading"}
-        >
-          {booths.map((club) => (
-            <FestivalBooth key={club.key} club={club} status={state.status} onPreview={club.key === "mjsec" ? onPreviewMjsec : undefined} />
-          ))}
-        </ul>
+        <div className={styles.sceneViewport}>
+          <div className={styles.scene}>
+            <ul
+              className={styles.booths}
+              aria-label="동아리 부스 선택"
+              aria-busy={state.status === "loading"}
+            >
+              {booths.map((club) => (
+                <FestivalBooth key={club.key} club={club} status={state.status} onPreview={club.key === "mjsec" ? onPreviewMjsec : undefined} />
+              ))}
+            </ul>
+          </div>
+        </div>
         <footer className={styles.sceneFooter}>
           <span>
             {state.status === "loading"
@@ -137,6 +143,12 @@ export function SignatureFestivalScreen({ state, onPreviewMjsec }) {
           </button>
         </footer>
       </div>
+      <ul className={styles.mobileBoothList} aria-label="동아리 부스 안내 및 입장">
+        {booths.map((club) => (
+          <FestivalBooth key={club.key} club={club} status={state.status} compact
+            onPreview={club.key === "mjsec" ? onPreviewMjsec : undefined} />
+        ))}
+      </ul>
       {state.status === "success" && otherClubs.length > 0 && (
         <section className={styles.otherClubs} aria-label="추가 동아리 부스">
           <h2>함께하는 부스</h2>
