@@ -95,6 +95,20 @@ test("알려지지 않은 동아리는 깨진 이미지 대신 이름으로 표�
   assert.match(html, /brandName[^>]*>추가 동아리/);
 });
 
+test("모바일 부스 안내도 같은 실제 데이터와 입장 링크를 사용하며 일러스트를 추가하지 않는다", () => {
+  const html = render(FESTIVAL_CLUBS.map((club) => ({
+    signature_id: `problem-${club.key}`, club_id: club.key, club_name: club.name, is_solved: false,
+  })));
+  assert.equal((html.match(/data-booth="/g) || []).length, 6);
+  assert.equal((html.match(/data-directory-booth="/g) || []).length, 6);
+  assert.equal((html.match(/<h1>/g) || []).length, 1);
+  assert.match(html, /aria-label="동아리 부스 안내 및 입장"/);
+  for (const club of FESTIVAL_CLUBS) {
+    assert.equal((html.match(new RegExp(`href="/signatures/clubs/${club.key}"`, "g")) || []).length, 2);
+    assert.ok(html.includes(club.university));
+  }
+});
+
 test("일부만 해결한 부스는 해결 수만 표시하고 스탬프를 찍지 않는다", () => {
   const html = render([entry("one", true), entry("two")]);
   assert.match(html, /data-progress="partial"/);
