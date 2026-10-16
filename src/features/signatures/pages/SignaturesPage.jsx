@@ -59,12 +59,13 @@ function FestivalBooth({ club, status, onPreview, compact = false }) {
       data-progress={complete ? "complete" : visited ? "partial" : "open"}
     >
       {onPreview ? (
-        <button type="button" className={linkClass} onClick={onPreview} aria-label={club.name + " 샘플 문제 메뉴 열기"}>
+        <button type="button" className={linkClass} onClick={onPreview} aria-label={club.name + " 문제 메뉴 열기"}>
           {contents}
         </button>
       ) : available ? (
         <Link
           to={ROUTES.signatureClub(club.clubId)}
+          state={{ fromFestival: true }}
           className={linkClass}
           aria-label={
             club.name + " 부스 들어가기" + (complete ? " 풀이 완료" : "")
@@ -93,7 +94,7 @@ function FestivalBooth({ club, status, onPreview, compact = false }) {
   );
 }
 
-export function SignatureFestivalScreen({ state, onPreviewMjsec }) {
+export function SignatureFestivalScreen({ state, onPreviewClub }) {
   const { booths, otherClubs } = buildFestivalBooths(state.data);
   return (
     <main className={styles.festivalPage} aria-label="동아리 축제장">
@@ -123,7 +124,7 @@ export function SignatureFestivalScreen({ state, onPreviewMjsec }) {
               aria-busy={state.status === "loading"}
             >
               {booths.map((club) => (
-                <FestivalBooth key={club.key} club={club} status={state.status} onPreview={club.key === "mjsec" ? onPreviewMjsec : undefined} />
+                <FestivalBooth key={club.key} club={club} status={state.status} onPreview={onPreviewClub ? () => onPreviewClub(club) : undefined} />
               ))}
             </ul>
           </div>
@@ -146,7 +147,7 @@ export function SignatureFestivalScreen({ state, onPreviewMjsec }) {
       <ul className={styles.mobileBoothList} aria-label="동아리 부스 안내 및 입장">
         {booths.map((club) => (
           <FestivalBooth key={club.key} club={club} status={state.status} compact
-            onPreview={club.key === "mjsec" ? onPreviewMjsec : undefined} />
+            onPreview={onPreviewClub ? () => onPreviewClub(club) : undefined} />
         ))}
       </ul>
       {state.status === "success" && otherClubs.length > 0 && (
