@@ -1,4 +1,4 @@
-import { PrizeTotal, PrizeList } from "./Prizes.jsx";
+import { PrizeTotal, PrizeList, SpecialAwards } from "./Prizes.jsx";
 
 export default function EventPrizes() {
   return (
@@ -12,9 +12,10 @@ export default function EventPrizes() {
         <div className="prize-total">
           <span>총 시상액</span>
           <PrizeTotal />
-          <p className="prize-caption">내부와 외부, 각 트랙의 TOP 3</p>
+          <p className="prize-caption">트랙별 TOP 3와 안랩 대표상</p>
         </div>
         <div className="prize-details">
+          <SpecialAwards />
           <PrizeList />
         </div>
       </div>

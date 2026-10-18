@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { BLOCKED_REASON_MESSAGES } from "../data/boardContent.js";
 import MileageRouletteModal from "./MileageRouletteModal.jsx";
+import GoldenKeyCard from "./GoldenKeyCard.jsx";
 import ChallengeSelection, { ReopenBoardEvent, ReopenChallengeSelection } from "./ChallengeSelection.jsx";
 import { isChallengeSelectionEmpty } from "../utils/challengeSelection.js";
 import styles from "./BoardScreen.module.css";
@@ -200,16 +201,7 @@ function ChanceDrawEvent({ event, isMutating, onRetry, onClose }) {
   }
 
   return (
-    <PanelShell title="황금열쇠" onClose={onClose}>
-      <dl className="my-[0.5cqw] grid grid-cols-[auto_1fr] gap-x-[0.6cqw] gap-y-[0.28cqw] text-[0.68cqw]">
-        <dt className="font-bold">카드</dt>
-        <dd>{event.result.name || event.result.cardId}</dd>
-        <dt className="font-bold">설명</dt>
-        <dd>{event.result.description || "-"}</dd>
-        <dt className="font-bold">효과</dt>
-        <dd>{event.result.effect || "-"}</dd>
-      </dl>
-    </PanelShell>
+    <GoldenKeyCard card={event.result} onClose={onClose} />
   );
 }
 

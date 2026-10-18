@@ -18,9 +18,39 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
+    add_header X-Frame-Options "DENY" always;
+    add_header Content-Security-Policy "frame-ancestors 'none'" always;
+    add_header X-Content-Type-Options "nosniff" always;
+
     # React Router(SPA) — 새로고침/직접 URL 진입 시 index.html로 폴백
     location / {
         try_files $uri $uri/ /index.html;
+    }
+
+    # Runtime이 사용하는 비밀값 조회 경로만 백엔드로 전달한다
+    location = /internal/v1/runtime-secrets/resolve {
+        client_max_body_size 16k;
+        proxy_pass ${BACKEND_URL}/internal/v1/runtime-secrets/resolve;
+        proxy_ssl_server_name on;
+        proxy_set_header Host $host;
+        proxy_set_header Authorization $http_authorization;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;
+        proxy_cache off;
+        proxy_buffering off;
+    }
+
+    # SLA가 Django의 DB·Redis 점검 결과를 그대로 받을 수 있게 연결한다
+    location = /healthz {
+        proxy_pass ${BACKEND_URL}/healthz;
+        proxy_ssl_server_name on;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;
+        proxy_cache off;
+        proxy_intercept_errors off;
     }
 
     # 백엔드 API 프록시

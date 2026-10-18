@@ -65,19 +65,45 @@ export function getPrizes(value) {
     return null;
   const labels = value.tracks.map((row) => row.label.trim());
   if (new Set(labels).size !== labels.length) return null;
+  const specialAwards =
+    value.specialAwards === undefined ? [] : value.specialAwards;
   if (
-    value.tracks.reduce(
-      (sum, row) =>
-        sum + row.amounts.reduce((subtotal, amount) => subtotal + amount, 0),
-      0,
-    ) !== value.totalKrw
+    !Array.isArray(specialAwards) ||
+    specialAwards.some(
+      (award) =>
+        typeof award?.label !== "string" ||
+        !award.label.trim() ||
+        !Number.isSafeInteger(award.amountKrw) ||
+        award.amountKrw <= 0 ||
+        [award.description, award.selectionNote].some(
+          (text) => text !== undefined && typeof text !== "string",
+        ),
+    )
   )
     return null;
+  const awardLabels = specialAwards.map((award) => award.label.trim());
+  if (new Set(awardLabels).size !== awardLabels.length) return null;
+  const trackTotal = value.tracks.reduce(
+    (sum, row) =>
+      sum + row.amounts.reduce((subtotal, amount) => subtotal + amount, 0),
+    0,
+  );
+  const specialAwardTotal = specialAwards.reduce(
+    (sum, award) => sum + award.amountKrw,
+    0,
+  );
+  if (trackTotal + specialAwardTotal !== value.totalKrw) return null;
   return {
     total: value.totalKrw,
     tracks: value.tracks.map((row) => ({
       label: row.label.trim(),
       amounts: [...row.amounts],
+    })),
+    specialAwards: specialAwards.map((award) => ({
+      label: award.label.trim(),
+      amount: award.amountKrw,
+      description: award.description?.trim() || "",
+      selectionNote: award.selectionNote?.trim() || "",
     })),
   };
 }
