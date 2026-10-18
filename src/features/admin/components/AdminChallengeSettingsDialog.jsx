@@ -13,6 +13,9 @@ function FlagPanel({ challengeId, disabled, onBusyChange }) {
   const [revealed, setRevealed] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [newFlag, setNewFlag] = useState("");
+  const [notice, setNotice] = useState("");
   const pending = useRef(false);
   const request = useRef(null);
   useEffect(() => () => request.current?.abort(), []);
@@ -37,6 +40,24 @@ function FlagPanel({ challengeId, disabled, onBusyChange }) {
     finally { pending.current = false; setBusy(false); onBusyChange(false); }
   }
 
+  const invalidFlag = !newFlag || /[\0\r\n]/.test(newFlag) || new TextEncoder().encode(newFlag).length > 4096;
+
+  async function saveFlag() {
+    if (pending.current || disabled || invalidFlag) return;
+    pending.current = true;
+    setBusy(true); onBusyChange(true); setError(""); setNotice("");
+    try {
+      const response = await updateAdminChallenge(challengeId, { flag: newFlag });
+      if (!isSuccess(response.data)) throw new Error(response.data?.message || "플래그를 변경하지 못했습니다");
+      setRevealed(null); setNewFlag(""); setEditing(false);
+      const refreshed = await flag.reload();
+      setNotice(refreshed
+        ? "채점 플래그를 변경했습니다 비밀값 탭에서 flag를 같은 값으로 저장하고 새 배포 버전을 만들어주세요"
+        : "채점 플래그는 변경했습니다 최신 상태를 다시 확인해주세요");
+    } catch (failure) { setError(failure?.response?.data?.message || failure.message || "플래그를 변경하지 못했습니다"); }
+    finally { pending.current = false; setBusy(false); onBusyChange(false); }
+  }
+
   const data = flag.data;
   return <section aria-label="채점 플래그">
     <div className={styles.flagLabel}><h3>플래그</h3>
@@ -44,6 +65,7 @@ function FlagPanel({ challengeId, disabled, onBusyChange }) {
     </div>
     <AdminStatusMessage status={flag.status} error={flag.error} onRetry={flag.retry}/>
     {error && <p role="alert" className={styles.errorNotice}>{error}</p>}
+    {notice && <p role="status" className={styles.helpText}>{notice}</p>}
     {flag.status === "success" && <>
       <div className={styles.flagBox}>
         <output aria-label="채점용 플래그 원문" className={styles.flagValue}>{revealed ?? (data.configured ? "••••••••••••••••" : "등록된 플래그 없음")}</output>
@@ -62,6 +84,22 @@ function FlagPanel({ challengeId, disabled, onBusyChange }) {
         : data.source_status === "unavailable" ? "원문을 읽지 못했습니다 저장소 연결을 확인해주세요"
         : "채점 값은 저장되어 있지만 확인할 원문이 없습니다"}</p>
       {data.reveal_available && <p className={styles.flagSource}>{data.source === "repository" ? "info.yaml" : "저장된 비밀값"}에서 확인 · 원문은 1분 뒤 숨겨집니다</p>}
+      {!editing ? <button type="button" className={styles.button} disabled={disabled || busy}
+        onClick={() => { setEditing(true); setError(""); setNotice(""); }}>플래그 변경</button>
+        : <div className="mt-3 space-y-2">
+          <label>새 채점 플래그<input type="password" autoComplete="new-password" aria-label="새 채점 플래그"
+            className={styles.input} value={newFlag} disabled={disabled || busy} maxLength={4096}
+            onChange={(event) => setNewFlag(event.target.value)}
+            onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); saveFlag(); } }}/></label>
+          <p className={styles.helpText}>저장하면 이전 플래그는 정답으로 인정되지 않습니다</p>
+          <p className={styles.helpText}>실행 중인 문제에는 기존 값이 남습니다 비밀값과 새 배포 버전도 함께 설정해주세요</p>
+          <div className="flex gap-2">
+            <button type="button" className={styles.primary} disabled={disabled || busy || invalidFlag} onClick={saveFlag}>
+              {busy ? "저장 중…" : "채점 플래그 저장"}</button>
+            <button type="button" className={styles.button} disabled={disabled || busy}
+              onClick={() => { setEditing(false); setNewFlag(""); setError(""); }}>취소</button>
+          </div>
+        </div>}
     </>}
   </section>;
 }

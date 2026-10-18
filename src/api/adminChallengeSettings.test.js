@@ -28,6 +28,7 @@ test("challenge settings use admin routes, explicit flag reveal, and cancellatio
     await getAdminChallengeFiles("challenge-a", { signal });
     await revealAdminChallengeFlag("challenge-a", { signal });
     await updateAdminChallenge("challenge-a", { title: "새 제목", description: "새 지문" });
+    await updateAdminChallenge("challenge-a", { flag: "MSG{new_flag}" });
     await getAdminChallengeRepositoryFiles("challenge-a", { signal });
     await downloadAdminChallengeFile("challenge-a", "file-b", { signal });
     await getAdminReleaseFiles("challenge-a", "release-c", { signal, params: { page: 2 } });
@@ -36,6 +37,7 @@ test("challenge settings use admin routes, explicit flag reveal, and cancellatio
     assert.deepEqual(requests.map(({ method, url }) => [method, url]), [
       ["get", "/admin/challenges/challenge-a"], ["get", "/admin/challenges/challenge-a/flag"],
       ["get", "/admin/challenges/challenge-a/files"], ["post", "/admin/challenges/challenge-a/flag/reveal"],
+      ["patch", "/admin/challenges/challenge-a"],
       ["patch", "/admin/challenges/challenge-a"],
       ["get", "/admin/challenges/challenge-a/repository-files"],
       ["get", "/admin/challenges/challenge-a/files/file-b/download"],
@@ -46,16 +48,18 @@ test("challenge settings use admin routes, explicit flag reveal, and cancellatio
     assert.ok(requests.slice(0, 4).every((request) => request.signal === signal));
     assert.deepEqual(JSON.parse(requests[3].data), {});
     assert.deepEqual(JSON.parse(requests[4].data), { title: "새 제목", description: "새 지문" });
+    assert.deepEqual(JSON.parse(requests[5].data), { flag: "MSG{new_flag}" });
     assert.equal(requests[3].timeout, 15000);
     assert.equal(requests[4].timeout, 15000);
-    assert.equal(requests[6].timeout, 60000);
-    assert.equal(requests[6].responseType, "blob");
-    assert.equal(requests[6].signal, signal);
-    assert.deepEqual(requests[7].params, { page: 2, release_id: "release-c" });
+    assert.equal(requests[5].timeout, 15000);
+    assert.equal(requests[7].timeout, 60000);
+    assert.equal(requests[7].responseType, "blob");
     assert.equal(requests[7].signal, signal);
-    assert.equal(requests[8].headers.get("Idempotency-Key"), "files-retry-key");
+    assert.deepEqual(requests[8].params, { page: 2, release_id: "release-c" });
+    assert.equal(requests[8].signal, signal);
     assert.equal(requests[9].headers.get("Idempotency-Key"), "files-retry-key");
-    assert.deepEqual(JSON.parse(requests[8].data), { mode: "SELECTED", file_id: "file-b" });
+    assert.equal(requests[10].headers.get("Idempotency-Key"), "files-retry-key");
+    assert.deepEqual(JSON.parse(requests[9].data), { mode: "SELECTED", file_id: "file-b" });
   } finally {
     apiClient.defaults.adapter = originalAdapter;
     if (originalStorage) Object.defineProperty(globalThis, "localStorage", originalStorage);
