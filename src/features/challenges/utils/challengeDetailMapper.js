@@ -113,6 +113,8 @@ export function mapChallengeInstance(data, now = Date.now()) {
     challengeId: data.challenge_id,
     challengeTitle: data.challenge_title || "다른 문제",
     status: data.status,
+    deleteReason: data.delete_reason ?? null,
+    replacedInstanceId: data.replaced_instance_id ?? null,
     connectUrl: data.host,
     endpoints: mapInstanceEndpoints(data),
     expiresAt: data.expires_at,

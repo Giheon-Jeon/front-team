@@ -15,6 +15,7 @@ function idKey(prefix) {
 export function getMyInstances(config) {
   // GET /teams/me/instances (복수) - 본인(user_id) 기준 활성 인스턴스 단건 또는 null.
   // 같은 팀 다른 사용자 인스턴스는 미포함.
+  // config.params.challenge_id가 있으면 활성 인스턴스가 없을 때 해당 문제의 마지막 본인 이력도 조회한다.
   return apiClient.get("/teams/me/instances", config);
 }
 
