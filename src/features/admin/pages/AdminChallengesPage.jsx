@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { forceResetInstance, forceStopInstance, getAdminChallenges, getAdminInstances, setChallengeVisibility } from "../../../api/admin.js";
 import { INSTANCE_STATUS } from "../../../constants/enums.js";
 import { isSuccess } from "../../../utils/response.js";
+import { startVisiblePolling } from "../../../utils/visiblePolling.js";
 import { toKst } from "../../../utils/time.js";
 import AdminLayout, { AdminBadge, AdminStatusMessage } from "../components/AdminLayout.jsx";
 import AdminPagination from "../components/AdminPagination.jsx";
@@ -35,14 +36,9 @@ function InstancesSection() {
   const pending = useRef(false);
   const instances = useAdminResource((config) => getAdminInstances({ status: filter || undefined, page, size: 50 }, config), [filter, page], "인스턴스 목록을 불러오지 못했습니다");
   useEffect(() => {
-    let active = true;
-    let timer;
-    const poll = async () => {
-      if (!pending.current) await instances.reload();
-      if (active) timer = setTimeout(poll, 10000);
-    };
-    timer = setTimeout(poll, 10000);
-    return () => { active = false; clearTimeout(timer); };
+    return startVisiblePolling(() => {
+      if (!pending.current) return instances.reload();
+    }, { intervalMs: 10000, immediate: false });
   }, [instances.reload]);
 
   async function runAction() {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getAdminDeploymentTests, startAdminDeploymentTest, stopAdminDeploymentTest } from "../../../api/admin.js";
 import { isSuccess } from "../../../utils/response.js";
+import { startVisiblePolling } from "../../../utils/visiblePolling.js";
 import { toKst } from "../../../utils/time.js";
 import { mapInstanceEndpoints } from "../../challenges/utils/challengeDetailMapper.js";
 import { deploymentTestStatus, deploymentTestSteps } from "../utils/adminDeploymentTests.js";
@@ -36,9 +37,8 @@ export default function AdminDeploymentTestPanel({ challengeId, release, onBusyC
 
   useEffect(() => {
     mounted.current = true;
-    const initial = setTimeout(load, 0);
-    const timer = setInterval(() => { if (document.visibilityState === "visible") load(); }, 4000);
-    return () => { mounted.current = false; generation.current += 1; controller.current?.abort(); clearTimeout(initial); clearInterval(timer); };
+    const stopPolling = startVisiblePolling(load, { intervalMs: 4000 });
+    return () => { stopPolling(); mounted.current = false; generation.current += 1; controller.current?.abort(); };
   }, [load]);
   useEffect(() => { onBusyChange?.(busy); }, [busy, onBusyChange]);
   useEffect(() => () => onBusyChange?.(false), [onBusyChange]);

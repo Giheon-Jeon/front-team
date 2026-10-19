@@ -1,6 +1,6 @@
 async (page) => {
   const origin = new URL(page.url()).origin;
-  const prefix = 'performance-qa';
+  const prefix = new URL(origin).port === '4173' ? 'performance-baseline' : 'performance-current';
   const now = '2026-10-20T03:00:00.000Z';
   const iso = delta => new Date(Date.parse(now) + delta).toISOString();
   const clubs = ['MJSEC', 'SWING', 'Y-CERT', 'seKUrity', 'CodeCure', 'Aegis'];
@@ -27,14 +27,14 @@ async (page) => {
     else if (path === '/board/dice/status') data = { can_roll: true, dice_rolls_left: 3, timer_running: true, blocked_reason: null, server_time: now, next_dice_reset_at: iso(600000) };
     else if (path === '/board/chance/catalog') data = { cards: [] };
     else if (path === '/board/cell/current') data = { cell_index: 1, type: 'START', challenge_candidates: [] };
-    else if (path === '/board/opened_challenges') data = { challenges: [], total_count: 0 };
+    else if (path === '/board/opened_challenges') data = { opened_challenges: [], total_count: 0 };
     else if (path === '/timer') data = { name: 'QA MSG CTF', status: 'RUNNING', start_time: iso(-3600000), end_time: iso(3600000), server_time: now, remaining_seconds: 3600 };
     else if (path === '/leaderboard') data = { teams };
     else if (path === '/ranking') data = { rankings: teams.slice(0, 6).map((team,i) => ({...team, rank:i+1, mileage:1000, last_solved_at:iso(-300000)})), total_count: 8 };
     else if (path === '/ranking/me' || path === '/ranking/member') data = { rank:1, nickname:'QA 운영자', user_score:800, solved_count:1 };
     else if (path === '/koth/clubs') data = { clubs: clubs.map((name,i)=>({club_id:`club-${i+1}`, name, challenges:[challenges[i]]})), total_count:6, challenge_count:6, active_count:6 };
     else if (path === '/koth/me') data = { team_name:'QA Alpha', total_koth_score:300, challenges:progress };
-    else if (path === '/koth/leaderboard') data = { koth_challenge_id:url.searchParams.get('koth_challenge_id'), leaderboard:[{rank:1,team_id:'team-1',team_name:'QA Alpha',score:50}] };
+    else if (path === '/koth/leaderboard') data = { koth_challenge_id:url.searchParams.get('koth_challenge_id'), leaderboard:[{rank:1,team_id:'team-1',team_name:'QA Alpha',earned_score:50}] };
     else if (path.startsWith('/koth/clubs/')) { const index = Number(path.split('-').at(-1))-1; data = {club_id:`club-${index+1}`,name:clubs[index],challenge_count:1,challenges:[challenges[index]]}; }
     else if (path === '/koth/team_token') data = { team_token:'qa-local-fixture-token' };
     else if (path === '/signatures') data = {signatures, total_count:signatures.length};
@@ -42,7 +42,7 @@ async (page) => {
     else if (path === '/teams/me') data = {team_name:'QA Alpha',team_score:800,mileage:1000,jeopardy_score:500,koth_score:300,signature_score:0,is_banned:false,members:[{nickname:'QA 운영자',is_leader:true},{nickname:'QA 참가자',is_leader:false}]};
     else if (path === '/teams/me/mileage_history') data = {history:[],total_count:0};
     else if (path === '/teams/me/solves') data = {solves:[],total_count:0};
-    else if (path === '/instances/me' || path === '/teams/me/instances') data = {instances:[]};
+    else if (path === '/instances/me' || path === '/teams/me/instances') data = null;
     else if (path.startsWith('/challenges/')) data = {challenge_id:'challenge-1',title:'QA Challenge',description:'한글 문제 설명과 English description',category:'WEB',score:100,status:'OPENED',opened_at:iso(-60000),is_solved:false,files:[],instance_required:false};
     else if (path === '/admin/dashboard') data = {total_teams:8,total_users:16,running_instances:0,failed_instances:0,total_challenges:36};
     else if (path === '/admin/events') data = {events:[],total_count:0};
@@ -63,7 +63,7 @@ async (page) => {
   const onError = error => errors.push(error.message);
   page.on('pageerror', onError);
   const results = [];
-  const paths = ['/', '/guide', '/login', '/board', '/leaderboard', '/koth', '/mypage', '/challenges/challenge-1', '/rules', '/signatures', '/admin'];
+  const paths = ['/', '/guide', '/login', '/board', '/leaderboard', '/koth', '/mypage', '/challenges/challenge-1', '/rules', '/signatures', '/admin', '/timer'];
   for (const width of [1440,390]) {
     await page.setViewportSize({width,height:width===1440?900:844});
     for (const path of paths) {
