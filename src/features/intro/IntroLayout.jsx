@@ -5,6 +5,7 @@ import IntroHeader from "./components/IntroHeader.jsx";
 import IntroFooter from "./components/IntroFooter.jsx";
 import { MotionProvider, useMotion } from "./components/MotionProvider.jsx";
 import "./intro.css";
+import "./intro-fonts.generated.css";
 
 function IntroFrame() {
   const location = useLocation();

@@ -62,7 +62,7 @@
     content: "";
     position: absolute;
     inset: 0;
-    background: url("/assets/board/bg-1920x1080.webp") center / cover no-repeat;
+    background: url("/assets/board/bg-1920x1080-display.webp") center / cover no-repeat;
     pointer-events: none;
   }
 }
@@ -361,7 +361,7 @@
     padding: 20px;
     overflow: hidden;
     border: 8px solid transparent;
-    border-image: url("/assets/challenge-detail/panel-board.png") 32 stretch;
+    border-image: url("/assets/challenge-detail/panel-board.webp") 32 stretch;
     background: #eddbb6;
     background-clip: padding-box;
   }
@@ -391,7 +391,7 @@
   .mobileOpenOverlay .openPanel {
     position: relative; inset: auto; width: min(100%, 680px); height: 100%; max-height: none; min-width: 0;
     display: flex; flex-direction: column; margin: 0; padding: 12px; overflow: hidden;
-    border: 8px solid transparent; border-image: url("/assets/challenge-detail/panel-board.png") 32 stretch;
+    border: 8px solid transparent; border-image: url("/assets/challenge-detail/panel-board.webp") 32 stretch;
     background: #eddbb6; background-clip: padding-box; color: #613d15;
   }
   .mobileOpenOverlay .openPanelHeader { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-shrink: 0; padding-bottom: 10px; border-bottom: 1px solid #9c754875; }

@@ -559,7 +559,7 @@
   overscroll-behavior: contain;
   padding: 24px 28px 28px;
   border: 8px solid transparent;
-  border-image: url("/assets/challenge-detail/panel-board.png") 32 stretch;
+  border-image: url("/assets/challenge-detail/panel-board.webp") 32 stretch;
   border-radius: 0;
   background: #f5e8ca;
   background-clip: padding-box;

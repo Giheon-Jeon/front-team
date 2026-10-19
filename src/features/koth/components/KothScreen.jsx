@@ -34,7 +34,7 @@ export default function KothScreen({
     <main className={styles.page} aria-label="King of the Hill 문제 선택">
       <div className={styles.stage}>
         <img
-          src="/assets/koth/koth-trail-background.png"
+          src="/assets/koth/koth-trail-background.webp"
           alt=""
           aria-hidden="true"
           className={styles.background}

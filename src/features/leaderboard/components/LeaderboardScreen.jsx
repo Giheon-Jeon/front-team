@@ -24,7 +24,7 @@ export default function LeaderboardScreen({
       <div className={styles.stage}>
         <div className={styles.designCanvas}>
           <img
-            src={`${ASSET_BASE}leaderboard-layout.png`}
+            src={`${ASSET_BASE}leaderboard-layout.webp`}
             alt=""
             aria-hidden="true"
             className={styles.leaderboardArtwork}

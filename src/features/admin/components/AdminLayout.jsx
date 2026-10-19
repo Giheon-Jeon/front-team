@@ -20,7 +20,7 @@ const ASSET_BASE = `${BASE_URL}assets/admin/`;
 // 흰 사각형처럼 튄다. rules/msg-ctf-logo.png는 같은 로고를 실제 알파 채널로
 // 누끼 딴 버전이라 이쪽을 admin 전용 사본으로 복사해 사용한다.
 const LOGO_SRC = `${ASSET_BASE}logo.png`;
-const BACKGROUND_SRC = `${ASSET_BASE}background-forest.png`;
+const BACKGROUND_SRC = `${BASE_URL}assets/login/background-plaza.webp`;
 const PANEL_SRC = `${ASSET_BASE}board-panel.png`;
 
 const NAV_ITEMS = [
@@ -52,32 +52,45 @@ function useAdminNickname() {
   return nickname;
 }
 
-function useKstClock() {
+function KstClock() {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(timer);
+    let timer;
+    const update = () => {
+      clearTimeout(timer);
+      if (document.hidden) return;
+      setNow(new Date());
+      // The label displays minutes. Schedule the next minute boundary only.
+      timer = setTimeout(update, 60000 - Date.now() % 60000);
+    };
+    update();
+    document.addEventListener("visibilitychange", update);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("visibilitychange", update);
+    };
   }, []);
-  return now;
+  return <span className="font-kode-mono text-sm text-admin-gold">{formatKst(now)}</span>;
 }
 
+const kstFormatter = new Intl.DateTimeFormat("ko-KR", {
+  timeZone: "Asia/Seoul",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+
 function formatKst(date) {
-  const parts = new Intl.DateTimeFormat("ko-KR", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).formatToParts(date);
+  const parts = kstFormatter.formatToParts(date);
   const get = (type) => parts.find((p) => p.type === type)?.value ?? "";
   return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")} (KST)`;
 }
 
 export default function AdminLayout({ title, actions, children, className = "" }) {
   const nickname = useAdminNickname();
-  const now = useKstClock();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -156,9 +169,7 @@ export default function AdminLayout({ title, actions, children, className = "" }
               {title}
             </h1>
             <div className="flex flex-col items-end gap-1 text-right">
-              <span className="font-kode-mono text-sm text-admin-gold">
-                {formatKst(now)}
-              </span>
+              <KstClock />
               <div className="flex items-center gap-2">
                 <AdminBadge>관리자</AdminBadge>
                 <span className="font-song-myung text-sm text-admin-ink">

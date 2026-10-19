@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getLeaderboard, getRankings } from "../../../api/leaderboard.js";
 import { ROUTES } from "../../../routes/routePaths.js";
 import { isSuccess } from "../../../utils/response.js";
+import { startVisiblePolling } from "../../../utils/visiblePolling.js";
 import LeaderboardScreen from "../components/LeaderboardScreen.jsx";
 import { LEADERBOARD_PREVIEW_TEAMS, RANKING_PREVIEW_ROWS } from "../data/leaderboardPreview.js";
 import { adaptLeaderboardTeams, adaptRankingRows, mergeSolveCounts } from "../utils/leaderboardData.js";
@@ -25,7 +26,6 @@ export default function LeaderboardPage() {
   useEffect(() => {
     if (USE_PREVIEW_DATA) return;
     let cancelled = false;
-    let timer;
     const controller = new AbortController();
     const config = { signal: controller.signal, timeout: 10000 };
     setRanking({ status: "loading", data: [], error: false });
@@ -58,13 +58,12 @@ export default function LeaderboardPage() {
       });
       if (allSucceeded) setUpdatedAt(new Date().toISOString());
       setRefreshing(false);
-      timer = window.setTimeout(load, 30000);
     }
-    load();
+    const stopPolling = startVisiblePolling(load);
     return () => {
+      stopPolling();
       cancelled = true;
       controller.abort();
-      window.clearTimeout(timer);
     };
   }, [page, revision]);
 

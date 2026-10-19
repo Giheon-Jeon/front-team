@@ -1092,7 +1092,7 @@
     top: calc(var(--u) * 130);
     width: calc(var(--u) * 1720);
     height: calc(var(--u) * 870);
-    background: url("/assets/challenge-detail/panel-board.png") center / 100% 100% no-repeat;
+    background: url("/assets/challenge-detail/panel-board.webp") center / 100% 100% no-repeat;
     pointer-events: none;
   }
   .backButton {

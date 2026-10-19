@@ -38,7 +38,7 @@ export default function GoldenKeyCard({ card, onClose }) {
   }, [onClose]);
   const content = <div className={styles.overlay}>
     <section className={styles.card} role="dialog" aria-modal="true" aria-labelledby={titleId}>
-      <div className={styles.art}><img src="/assets/board/golden-key-original.png" alt="" /></div>
+      <div className={styles.art}><img src="/assets/board/golden-key-original.webp" alt="" /></div>
       <p className={styles.ribbon}>황금열쇠</p>
       <h2 id={titleId} className={styles.title}>{title}</h2>
       <div className={styles.description} tabIndex={0}>{description}</div>
