@@ -20,7 +20,7 @@ export default function useChallengeDetailData(challengeId) {
     setState((current) => ({ ...current, refreshing: true }));
     const [detailResult, instanceResult] = await Promise.allSettled([
       getChallengeDetail(challengeId, config),
-      getMyInstances(config),
+      getMyInstances({ ...config, params: { challenge_id: challengeId } }),
     ]);
     if (sequence !== requestSequence.current) return false;
     const detail = readDetailResult(

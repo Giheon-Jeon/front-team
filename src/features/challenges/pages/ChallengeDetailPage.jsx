@@ -9,6 +9,7 @@ import {
 } from "../../../api/instances.js";
 import { ROUTES } from "../../../routes/routePaths.js";
 import { isSuccess } from "../../../utils/response.js";
+import { TERMINAL_INSTANCE_STATUSES } from "../../../constants/enums.js";
 import ChallengeDetailScreen from "../components/ChallengeDetailScreen.jsx";
 import useChallengeDetailData from "../hooks/useChallengeDetailData.js";
 import {
@@ -230,7 +231,11 @@ function ChallengeDetailContent({ challengeId }) {
       onInstanceAction={requestAction}
       retrySeconds={retrySeconds}
       flagFeedback={flagFeedback}
-      instanceFeedback={instanceFeedback}
+      instanceFeedback={
+        TERMINAL_INSTANCE_STATUSES.includes(instance?.status) && instanceFeedback?.type === "success"
+          ? null
+          : instanceFeedback
+      }
       pendingAction={pendingAction}
       submitDisabled={
         pendingAction != null ||
