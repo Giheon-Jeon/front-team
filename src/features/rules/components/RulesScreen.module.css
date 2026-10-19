@@ -9,6 +9,9 @@
   overflow: hidden;
   background: #674326 url("/assets/login/background-plaza.webp") center / cover;
 }
+@media (max-width: 1100px) and (max-aspect-ratio: 9/10) {
+  .page { background-image: url("/assets/login/background-plaza-portrait.webp"); }
+}
 
 .stage {
   position: absolute;

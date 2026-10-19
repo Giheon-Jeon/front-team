@@ -334,6 +334,10 @@
   .rankingGrid .tableState { grid-column: 1 / -1; height: auto; padding: 24px 8px; }
 }
 
+@media (max-width: 1100px) and (max-aspect-ratio: 9/10) {
+  .page { background-image: url("/assets/login/background-plaza-portrait.webp"); }
+}
+
 @media (max-width: 400px) {
   .mobileTitle { font-size: 20px; }
   .designCanvas { padding-inline: 10px; }

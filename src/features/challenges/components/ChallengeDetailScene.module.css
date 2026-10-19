@@ -1,3 +1,5 @@
+@import "../../../styles/pretendard/detail.generated.css";
+
 @font-face {
   font-family: "Detail Fell";
   src: url("/assets/intro/fonts/IMFeENrm28P.ttf") format("truetype");
@@ -12,14 +14,6 @@
   font-weight: 400;
   font-display: swap;
 }
-@font-face {
-  font-family: "Detail Pretendard";
-  src: url("/assets/fonts/pretendard/PretendardVariable.woff2") format("woff2");
-  font-style: normal;
-  font-weight: 100 900;
-  font-display: swap;
-}
-
 /* 1u = Figma 1920×1080 캔버스의 1px. 좁은 화면에서는 1px로 돌아가 일반 흐름 레이아웃이 된다 */
 .page {
   --u: 1px;

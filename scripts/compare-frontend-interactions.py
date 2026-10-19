@@ -1,8 +1,9 @@
 from pathlib import Path
 from PIL import Image, ImageChops, ImageStat
 import json
+import sys
 
-out=Path(__file__).resolve().parents[1] / "output/playwright"
+out=Path(sys.argv[1]) if len(sys.argv)>1 else Path(__file__).resolve().parents[1] / "output/playwright"
 records={}
 for name in ['baseline','current']:
     file=out/f'interactions-{name}.log'
@@ -38,4 +39,4 @@ for current in records['current']['results']:
     rows.append({'name':key[0],'width':key[1],'same_text':old['text']==current['text'],'node_changes':node_changes,'pixels':pixels,'focus_before':old['focusInsideDialog'],'focus_after':current['focusInsideDialog'],'source_image_requested_before':old['leaderboardFullImage'],'source_image_requested_after':current['leaderboardFullImage']})
 summary={'cases':len(rows),'errors':records['current']['errors'],'unknown':records['current']['unknown'],'text_changes':sum(not row['same_text'] for row in rows),'layout_changes':sum(bool(row['node_changes']) for row in rows),'geometry_values':len(geometry_deltas),'max_geometry_delta':max(geometry_deltas,default=0),'rows':rows}
 (out/'interaction-comparison.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2),encoding='utf-8')
-print(json.dumps({**{k:v for k,v in summary.items() if k!='rows'},'differences':[row for row in rows if row['node_changes'] or not row['same_text'] or row['pixels'].get('percent_over_32',0)>1], 'leaderboard':[{'width':row['width'],**row['pixels'],'old_source':row['source_image_requested_before'],'new_source':row['source_image_requested_after']} for row in rows if row['name']=='leaderboard-symbols']},ensure_ascii=False))
+print(json.dumps({**{k:v for k,v in summary.items() if k!='rows'},'differences':[row for row in rows if row['node_changes'] or not row['same_text'] or row['pixels'].get('percent_over_32',0)>1], 'leaderboard':[{'width':row['width'],**row['pixels'],'old_source':row['source_image_requested_before'],'new_source':row['source_image_requested_after']} for row in rows if row['name']=='leaderboard-symbols']},ensure_ascii=True))

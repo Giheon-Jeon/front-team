@@ -457,3 +457,6 @@
   .tokenPanel input { font-size: 16px; min-height: 48px; }
   .tokenPanel button { min-height: 44px; }
 }
+@media (max-width: 1100px) and (max-aspect-ratio: 9/10) {
+  .page { background-image: url("/assets/login/background-plaza-portrait.webp"); }
+}

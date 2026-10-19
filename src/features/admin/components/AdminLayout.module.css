@@ -1,6 +1,10 @@
 .layout {
+  background-image: var(--admin-background);
   font-family:
     "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+@media (max-width: 1100px) and (max-aspect-ratio: 9/10) {
+  .layout { background-image: url("/assets/login/background-plaza-portrait.webp"); }
 }
 .layout > div {
   gap: 20px;

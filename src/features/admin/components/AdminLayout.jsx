@@ -96,7 +96,7 @@ export default function AdminLayout({ title, actions, children, className = "" }
   return (
     <div
       className={`min-h-screen bg-cover bg-center bg-fixed text-admin-ink ${layout.layout} ${className}`}
-      style={{ backgroundImage: `url(${BACKGROUND_SRC})` }}
+      style={{ "--admin-background": `url(${BACKGROUND_SRC})` }}
     >
       <div className="mx-auto flex min-h-screen max-w-[1720px] flex-col gap-6 px-4 py-8 md:flex-row">
         <aside

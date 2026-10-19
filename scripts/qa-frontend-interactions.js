@@ -1,5 +1,6 @@
 async (page) => {
   const origin = new URL(page.url()).origin;
+  const output = new URL(page.url()).searchParams.get('qaOutput') || 'output/playwright';
   const prefix = new URL(origin).port==='4173'?'regression-baseline':'regression-current';
   const now = '2026-10-20T03:00:00.000Z';
   const iso = delta => new Date(Date.parse(now) + delta).toISOString();
@@ -78,7 +79,7 @@ async (page) => {
   };
   const capture = async (name, width, fullPage = false) => {
     await settle();
-    await page.screenshot({path:`output/playwright/${prefix}-${name}-${width}.png`,fullPage,animations:'disabled',mask:[page.locator('iframe')]});
+    await page.screenshot({path:`${output}/${prefix}-${name}-${width}.png`,fullPage,animations:'disabled',mask:[page.locator('iframe')]});
     const record = await page.evaluate(() => {
       const visible = element => {
         const rect=element.getBoundingClientRect(),style=getComputedStyle(element);
@@ -164,6 +165,10 @@ async (page) => {
     await page.keyboard.press('Escape');
     await page.waitForURL('**/signatures');
     if(await page.evaluate(()=>document.body.style.overflow==='hidden')) throw new Error('Booth menu left scroll locked');
+    for (const [path,name] of [['/mypage','mypage'],['/challenges/challenge-1','challenge-detail'],['/rules','rules'],['/admin','admin-dashboard']]) {
+      await navigate(path);
+      await capture(name,width);
+    }
     await navigate('/leaderboard');
     await page.locator('main[data-leaderboard-source*="leaderboard:success"]').waitFor();
     await capture('leaderboard-symbols',width);

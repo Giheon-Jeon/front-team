@@ -1,5 +1,6 @@
 async (page) => {
   const origin = new URL(page.url()).origin;
+  const output = new URL(page.url()).searchParams.get('qaOutput') || 'output/playwright';
   const prefix = new URL(origin).port === '4173' ? 'performance-baseline' : 'performance-current';
   const now = '2026-10-20T03:00:00.000Z';
   const iso = delta => new Date(Date.parse(now) + delta).toISOString();
@@ -72,12 +73,15 @@ async (page) => {
       await page.locator('main, [data-board-layer="track"], form, [aria-label="문제 상세"]').first().waitFor({state:'visible'});
       await page.evaluate(() => document.fonts.ready);
       await page.waitForTimeout(350);
+      // CSS backgrounds and lazy route assets can finish after the document's
+      // load event. Keep size comparisons independent of response timing.
+      await page.waitForLoadState('networkidle', {timeout:15000});
       if (new URL(page.url()).pathname !== path) throw new Error(`Unexpected redirect: ${path} to ${page.url()}`);
       await page.evaluate(async () => {
         await Promise.all([...document.images].filter(image => {const rect=image.getBoundingClientRect();return rect.bottom>0 && rect.top<innerHeight;}).map(image => image.decode().catch(()=>{})));
       });
       const name = path === '/' ? 'intro' : path.replace(/^\//,'').replaceAll('/','-');
-      await page.screenshot({path:`output/playwright/${prefix}-${name}-${width}.png`,animations:'disabled'});
+      await page.screenshot({path:`${output}/${prefix}-${name}-${width}.png`,animations:'disabled'});
       results.push(await page.evaluate(({path,width}) => {
         const resources=performance.getEntriesByType('resource');
         if (!resources.length) throw new Error('Resource timing is unavailable; rerun in a fresh browser session without clock emulation');
