@@ -33,14 +33,32 @@
 @media (prefers-reduced-motion: reduce) {
   .boardPiece { transition: none; }
 }
-/* 바닥 문양도 보드와 같은 1920×1080 좌표를 쓴다
-   화면을 채우는 cover 배경으로 두면 16:9 밖에서 원판과 축척이 달라진다 */
+/* 풍경은 FixedAspectStage의 배경 한 장으로 화면 전체를 채운다
+   원판과 조작 패널은 기존 1920×1080 무대에서 같은 비율로 축소한다 */
 @media (min-width: 1101px) {
   .frame {
     --board-scene-width: min(100vw, calc(100vh * 16 / 9));
     --board-scene-height: calc(var(--board-scene-width) * 9 / 16);
+    /* 원본 바닥 중심 (917, 630)을 보드와 같은 무대 좌표에 고정한다.
+       이 점에서 네 화면 끝까지 덮는 최소 크기를 택해 비율과 여백을 함께 지킨다. */
+    --board-floor-x: calc((100vw - var(--board-scene-width)) / 2 + var(--board-scene-width) * 917 / 1920);
+    --board-floor-y: calc((100vh - var(--board-scene-height)) / 2 + var(--board-scene-height) * 630 / 1080);
+    --board-backdrop-width: max(
+      calc(var(--board-floor-x) * 1920 / 917),
+      calc((100vw - var(--board-floor-x)) * 1920 / 1003),
+      calc(var(--board-floor-y) * 1920 / 630),
+      calc((100vh - var(--board-floor-y)) * 1920 / 450)
+    );
   }
-  .frame > img, .frame > .stage {
+  .frame > img {
+    inset: auto;
+    left: calc(var(--board-floor-x) - var(--board-backdrop-width) * 917 / 1920);
+    top: calc(var(--board-floor-y) - var(--board-backdrop-width) * 630 / 1920);
+    width: var(--board-backdrop-width);
+    max-width: none;
+    height: calc(var(--board-backdrop-width) * 9 / 16);
+  }
+  .frame > .stage {
     position: absolute;
     inset: auto;
     left: 50%;
@@ -49,22 +67,8 @@
     height: var(--board-scene-height);
     transform: translate(-50%, -50%);
   }
-  .frame > img {
-    object-fit: contain;
-    /* 16:9 밖으로 남는 좌우(또는 위아래)는 아래 cover 배경이 채운다. 경계가 보이지 않게 가장자리만 흐리게 잇는다 */
-    -webkit-mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent), linear-gradient(to bottom, transparent, #000 3%, #000 97%, transparent);
-    -webkit-mask-composite: source-in;
-    mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent), linear-gradient(to bottom, transparent, #000 3%, #000 97%, transparent);
-    mask-composite: intersect;
-  }
-  /* 여백 없이 화면 전체를 같은 배경 그림으로 채운다. 바닥 문양 정렬은 위의 16:9 배경이 맡는다 */
-  .frame::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: url("/assets/board/bg-1920x1080-display.webp") center / cover no-repeat;
-    pointer-events: none;
-  }
+  /* 축소해도 원본 패널의 샘플 타이머가 실제 상태 뒤로 드러나지 않게 한다. */
+  .diceReadout { min-height: 12%; align-content: center; }
 }
 /* 열린 문제 패널 제목은 데스크톱에선 패널 이미지에 그려져 있어 스크린리더에만 노출 */
 .mobileOpenTitle { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

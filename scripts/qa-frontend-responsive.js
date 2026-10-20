@@ -91,6 +91,21 @@ async (page) => {
           if(getComputedStyle(root.querySelector('table')).display!=='table' || getComputedStyle(root.querySelector('tbody tr')).display!=='table-row') throw new Error('Scoreboard reflowed into mobile cards');
           if(resources.some(x=>/background-plaza|panel-board/.test(x.path))) throw new Error('Separate scoreboard backdrop downloaded');
         }
+        if(current && path==='/board') {
+          const scene=document.querySelector('[data-board-layer="scene"]'),stage=scene.closest('[class*="_stage_"]'),frame=stage.parentElement;
+          const background=frame.querySelector(':scope > img'),mobile=scene.querySelector('[data-board-layer="background"]');
+          const visible=node=>{const box=node.getBoundingClientRect();return box.width>0 && box.height>0 && getComputedStyle(node).visibility!=='hidden';};
+          const fill=getComputedStyle(frame,'::before');
+          if(Number(visible(background))+Number(visible(mobile))+Number(fill.content!=='none' && fill.backgroundImage!=='none')!==1) throw new Error('Board background painted more than once');
+          if(width>1100) {
+            const picture=background.getBoundingClientRect(),board=stage.getBoundingClientRect();
+            if(picture.left>1 || picture.top>1 || picture.right<width-1 || picture.bottom<height-1) throw new Error('Board background leaves a gap');
+            if(Math.abs(picture.width/picture.height-16/9)>.001 || Math.abs(board.width/board.height-16/9)>.001) throw new Error('Board scene proportions changed');
+            const actual=[picture.left+picture.width*917/1920,picture.top+picture.height*630/1080];
+            const expected=[board.left+board.width*917/1920,board.top+board.height*630/1080];
+            if(actual.some((value,index)=>Math.abs(value-expected[index])>1)) throw new Error('Board floor slipped away from the track');
+          }
+        }
         if(current && portrait && path!=='/board' && resources.some(x=>x.path.endsWith('/background-plaza.webp'))) throw new Error('Full plaza downloaded in portrait');
         if(innerWidth!==width || innerHeight!==height || Math.abs(devicePixelRatio-dpr)>.001) throw new Error('Device metrics mismatch');
         const broken=[...document.images].filter(x=>x.complete && x.naturalWidth===0).map(x=>x.src);

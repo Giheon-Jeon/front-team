@@ -20,11 +20,11 @@ test("모바일 두 후보는 데스크톱의 개별 left 좌표를 남기지 �
   assert.equal(rule.left, "auto");
 });
 
-test("데스크톱 바닥과 무대는 같은 크기와 중심을 사용하고 다른 화면에는 영향을 주지 않는다", () => {
+test("데스크톱 풍경은 한 번만 표시하고 보드와 패널은 원래 무대 좌표를 유지한다", () => {
   const path = "../components/BoardScreen.module.css";
   const condition = "(min-width: 1101px)";
   const frame = mediaRule(path, condition, ".frame");
-  const scene = mediaRule(path, condition, ".frame > img, .frame > .stage");
+  const scene = mediaRule(path, condition, ".frame > .stage");
   const background = mediaRule(path, condition, ".frame > img");
   assert.equal(frame["--board-scene-width"], "min(100vw, calc(100vh * 16 / 9))");
   assert.equal(frame["--board-scene-height"], "calc(var(--board-scene-width) * 9 / 16)");
@@ -33,17 +33,15 @@ test("데스크톱 바닥과 무대는 같은 크기와 중심을 사용하고 �
     width: "var(--board-scene-width)", height: "var(--board-scene-height)",
     transform: "translate(-50%, -50%)",
   });
-  assert.equal(background["object-fit"], "contain");
-  // 16:9 밖 여백은 같은 배경을 cover로 깔아 채운다(갈색 빈 여백 금지)
+  assert.equal(background["max-width"], "none");
+  assert.equal(background["mask-image"], undefined);
   const fill = mediaRule(path, condition, ".frame::before");
-  assert.equal(fill.inset, "0");
-  assert.match(fill.background, /bg-1920x1080-display\.webp.*cover/);
-  assert.equal(background["mask-composite"], "intersect");
+  assert.deepEqual(fill, {});
   const common = readFileSync(new URL("../../../components/common/FixedAspectStage.jsx", import.meta.url), "utf8");
   assert.match(common, /object-cover/);
 });
 
-test("16:9, 16:10, 세로로 긴 창과 울트라와이드에서 배경과 카드의 축척이 같다", () => {
+test("16:9, 16:10, 세로로 긴 창과 울트라와이드에서 보드와 패널의 축척이 같다", () => {
   // 바로 위 테스트에서 이 계산과 실제 CSS 선언의 일치를 확인한다
   for (const [width, height] of [[1920, 1080], [1280, 720], [1440, 900], [1280, 1008], [2560, 1080], [1101, 900], [1600, 600]]) {
     const sceneWidth = Math.min(width, height * 16 / 9);
@@ -54,10 +52,10 @@ test("16:9, 16:10, 세로로 긴 창과 울트라와이드에서 배경과 카�
     assert.ok(left >= -0.001 && top >= -0.001);
     assert.ok(Math.abs(sceneHeight / 1080 - scale) < 1e-10);
     for (const [x, y] of [[448, 289], [596, 482], [805, 460], [1038, 481]]) {
-      const backgroundPoint = [left + x * scale, top + y * scale];
+      const boardPoint = [left + x * scale, top + y * scale];
       const stagePoint = [left + sceneWidth * x / 1920, top + sceneHeight * y / 1080];
-      assert.ok(Math.abs(backgroundPoint[0] - stagePoint[0]) < 1e-9);
-      assert.ok(Math.abs(backgroundPoint[1] - stagePoint[1]) < 1e-9);
+      assert.ok(Math.abs(boardPoint[0] - stagePoint[0]) < 1e-9);
+      assert.ok(Math.abs(boardPoint[1] - stagePoint[1]) < 1e-9);
     }
   }
 });
