@@ -1,10 +1,10 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import FixedAspectStage from "../../../components/common/FixedAspectStage.jsx";
-import { useGameScene } from "../../../components/common/GameSceneContext.js";
 import { BLOCKED_REASON_MESSAGES } from "../data/boardContent.js";
 import { getBoardZoomScrollLeft } from "../utils/boardViewport.js";
 import useTrainTravel from "../hooks/useTrainTravel.js";
 import useTrainWhistle from "../hooks/useTrainWhistle.js";
+import useMobileBoardBackdrop from "../hooks/useMobileBoardBackdrop.js";
 import { preloadBoardTrain } from "./BoardTrain.jsx";
 import { prepareBoardLines } from "../utils/boardLines.js";
 import { normalizeBoardListView } from "../utils/boardChallengeList.js";
@@ -26,8 +26,8 @@ const NO_LINES = Object.freeze([]);
 
 // Figma node 3:2 "BoardPage" (1920x1080)
 // + 518:300 "열린 문제" + 555:342 "기차여행" + 555:306 "룰렛" + 104:502 "칸 눌럿음~".
-// 모든 화면에서 기존 16:9 무대 좌표를 유지한다
-// 작은 화면의 확대·이동은 배경과 무대를 함께 담은 GameSceneViewport에서 처리한다
+// 데스크톱은 기존 16:9 무대 좌표를 유지한다
+// 모바일은 BoardScene 안에서 배경 바닥과 원판을 함께 확대·스크롤한다
 export default function BoardScreen({
   boardDefinition,
   myBoard,
@@ -73,7 +73,6 @@ export default function BoardScreen({
   onOpenChallengeDetail,
   onCancelAirportDestination,
 }) {
-  const scene = useGameScene();
   const [localOpenListVisible, setLocalOpenListVisible] = useState(false);
   const isOpenListVisible = openListVisible ?? localOpenListVisible;
   const setIsOpenListVisible = (open) => {
@@ -96,18 +95,15 @@ export default function BoardScreen({
   const activeLineId = lines.find((line) => line.lineId === selectedLineId)?.lineId ?? lines[0]?.lineId ?? null;
   const boardRegionId = useId();
   const boardViewport = useRef(null);
+  const frameRef = useRef(null);
+  useMobileBoardBackdrop(frameRef, boardViewport);
   const trainTravel = useTrainTravel();
   const trainWhistle = useTrainWhistle();
   const followTrain = (pose) => {
     const viewport = boardViewport.current;
-    if (!viewport) return;
+    if (!isBoardZoomed || !viewport) return;
     const track = viewport.querySelector('[data-board-layer="track"]');
     if (!track) return;
-    if (scene) {
-      if (scene.expanded) scene.centerOn(track, pose.x / 100, pose.y / 100);
-      return;
-    }
-    if (!isBoardZoomed) return;
     // 확대 보드에서는 칸 단위 점프 없이 기차의 실제 화면 좌표를 따라간다
     const center = track.offsetLeft + track.clientWidth * pose.x / 100;
     viewport.scrollLeft = Math.max(0, Math.min(viewport.scrollWidth - viewport.clientWidth, center - viewport.clientWidth / 2));
@@ -139,7 +135,6 @@ export default function BoardScreen({
   }, [isOpenListVisible, isLineSummaryOpen]);
 
   useEffect(() => {
-    if (scene) return undefined;
     const viewport = boardViewport.current;
     if (!viewport) return undefined;
     if (!isBoardZoomed) {
@@ -156,10 +151,9 @@ export default function BoardScreen({
       );
     });
     return () => window.cancelAnimationFrame(frameId);
-  }, [scene, isBoardZoomed, displayPosition]);
+  }, [isBoardZoomed, displayPosition]);
 
   useEffect(() => {
-    if (scene) return undefined;
     const desktop = window.matchMedia("(min-width: 1101px)");
     const resetZoom = () => {
       if (desktop.matches) setIsBoardZoomed(false);
@@ -167,7 +161,7 @@ export default function BoardScreen({
     };
     desktop.addEventListener("change", resetZoom);
     return () => desktop.removeEventListener("change", resetZoom);
-  }, [scene]);
+  }, []);
 
   const cells = boardDefinition?.cells ?? [];
   const blockedMessage = awaitingDiscard
@@ -196,16 +190,6 @@ export default function BoardScreen({
     : null;
   useEffect(() => { if (isAirportSelecting) void preloadBoardTrain(); }, [isAirportSelecting]);
   useEffect(() => {
-    if (scene) {
-      if (isAirportSelecting && zoomBeforeTrainSelection.current === null) {
-        zoomBeforeTrainSelection.current = scene.expanded;
-        if (scene.compact) scene.setExpanded(true);
-      } else if (!isAirportSelecting && !trainTravel.journey && zoomBeforeTrainSelection.current !== null) {
-        scene.setExpanded(zoomBeforeTrainSelection.current);
-        zoomBeforeTrainSelection.current = null;
-      }
-      return;
-    }
     if (isAirportSelecting) {
       if (zoomBeforeTrainSelection.current === null) {
         zoomBeforeTrainSelection.current = isBoardZoomed;
@@ -216,7 +200,7 @@ export default function BoardScreen({
       setIsBoardZoomed(window.matchMedia("(max-width: 1100px)").matches && zoomBeforeTrainSelection.current);
       zoomBeforeTrainSelection.current = null;
     }
-  }, [scene, isAirportSelecting, trainTravel.journey, isBoardZoomed]);
+  }, [isAirportSelecting, trainTravel.journey, isBoardZoomed]);
   const selectionKey = getChallengeSelectionKey({
     myBoard, currentCell, awaitingDiscard, pendingChanceChoice, pendingRoll,
     blockedReason: diceStatus?.blockedReason, cellEvent, isLoading,
@@ -235,7 +219,7 @@ export default function BoardScreen({
   useEffect(() => { setDismissedSelectionKey(null); }, [selectionKey]);
 
   return (
-    <FixedAspectStage backdropSrc="/assets/board/bg-1920x1080-display.webp" frameClassName={styles.frame} className={styles.stage}>
+    <FixedAspectStage frameRef={frameRef} backdropSrc="/assets/board/bg-1920x1080-display.webp" frameClassName={styles.frame} className={styles.stage}>
       <BoardDiceStatusPanel
         rollsLeft={diceStatus?.diceRollsLeft ?? myBoard?.diceRollsLeft ?? 0}
         canRoll={canRoll}

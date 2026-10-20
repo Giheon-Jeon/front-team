@@ -5,6 +5,7 @@ import MileageHistoryTable from "./MileageHistoryTable.jsx";
 import SolveHistoryTable from "./SolveHistoryTable.jsx";
 import TeamInfoCard from "./TeamInfoCard.jsx";
 import styles from "./MyPageScene.module.css";
+import PanelTexture from "../../../components/common/PanelTexture.jsx";
 
 function profileText(state, field) {
   if (state.status === "loading") return "LOADING";
@@ -52,6 +53,7 @@ export default function MyPageScreen({
           <img src="/assets/mypage/icon-back.svg" alt="" aria-hidden="true" />
         </button>
         <main className={styles.board} aria-label="마이 페이지">
+          <PanelTexture material="paper" />
           <div className={styles.statusBar}>
             <p className={status.alert ? styles.statusAlert : undefined} role={status.alert ? "alert" : undefined}>
               {status.text}
@@ -70,6 +72,7 @@ export default function MyPageScreen({
             isLoggingOut={isLoggingOut}
           />
           <section className={`${styles.metricPanel} ${styles.scorePanel}`} aria-label="팀 점수">
+            <PanelTexture />
             <h2 className={styles.bakedLabel}>CURRENT SCORE</h2>
             <p className={styles.metricValue}>{profileText(profile, "score")}</p>
             <p className={styles.breakdown}>
@@ -80,6 +83,7 @@ export default function MyPageScreen({
             </p>
           </section>
           <section className={`${styles.metricPanel} ${styles.mileagePanel}`} aria-label="마일리지 잔액">
+            <PanelTexture />
             <h2 className={styles.bakedLabel}>MILEAGE</h2>
             <p className={styles.metricValue}>{profileText(profile, "mileage")}</p>
             <span className={styles.unit}>MI</span>

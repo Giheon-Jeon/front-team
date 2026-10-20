@@ -2,13 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import postcss from "postcss";
-import { getBoardZoomScrollLeft } from "./boardViewport.js";
+import { getBoardZoomScrollLeft, getMobileBoardBackdrop } from "./boardViewport.js";
 
 function mediaRule(path, condition, selector) {
   const root = postcss.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
   const values = {};
-  root.walkAtRules((media) => {
-    if (!["media", "container"].includes(media.name) || media.params.replace(/^game-scene\s+/, "").trim() !== condition) return;
+  root.walkAtRules("media", (media) => {
+    if (media.params !== condition) return;
     media.walkRules(selector, (rule) => rule.walkDecls((decl) => { values[decl.prop] = decl.value; }));
   });
   return values;
@@ -26,7 +26,7 @@ test("데스크톱 풍경은 한 번만 표시하고 보드와 패널은 원래 
   const frame = mediaRule(path, condition, ".frame");
   const scene = mediaRule(path, condition, ".frame > .stage");
   const background = mediaRule(path, condition, ".frame > img");
-  assert.equal(frame["--board-scene-width"], "min(calc(var(--scene-vw, 1vw) * 100), calc(calc(var(--scene-vh, 1vh) * 100) * 16 / 9))");
+  assert.equal(frame["--board-scene-width"], "min(100vw, calc(100vh * 16 / 9))");
   assert.equal(frame["--board-scene-height"], "calc(var(--board-scene-width) * 9 / 16)");
   assert.deepEqual(scene, {
     position: "absolute", inset: "auto", left: "50%", top: "50%",
@@ -138,12 +138,31 @@ test("모바일의 바닥 배경을 고정하지 않고 원판과 같은 장면�
   const css = readFileSync(new URL("../components/BoardScreen.module.css", import.meta.url), "utf8");
   const screen = readFileSync(new URL("../components/BoardScreen.jsx", import.meta.url), "utf8");
   const scene = readFileSync(new URL("../components/BoardScene.jsx", import.meta.url), "utf8");
-  assert.match(css, /\.frame > img\s*\{\s*display: none/);
+  assert.match(css, /\.frame > img\s*\{\s*display: block; position: absolute;[^}]*var\(--mobile-background-left/);
   assert.doesNotMatch(css, /\.frame > img\s*\{\s*position: fixed/);
   assert.match(css, /\.sceneBackdrop\s*\{[^}]*position: absolute/);
   assert.match(css, /\.boardScene\s*\{[^}]*position: relative/);
   assert.match(screen, /<BoardScene[^>]*>\s*<BoardTrack[\s\S]*?\/>\s*<\/BoardScene>/);
   assert.match(scene, /data-board-layer="scene"[\s\S]*data-board-layer="background"[\s\S]*\{children\}/);
+  assert.match(css, /\.sceneBackdrop\s*\{ display: none; \}/);
+});
+
+test("모바일 배경 한 장이 전체 화면을 채우고 원판 바닥 기준점을 유지한다", () => {
+  for (const width of [320, 390, 768, 844, 1100]) for (const viewportHeight of [390, 568, 844, 1024]) {
+    for (const sceneWidth of [width, Math.max(width * 1.5, 620)]) {
+      const sceneHeight = sceneWidth * 960 / 951;
+      const sceneTop = 240;
+      const height = Math.max(viewportHeight, sceneTop + sceneHeight + 24);
+      for (const sceneLeft of [0, (width - sceneWidth) / 2, width - sceneWidth]) {
+        const image = getMobileBoardBackdrop({ width, height, sceneLeft, sceneTop, sceneWidth, sceneHeight });
+        assert.ok(Math.abs(image.width / image.height - 16 / 9) < 1e-9);
+        assert.ok(image.left <= 1e-7 && image.top <= 1e-7);
+        assert.ok(image.left + image.width >= width - 1e-7 && image.top + image.height >= height - 1e-7);
+        assert.ok(Math.abs(image.left + image.width * 917 / 1920 - (sceneLeft + sceneWidth * 469 / 951)) < 1e-7);
+        assert.ok(Math.abs(image.top + image.height * 630 / 1080 - (sceneTop + sceneHeight * 510 / 960)) < 1e-7);
+      }
+    }
+  }
 });
 
 test("모바일 보드에는 좌우 액자 여백을 두지 않고 열린 문제와 확대를 한 줄에 배치한다", () => {
@@ -168,7 +187,9 @@ test("모바일 풍경을 짧게 잘라도 바닥과 원판의 원본 좌표는 
   assert.equal(cropHeight, 960);
   assert.equal(percent(backdropRule, "height") * cropHeight, 1080);
   assert.equal(-percent(backdropRule, "top") * cropHeight, 120);
-  assert.ok(Math.abs((percent(trackRule, "top") - percent(backdropRule, "top")) * cropHeight - 289) < 0.001);
+  const [, inset, originalHeight] = trackRule.match(/top: calc\((\d+) \/ (\d+) \* 100%\)/).map(Number);
+  assert.equal(originalHeight, cropHeight);
+  assert.equal(inset - percent(backdropRule, "top") * cropHeight, 289);
   assert.ok(Math.abs(-percent(backdropRule, "left") * cropWidth - 448) < 0.001);
 });
 

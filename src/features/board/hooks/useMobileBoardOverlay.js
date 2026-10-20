@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
-import { useGameScene } from "../../../components/common/GameSceneContext.js";
 
 export default function useMobileBoardOverlay(panelRef) {
-  const scene = useGameScene();
   const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && window.matchMedia("(max-width: 1100px)").matches);
   useEffect(() => {
     const media = window.matchMedia("(max-width: 1100px)");
@@ -11,9 +9,8 @@ export default function useMobileBoardOverlay(panelRef) {
     update();
     return () => media.removeEventListener("change", update);
   }, []);
-  const useMobileOverlay = isMobile && !scene;
   useEffect(() => {
-    if (!useMobileOverlay) return;
+    if (!isMobile) return;
     const body = document.body;
     const app = document.getElementById("root");
     const previousInert = app?.inert;
@@ -38,6 +35,6 @@ export default function useMobileBoardOverlay(panelRef) {
       window.scrollTo(x, y);
       if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
     };
-  }, [useMobileOverlay, panelRef]);
-  return useMobileOverlay;
+  }, [isMobile, panelRef]);
+  return isMobile;
 }

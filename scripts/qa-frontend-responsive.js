@@ -64,92 +64,105 @@ async (page) => {
   const onError=error=>errors.push(error.message);
   page.on('pageerror',onError);
   await page.emulateMedia({reducedMotion:'reduce'});
-  const cdp = await page.context().newCDPSession(page);
-  const results = [];
-  const reference = {};
-  const paths = ['/board', '/koth', '/rules', '/mypage', '/challenges/challenge-1', '/signatures', '/leaderboard', '/admin'];
-  const sizes = [[1920,1080,1],[320,568,1],[390,844,1],[844,390,1],[768,1024,1],[1024,768,1],[1100,900,1],[1101,900,1],[1440,900,1],[1600,600,1],[390,844,2],[1440,900,2]];
-  for (const [width,height,dpr] of sizes) {
-    await page.setViewportSize({width,height});
-    for (const path of paths) {
-      // Playwright screenshots reset device metrics; apply them before every measurement.
-      await cdp.send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:dpr,mobile:false});
-      await page.goto(origin+path);
-      await page.locator('main, [data-board-layer="track"]').first().waitFor();
-      await page.evaluate(()=>document.fonts.ready);
-      if(path==='/board') await page.waitForFunction(()=>document.querySelector('button[aria-label="주사위 굴리기"]')?.disabled===false && document.querySelector('canvas'),null,{polling:100,timeout:20000});
-      await page.evaluate(async () => Promise.all([...document.images].filter(img=>img.getBoundingClientRect().width).map(img=>img.decode().catch(()=>{}))));
-      const record = await page.evaluate(({path,width,height,dpr})=>{
-        const visible = node => {const rect=node.getBoundingClientRect();return rect.width>0 && rect.height>0 && getComputedStyle(node).visibility!=='hidden';};
-        const assert = (condition,message) => {if(!condition) throw new Error(path+' '+width+'x'+height+' '+message);};
-        assert(innerWidth===width && innerHeight===height && Math.abs(devicePixelRatio-dpr)<.001,'Device metrics mismatch');
-        const broken=[...document.images].filter(x=>x.complete && x.naturalWidth===0).map(x=>x.src);
-        const overflow=document.documentElement.scrollWidth>innerWidth+1;
-        const alerts=[...document.querySelectorAll('[role="alert"]')].filter(visible).map(x=>x.textContent);
-        assert(!broken.length && !overflow && !alerts.length,JSON.stringify({broken,overflow,alerts}));
-        const viewport=document.querySelector('[data-game-viewport]');
-        let geometry=null,artwork=[];
-        if(viewport) {
-          const compact=width<=1100 || height<620;
-          const canvas=viewport.querySelector('[data-game-canvas]');
-          const rect=canvas.getBoundingClientRect();
-          const scale=rect.width/canvas.offsetWidth;
-          assert(viewport.dataset.compact===String(compact),'Wrong scene mode');
-          assert(Math.abs(scale-rect.height/canvas.offsetHeight)<.00001,'Canvas stretched');
-          if(compact) {
-            assert(canvas.offsetWidth===1920 && canvas.offsetHeight===1080,'Mobile layout lost original canvas');
-            assert(rect.left>=-1 && rect.top>=-1 && rect.right<=width+1 && rect.bottom<=height+1,'Fit view crops the artwork');
-            assert(viewport.scrollWidth<=width+1 && viewport.scrollHeight<=height+1,'Fit view has hidden overflow');
-            assert(getComputedStyle(canvas.firstElementChild).backgroundImage==='none','Duplicate page background');
-            const control=[...document.querySelectorAll('button')].find(x=>x.textContent==='확대 보기');
-            assert(control?.getBoundingClientRect().height>=44,'View control is too small');
-          }
-          const selector='img, [data-board-layer="track"], [class*="_boardFrame_"], [class*="_sceneViewport_"], [class*="_boothPosition_"], [class*="_rulesPanel_"], [class*="_descriptionPanel_"]';
-          artwork=[...canvas.querySelectorAll(selector)].filter(visible).filter(node=>!node.getAttribute('src')?.includes('bg-1920x1080-display')).map(node=>{
-            const r=node.getBoundingClientRect();
-            return {key:node.getAttribute('src')||node.getAttribute('data-board-layer')||node.className,rect:[(r.left-rect.left)/scale,(r.top-rect.top)/scale,r.width/scale,r.height/scale]};
-          });
-          if(path==='/koth') assert(artwork.some(x=>x.key.includes('koth-trail-background.webp')),'KoTH original map missing');
-          if(path==='/signatures') {
-            assert([...canvas.querySelectorAll('[class*="_boothPosition_"]')].filter(visible).length===6,'Booth targets missing');
-            assert(![...canvas.querySelectorAll('[class*="_mobileBoothList_"]')].some(visible),'Festival changed into mobile directory');
-          }
+  const cdp=await page.context().newCDPSession(page);
+  const results=[];
+  const sizes=[[320,568,1],[390,844,1],[844,390,1],[768,1024,1],[1024,768,1],[1100,900,1],[1101,900,1],[1440,900,1],[1920,1080,1],[1600,600,1],[390,844,2],[1440,900,2]];
+  try {
+    for(const [width,height,dpr] of sizes) {
+      await page.setViewportSize({width,height});
+      for(const path of ['/board','/leaderboard','/koth','/mypage','/challenges/challenge-1','/rules','/signatures','/admin']) {
+        await cdp.send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:dpr,mobile:false});
+        await page.goto(origin+path,{waitUntil:'domcontentloaded',timeout:45000});
+        await page.locator('main, [data-board-layer="track"]').first().waitFor();
+        await page.evaluate(()=>document.fonts.ready);
+        if(path==='/board') await page.waitForFunction(()=>document.querySelector('button[aria-label="주사위 굴리기"]')?.disabled===false && document.querySelector('canvas'),null,{polling:100,timeout:20000});
+        await page.evaluate(async()=>Promise.all([...document.images].filter(x=>x.getBoundingClientRect().width).map(x=>x.decode().catch(()=>{}))));
+        if(path==='/board') await page.waitForFunction(()=>{
+          const scene=document.querySelector('[data-board-layer="scene"]'),stage=scene.closest('[class*="_stage_"]'),frame=stage.parentElement,image=frame.querySelector(':scope > img'),p=image.getBoundingClientRect(),b=scene.getBoundingClientRect(),s=stage.getBoundingClientRect();
+          const expected=innerWidth<=1100?[b.left+b.width*469/951,b.top+b.height*510/960]:[s.left+s.width*917/1920,s.top+s.height*630/1080];
+          return [p.left+p.width*917/1920,p.top+p.height*630/1080].every((value,i)=>Math.abs(value-expected[i])<1);
+        },null,{polling:100,timeout:10000});
+        await page.waitForTimeout(100);
+        const result=await page.evaluate(({path,width,height,dpr})=>{
+          const assert=(value,message)=>{if(!value)throw new Error(path+' '+width+'x'+height+' '+message);};
+          const visible=node=>{if(!node)return false;const r=node.getBoundingClientRect();return r.width>0 && r.height>0 && getComputedStyle(node).visibility!=='hidden';};
+          const rect=node=>{const r=node.getBoundingClientRect();return {left:r.left,top:r.top,width:r.width,height:r.height,right:r.right,bottom:r.bottom};};
+          assert(innerWidth===width && innerHeight===height && Math.abs(devicePixelRatio-dpr)<.001,'Incorrect device metrics');
+          const overflow=document.documentElement.scrollWidth>innerWidth+1;
+          const broken=[...document.images].filter(x=>x.complete && x.naturalWidth===0).map(x=>x.src);
+          const alerts=[...document.querySelectorAll('[role="alert"]')].filter(visible).map(x=>x.textContent);
+          assert(!overflow && !broken.length && !alerts.length,JSON.stringify({overflow,broken,alerts}));
+          assert(!document.querySelector('[data-game-canvas]'),'Page was forced into a desktop canvas');
+          let details={};
           if(path==='/board') {
-            const track=canvas.querySelector('[data-board-layer="track"]'),stage=track.closest('[class*="_stage_"]');
-            const background=compact?viewport.querySelector('[data-game-backdrop]'):stage.parentElement.querySelector(':scope > img');
-            const all=[...viewport.querySelectorAll('img[src*="bg-1920x1080-display"]')].filter(visible);
-            assert(all.length===1,'Board background painted more than once');
-            const picture=background.getBoundingClientRect(),board=stage.getBoundingClientRect();
-            assert(picture.left<=1 && picture.top<=1 && picture.right>=width-1 && picture.bottom>=height-1,'Board backdrop leaves a gap');
-            assert(Math.abs(picture.width/picture.height-16/9)<.001 && Math.abs(board.width/board.height-16/9)<.001,'Board proportions changed');
-            const a=[picture.left+picture.width*917/1920,picture.top+picture.height*630/1080];
-            const b=[board.left+board.width*917/1920,board.top+board.height*630/1080];
-            assert(a.every((value,i)=>Math.abs(value-b[i])<1),'Floor anchor slipped');
+            const scene=document.querySelector('[data-board-layer="scene"]'),stage=scene.closest('[class*="_stage_"]'),frame=stage.parentElement;
+            const image=frame.querySelector(':scope > img'),inner=scene.querySelector('[data-board-layer="background"]');
+            assert(Number(visible(image))+Number(visible(inner))===1,'Duplicate scene background');
+            const picture=rect(image),bounds=rect(frame),board=rect(scene);
+            assert(Math.abs(picture.width/picture.height-16/9)<.001,'Background stretched');
+            assert(picture.left<=bounds.left+1 && picture.top<=bounds.top+1 && picture.right>=bounds.right-1 && picture.bottom>=bounds.bottom-1,'Backdrop leaves a gap');
+            const expected=width<=1100?[board.left+board.width*469/951,board.top+board.height*510/960]:[rect(stage).left+rect(stage).width*917/1920,rect(stage).top+rect(stage).height*630/1080];
+            const actual=[picture.left+picture.width*917/1920,picture.top+picture.height*630/1080];
+            assert(actual.every((value,i)=>Math.abs(value-expected[i])<1),'Background floor detached from board '+JSON.stringify({actual,expected,frame:bounds,board,picture}));
+            if(width<=1100) {
+              const status=document.querySelector('[class*="_diceReadout_"]');
+              assert(parseFloat(getComputedStyle(status).fontSize)>=16,'Dice status too small');
+              const nav=document.querySelector('nav[aria-label="대회 메뉴"]');
+              assert([...nav.querySelectorAll(':scope > a')].length===3,'Original navigation icons missing');
+              assert([...nav.querySelectorAll(':scope > a')].every(x=>rect(x).width>=44 && rect(x).height>=44),'Navigation touch target too small');
+            }
+            details={background:picture,anchor:actual};
           }
-          geometry={compact,scale,canvas:[rect.left,rect.top,rect.width,rect.height]};
-        } else if(path==='/leaderboard') {
-          const root=document.querySelector('main'),stage=root.firstElementChild,canvas=stage.firstElementChild,frame=stage.getBoundingClientRect(),matrix=new DOMMatrix(getComputedStyle(canvas).transform);
-          assert(getComputedStyle(root).backgroundImage.includes('leaderboard-scene-v1.webp'),'Wrong scoreboard backdrop');
-          assert(Math.abs(frame.width/frame.height-16/9)<.001 && Math.abs(matrix.a-matrix.d)<.00001,'Scoreboard proportions changed');
-          assert(getComputedStyle(root.querySelector('table')).display==='table' && getComputedStyle(root.querySelector('tbody tr')).display==='table-row','Scoreboard became mobile cards');
-        }
-        return {path,width,height,dpr,geometry,artwork,broken,overflow,alerts};
-      },{path,width,height,dpr});
-      if(width===1920 && height===1080) reference[path]=record.artwork;
-      else if(record.geometry?.compact) {
-        if(record.artwork.length!==reference[path].length) throw new Error('Artwork count changed '+path+' '+width+' '+JSON.stringify({actual:record.artwork,reference:reference[path]}));
-        record.maxCoordinateDifference=Math.max(0,...record.artwork.flatMap((node,i)=>{
-          if(node.key!==reference[path][i].key) throw new Error('Artwork source changed '+path);
-          return node.rect.map((value,j)=>Math.abs(value-reference[path][i].rect[j]));
-        }));
-        if(record.maxCoordinateDifference>1) throw new Error('Artwork/click target coordinates changed '+path+' '+record.maxCoordinateDifference);
+          if(path==='/leaderboard') {
+            const table=document.querySelector('table'),container=table.parentElement,canvas=document.querySelector('[class*="_designCanvas_"]');
+            assert(table.querySelectorAll('thead th').length===14,'Score columns omitted');
+            assert(getComputedStyle(table).display==='table' && getComputedStyle(table.querySelector('tbody tr')).display==='table-row','Table changed into cards');
+            if(width<=1100) {
+              assert(getComputedStyle(canvas).transform==='none' && canvas.offsetWidth<=width,'Whole page scaled down');
+              assert(parseFloat(getComputedStyle(table).fontSize)>=14,'Table text too small');
+              assert(container.scrollWidth>container.clientWidth && getComputedStyle(container).overflowX==='auto','Wide columns cannot be scrolled');
+              const graph=document.querySelector('[data-compact]');
+              assert(rect(graph).width<=width && rect(graph).height>=280,'Graph is not fitted to mobile');
+              assert([...document.querySelectorAll('[class*="_legendName_"]')].every(x=>parseFloat(getComputedStyle(x).fontSize)>=14),'Legend text too small');
+              assert(![...document.querySelectorAll('button')].some(x=>x.getAttribute('aria-label')==='스코어보드 읽기 크기로 확대'),'Global desktop zoom returned');
+              details={graph:rect(graph),tableWidth:container.scrollWidth,tableViewport:container.clientWidth};
+            }
+          }
+          if(path==='/mypage' && (width<=1100 || height<620)) {
+            const card=document.querySelector('[aria-label="팀 정보"]'),score=document.querySelector('[aria-label="팀 점수"]');
+            assert(rect(card).width<=width && parseFloat(getComputedStyle(card.querySelector('h1')).fontSize)>=24,'Profile shrunk instead of reflowed');
+            assert(getComputedStyle(card).borderImageSource.includes('panel-board.webp') && getComputedStyle(score).borderImageSource.includes('panel-score.png'),'Original paper or wood theme missing');
+          }
+          if(path.startsWith('/challenges/') && (width<=1100 || height<620)) {
+            const input=document.querySelector('#flag'),description=document.querySelector('[class*="_descriptionBody_"]');
+            assert(parseFloat(getComputedStyle(input).fontSize)>=16 && rect(input).width<=width,'Flag input is unreadable');
+            assert(getComputedStyle(input.closest('form')).borderImageSource.includes('panel-board.webp'),'Original flag panel theme missing');
+            assert(parseFloat(getComputedStyle(description).fontSize)>=16,'Description text too small');
+          }
+          if(path==='/koth' && width<=1100) {
+            const heading=document.querySelector('h1'),cards=[...document.querySelectorAll('[class*="_challengeButton_"]')];
+            assert(parseFloat(getComputedStyle(heading).fontSize)>=24 && cards.length===6,'Koth title or challenges missing');
+            assert(cards.every(x=>rect(x).width>=90),'Koth cards scaled too small');
+            assert(visible(document.querySelector('[class*="_mobileTrailArtwork_"]')),'Original mountain artwork missing');
+            assert(document.querySelectorAll('[class*="_mobileRoundArtwork_"]').length===3 && visible(document.querySelector('[data-material="map"]')),'Original map composition missing');
+          }
+          if(path==='/rules' && width<=1100) assert([...document.querySelectorAll('[class*="_ruleDescription_"]')].every(x=>parseFloat(getComputedStyle(x).fontSize)>=16),'Rules text too small');
+          if(path==='/signatures' && (width<=600 || width/height<=1.25)) {
+            const links=[...document.querySelectorAll('[data-directory-booth]')];
+            assert(links.length===6 && links.every(x=>getComputedStyle(x).borderImageSource.includes('panel-score.png')),'Mobile booths lost original wood theme');
+            assert(links.every(x=>rect(x.querySelector('a,button')).height>=44),'Booth entry target too small');
+          }
+          return {path,width,height,dpr,overflow,broken,alerts,details};
+        },{path,width,height,dpr});
+        if((width===390 || width===1440) && dpr===1) await page.screenshot({path:`${output}/theme-${path.slice(1).replaceAll('/','-')}-${width}.png`,animations:'disabled'});
+        results.push(result);
       }
-      if((width===390 || width===1440) && dpr===1) await page.screenshot({path:`${output}/responsive-${path.slice(1).replaceAll('/','-')}-${width}-${height}.png`,animations:'disabled'});
-      results.push(record);
     }
+    if(errors.length || unknown.length)throw new Error(JSON.stringify({errors,unknown}));
+    return {results,errors,unknown};
+  } finally {
+    await cdp.send('Emulation.clearDeviceMetricsOverride');
+    await cdp.detach();
+    page.removeListener('pageerror',onError);
   }
-  if(errors.length || unknown.length) throw new Error(JSON.stringify({errors,unknown}));
-  page.removeListener('pageerror',onError);
-  await cdp.detach();
-  return {results,errors,unknown};
 }

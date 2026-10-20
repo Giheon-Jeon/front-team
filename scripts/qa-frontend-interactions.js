@@ -1,7 +1,6 @@
 async (page) => {
   const origin = new URL(page.url()).origin;
   const output = new URL(page.url()).searchParams.get('qaOutput') || 'output/playwright';
-  const navigationOnly = new URL(page.url()).searchParams.get('qaScope') === 'scene';
   const prefix = new URL(origin).port==='4173'?'regression-baseline':'regression-current';
   const now = '2026-10-20T03:00:00.000Z';
   const iso = delta => new Date(Date.parse(now) + delta).toISOString();
@@ -11,7 +10,7 @@ async (page) => {
   const teams = Array.from({ length: 8 }, (_, i) => ({ team_id: `team-${i + 1}`, team_name: `QA ${['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf', 'Hotel'][i]}`, team_score: 800 - i * 100, is_top3: i < 3, solves: [{ challenge_id: 'challenge-1', solved_at: iso(-300000), points: 800 - i * 100, source_type: 'JEOPARDY' }] }));
   const cells = Array.from({ length: 36 }, (_, index) => ({ cell_index: index + 1, type: ({1:'START',7:'CHANCE',16:'ROULETTE',21:'AIRPORT',25:'ROULETTE',30:'CHANCE'})[index+1] || 'CHALLENGE', difficulty: 'EASY', name: `QA ${index+1}`, line_number: Math.floor(index / 6) + 1 }));
   const progress = challenges.map((challenge, i) => ({ koth_challenge_id: challenge.koth_challenge_id, earned_score: 50, rank: i + 1, solved_at: iso(-60000) }));
-  let flagSubmitted = false;
+  let flagSubmitted=false;
   const unknown = [];
   const apiRequests = [];
   await page.unroute('**/api/v1/**');
@@ -44,15 +43,15 @@ async (page) => {
     else if (path === '/koth/leaderboard') data = { koth_challenge_id:url.searchParams.get('koth_challenge_id'), leaderboard:[{rank:1,team_id:'team-1',team_name:'QA Alpha',earned_score:50}] };
     else if (path.startsWith('/koth/clubs/')) { const index = Number(path.split('-').at(-1))-1; data = {club_id:`club-${index+1}`,name:clubs[index],challenge_count:1,challenges:[challenges[index]]}; }
     else if (path === '/koth/team_token') data = { team_token:'qa-local-fixture-token' };
-    else if (path === '/signatures') { const list=scenario==='extra'?[...signatures,{signature_id:'extra-1',club_id:'extra-club',club_name:'추가 QA 동아리',title:'QA extra',description:'추가 부스',score:100,is_solved:false,solved_at:null,solved_team_count:0}]:signatures; data={signatures:list,total_count:list.length}; }
+    else if (path === '/signatures') data = {signatures, total_count:signatures.length};
     else if (path.startsWith('/signatures/')) data = signatures.find(item => path.endsWith(item.signature_id));
     else if (path === '/teams/me') data = {team_name:'QA Alpha',team_score:800,mileage:1000,jeopardy_score:500,koth_score:300,signature_score:0,is_banned:false,members:[{nickname:'QA 운영자',is_leader:true},{nickname:'QA 참가자',is_leader:false}]};
     else if (path === '/teams/me/mileage_history') data = {history:[],total_count:0};
     else if (path === '/teams/me/solves') data = {solves:[],total_count:0};
-    else if (path === '/teams/me/qr_token') data = {payment_token:'local-qa-payment-token',expires_at:iso(120000)};
-    else if (path === '/challenges/challenge-1/submit') { flagSubmitted=true; data={is_correct:true,earned_score:100,mileage_gained:100}; }
-    else if (path === '/instances/me' || path === '/teams/me/instances') data = scenario==='instance'?{instance_id:'qa-instance',challenge_id:'challenge-1',status:'RUNNING',expires_at:iso(1800000),extend_count:0,endpoints:[{container_name:'web',port:80,service_url:'https://challenge.example.com/long-connection-address-for-mobile-layout'}]}:null;
-    else if (path.startsWith('/challenges/')) data = {challenge_id:'challenge-1',title:'QA Challenge',description:scenario==='long'?Array.from({length:60},(_,i)=>`설명 ${i+1}: 한글과 English, 긴 본문도 스크롤로 확인합니다`).join('\n'):'한글 문제 설명과 English description',category:'WEB',score:100,status:'OPENED',opened_at:iso(-60000),is_solved:flagSubmitted,files:[],instance_required:false};
+    else if(path==='/teams/me/qr_token') data={payment_token:'local-qa-payment-token',expires_at:iso(120000)};
+    else if(path==='/challenges/challenge-1/submit'){flagSubmitted=true;data={is_correct:true,earned_score:100,mileage_gained:100};}
+    else if (path === '/instances/me' || path === '/teams/me/instances') data=scenario==='instance'?{instance_id:'qa-instance',challenge_id:'challenge-1',status:'RUNNING',expires_at:iso(1800000),extend_count:0,endpoints:[{container_name:'web',port:80,service_url:'https://challenge.example.com/long-connection-address-for-mobile-layout'}]}:null;
+    else if (path.startsWith('/challenges/')) data = {challenge_id:'challenge-1',title:'QA Challenge',description:'한글 문제 설명과 English description',category:'WEB',score:100,status:'OPENED',opened_at:iso(-60000),is_solved:flagSubmitted,files:[],instance_required:false};
     else if (path === '/admin/dashboard') data = {total_teams:8,total_users:16,running_instances:0,failed_instances:0,total_challenges:36};
     else if (path === '/admin/events') data = {events:[],total_count:0};
     else if (path === '/admin/instances') data = {instances:[],total_count:0,summary:{by_status:{RUNNING:0,FAILED:0}}};
@@ -112,103 +111,6 @@ async (page) => {
     await page.locator('main, [data-board-layer="track"], form').first().waitFor();
     await settle();
   };
-  if (navigationOnly) {
-    const cdp=await page.context().newCDPSession(page);
-    const resize=async(width,height)=>{
-      await page.setViewportSize({width,height});
-      await page.waitForFunction(({width,height})=>innerWidth===width && innerHeight===height,{width,height},{polling:100,timeout:10000});
-      await page.waitForTimeout(150);
-    };
-    const pan=async(width,height)=>{
-      const x=Math.round(width*.65), y=height<440?80:100;
-      // Chrome locks a drag to its first axis. Exercise each native scroll direction separately.
-      for(const axis of ['x','y']) {
-        await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
-        for(let i=1;i<=10;i++) {
-          await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x-(axis==='x'?i*12:0),y:y-(axis==='y'?i*6:0)}]});
-          await page.waitForTimeout(20);
-        }
-        await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
-        await page.waitForTimeout(400);
-      }
-    };
-    try {
-      await cdp.send('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:1});
-      for(const [path,label] of [['/board','보드'],['/koth','KoTH'],['/rules','규칙'],['/mypage','마이페이지'],['/challenges/challenge-1','문제 상세'],['/signatures','동아리 축제장']]) {
-        await resize(390,844);
-        await navigate(path);
-        await page.getByRole('button',{name:label+' 확대 보기',exact:true}).click();
-        const before=await page.locator('[data-game-viewport]').evaluate(node=>({x:node.scrollLeft,y:node.scrollTop}));
-        await pan(390,844);
-        const after=await page.locator('[data-game-viewport]').evaluate(node=>({x:node.scrollLeft,y:node.scrollTop}));
-        if(after.x<=before.x+30 || after.y<=before.y+10) throw new Error('Native touch pan failed '+path+' '+JSON.stringify({before,after}));
-        results.push({name:'native-touch-pan',path,before,after});
-        await resize(844,390);
-        await page.waitForFunction(()=>document.querySelector('[data-game-viewport]')?.dataset.expanded==='true',null,{polling:100,timeout:10000});
-        const landscapeBefore=await page.locator('[data-game-viewport]').evaluate(node=>({x:node.scrollLeft,y:node.scrollTop}));
-        await pan(844,390);
-        const landscapeAfter=await page.locator('[data-game-viewport]').evaluate(node=>({x:node.scrollLeft,y:node.scrollTop}));
-        if(landscapeAfter.x<=landscapeBefore.x+30 || landscapeAfter.y<=landscapeBefore.y+10) throw new Error('Landscape touch pan failed '+path+' '+JSON.stringify({landscapeBefore,landscapeAfter}));
-        results.push({name:'landscape-reading-retained',path,before:landscapeBefore,after:landscapeAfter});
-        await page.getByRole('button',{name:label+' 화면 맞춤',exact:true}).click();
-        await page.waitForFunction(()=>{const node=document.querySelector('[data-game-viewport]'),box=node.querySelector('[data-game-canvas]').getBoundingClientRect();return node.scrollLeft===0 && node.scrollTop===0 && box.left>=-1 && box.top>=-1 && box.right<=innerWidth+1 && box.bottom<=innerHeight+1;},null,{polling:100,timeout:10000});
-        results.push({name:'fit-view-restored',path});
-        await resize(1440,900);
-        await page.waitForFunction(()=>document.querySelector('[data-game-viewport]')?.dataset.compact==='false',null,{polling:100,timeout:10000});
-        await resize(390,844);
-        await page.getByRole('button',{name:label+' 확대 보기',exact:true}).waitFor();
-        results.push({name:'desktop-return-resets-reading',path});
-      }
-      for(const width of [320,390,768,844]) {
-        const height=width===844?390:844;
-        await resize(width,height);
-        await navigate('/challenges/challenge-1?qaScenario=long');
-        await page.getByRole('textbox',{name:'플래그',exact:true}).fill('MSG{local_qa}');
-        const input=await page.getByRole('textbox',{name:'플래그',exact:true}).boundingBox();
-        if(input.x<0 || (input.width>width-32 ? input.x>32 : input.x+input.width>width+1)) throw new Error('Input beginning is hidden '+width+' '+input.x);
-        const body=page.locator('[class*="_descriptionBody_"]').first();
-        const longDescription=await body.evaluate(node=>({client:node.clientHeight,scroll:node.scrollHeight}));
-        if(longDescription.scroll<=longDescription.client) throw new Error('Long description lost internal scrolling');
-        await capture('focused-input-visible',width);
-        await navigate('/koth');
-        await page.getByRole('button',{name:'KoTH 확대 보기',exact:true}).click();
-        await page.getByRole('button',{name:/^MJSEC .* KoTH/}).click();
-        await page.getByRole('link',{name:'문제 접속',exact:true}).waitFor();
-        const detail=await page.getByRole('region',{name:'선택한 KoTH 문제 정보',exact:true}).boundingBox();
-        if(detail.x<0 || (detail.width>width-32 && detail.x>32) || detail.x>width-100 || detail.y<0 || detail.y>height-100) throw new Error('Selected KoTH detail is off screen');
-        await capture('selected-koth-visible',width);
-        await page.getByRole('button',{name:'선택한 문제 정보 닫기',exact:true}).click();
-        await page.getByRole('button',{name:'팀 토큰',exact:true}).click();
-        const dialog=page.getByRole('dialog',{name:'KOTH TEAM TOKEN',exact:true});
-        await page.locator('#koth-team-token').waitFor();
-        const box=await dialog.boundingBox();
-        const close=await page.getByRole('button',{name:'KOTH 팀 토큰 닫기',exact:true}).boundingBox();
-        if(box.x<0 || box.x+box.width>width+1 || box.y<0 || box.y+box.height>height+1 || close.x<0 || close.x+close.width>width+1) throw new Error('Token dialog controls are outside viewport');
-        await capture('viewport-koth-token',width);
-        await page.keyboard.press('Escape');
-      }
-      await resize(390,844);
-      await navigate('/signatures?qaScenario=extra');
-      await page.getByRole('button',{name:'동아리 축제장 확대 보기',exact:true}).click();
-      const extra=page.getByRole('link',{name:'추가 QA 동아리 →',exact:true});
-      await extra.scrollIntoViewIfNeeded();
-      const box=await extra.boundingBox();
-      if(box.y<0 || box.y+box.height>844) throw new Error('Additional club below the artwork is unreachable');
-      results.push({name:'additional-club-reachable',href:await extra.getAttribute('href')});
-      await capture('additional-club-reachable',390);
-      for(const width of [390,1440]) {
-        await resize(width,width===390?844:900);
-        await navigate('/signatures/signature-1');
-        await capture('signature-detail',width);
-      }
-    } finally {
-      await cdp.send('Emulation.setTouchEmulationEnabled',{enabled:false});
-      await cdp.detach();
-      page.removeListener('pageerror',onError);
-    }
-    if(errors.length || unknown.length) throw new Error(JSON.stringify({errors,unknown}));
-    return {prefix,results,errors,unknown};
-  }
   for (const width of [320,390,768,1440]) {
     await page.setViewportSize({width,height:width===1440?900:844});
     for (const path of ['/','/guide']) {
@@ -221,7 +123,6 @@ async (page) => {
       await capture(path==='/'?'intro-full':'guide-full',width,true);
     }
     await navigate('/board');
-    if(width<1101) await page.getByRole('button',{name:'보드 확대 보기',exact:true}).click();
     await page.getByRole('button',{name:/^열린 문제 목록 보기/}).click();
     await page.getByRole('searchbox').waitFor();
     await capture('board-list',width);
@@ -232,7 +133,7 @@ async (page) => {
     if(width<1101) {
       await page.getByRole('button',{name:'보드 확대 보기',exact:true}).click();
       await capture('board-zoom',width);
-      await page.getByRole('button',{name:'보드 화면 맞춤',exact:true}).click();
+      await page.getByRole('button',{name:'보드 전체 보기',exact:true}).click();
     }
     await navigate('/board?qaScenario=golden');
     await page.getByRole('dialog',{name:'주사위 다시 굴리기',exact:true}).waitFor();
@@ -250,7 +151,6 @@ async (page) => {
     await page.getByRole('button',{name:'확인',exact:true}).click();
     if(await page.getByRole('dialog').count()) throw new Error('Roulette did not close');
     await navigate('/board?qaScenario=airport');
-    if(width<1101) await page.waitForFunction(()=>document.querySelector('[data-game-viewport]')?.dataset.expanded==='true',null,{polling:100,timeout:10000});
     await page.getByRole('button',{name:/^2번 QA 2 칸/}).click();
     await page.getByRole('region',{name:'기차여행 목적지 확인',exact:true}).waitFor();
     await capture('airport-confirm',width);
@@ -271,49 +171,55 @@ async (page) => {
     for (const [path,name] of [['/mypage','mypage'],['/challenges/challenge-1','challenge-detail'],['/rules','rules'],['/admin','admin-dashboard']]) {
       await navigate(path);
       await capture(name,width);
-      if(path!=='/admin' && width<1101) {
-        await page.getByRole('button',{name:/ 확대 보기$/,exact:false}).click();
-        await capture(name+'-reading',width);
-      }
     }
     await navigate('/mypage');
-    if(width<1101) await page.getByRole('button',{name:'마이페이지 확대 보기',exact:true}).click();
     await page.getByRole('button',{name:'결제 QR 발급',exact:true}).click();
     await page.locator('[aria-label^="결제 QR 코드,"] svg').waitFor();
     await capture('mypage-qr',width);
     await navigate('/challenges/challenge-1');
     await page.getByRole('textbox',{name:'플래그',exact:true}).fill('MSG{local_qa}');
-    if(width<1101 && await page.locator('[data-game-viewport]').getAttribute('data-expanded')!=='true') throw new Error('Input focus did not enter reading mode');
-    await capture('challenge-flag-input',width);
+    await capture('flag-input',width);
     await page.getByRole('button',{name:'플래그 제출',exact:true}).click();
     await page.getByRole('button',{name:'플래그 제출',exact:true}).filter({hasText:'SOLVED'}).waitFor();
-    await capture('challenge-flag-submitted',width);
+    await capture('flag-submitted',width);
     flagSubmitted=false;
     await navigate('/challenges/challenge-1?qaScenario=instance');
-    if(width<1101) await page.getByRole('button',{name:'문제 상세 확대 보기',exact:true}).click();
     await page.getByRole('button',{name:'인스턴스 종료',exact:true}).click();
     const confirmation=page.getByRole('dialog',{name:'인스턴스 종료',exact:true});
     await confirmation.waitFor();
     const dialogBox=await confirmation.boundingBox();
-    if(dialogBox.x<0 || dialogBox.x+dialogBox.width>width+1) throw new Error('Instance dialog exceeds the real viewport');
+    if(dialogBox.x<0 || dialogBox.x+dialogBox.width>width+1) throw new Error('Instance confirmation does not fit viewport');
     await capture('instance-confirmation',width);
     await page.keyboard.press('Escape');
-    if(await confirmation.count()) throw new Error('Instance confirmation did not cancel');
     await navigate('/koth');
-    if(width<1101) await page.getByRole('button',{name:'KoTH 확대 보기',exact:true}).click();
     await page.getByRole('button',{name:/^MJSEC .* KoTH/}).click();
     await page.getByRole('link',{name:'문제 접속',exact:true}).waitFor();
     await capture('koth-detail',width);
     await page.getByRole('button',{name:'선택한 문제 정보 닫기',exact:true}).click();
     await page.getByRole('button',{name:'팀 토큰',exact:true}).click();
-    await page.getByRole('dialog',{name:'KOTH TEAM TOKEN',exact:true}).waitFor();
+    const token=page.getByRole('dialog',{name:'KOTH TEAM TOKEN',exact:true});
     await page.locator('#koth-team-token').waitFor();
+    const tokenBox=await token.boundingBox();
+    if(tokenBox.x<0 || tokenBox.x+tokenBox.width>width+1) throw new Error('Team token does not fit viewport');
     await capture('koth-token',width);
     await page.keyboard.press('Escape');
-    if(await page.getByRole('dialog').count()) throw new Error('Koth token did not close');
     await navigate('/leaderboard');
     await page.locator('main[data-leaderboard-source*="leaderboard:success"]').waitFor();
     await capture('leaderboard-symbols',width);
+    const graph=page.locator('[data-range-start]');
+    const initial=await graph.getAttribute('data-range-start');
+    await page.getByRole('button',{name:'시간 구간 확대',exact:true}).click();
+    if(await graph.getAttribute('data-range-start')===initial) throw new Error('Graph zoom did not change time range');
+    await capture('leaderboard-graph-zoom',width);
+    await page.getByRole('button',{name:'전체 보기',exact:true}).click();
+    if(await graph.getAttribute('data-range-start')!==await graph.getAttribute('data-full-start')) throw new Error('Graph zoom did not reset');
+    if(width<1101) {
+      const table=page.getByRole('region',{name:'팀 순위표',exact:true});
+      await table.scrollIntoViewIfNeeded();
+      await table.evaluate(node=>{node.scrollLeft=node.scrollWidth;});
+      if(await table.evaluate(node=>node.scrollLeft)<100) throw new Error('All fourteen columns cannot be reached');
+      await capture('leaderboard-table-scroll',width);
+    }
   }
   page.removeListener('pageerror',onError);
   if(errors.length || unknown.length) throw new Error(JSON.stringify({errors,unknown}));

@@ -23,16 +23,18 @@ export default function KothChallengeButton({ challenge, stale, onSelect }) {
     >
       <span className={styles.challengeCaption}>{challenge.clubName}</span>
       <span className={styles.mobileChallengeTitle}>{challenge.title}</span>
-      <img
-        src={challenge.imageSrc}
-        alt=""
-        aria-hidden="true"
-        className={styles.layerImage}
-      />
-      <KothCompletionStamp
-        imageSrc={challenge.completionStampImageSrc}
-        visible={challenge.solved}
-      />
+      <span className={styles.challengeArtwork}>
+        <img
+          src={challenge.imageSrc}
+          alt=""
+          aria-hidden="true"
+          className={styles.layerImage}
+        />
+        <KothCompletionStamp
+          imageSrc={challenge.completionStampImageSrc}
+          visible={challenge.solved}
+        />
+      </span>
       {challenge.solved && (
         <span className="sr-only">최초 득점 완료</span>
       )}

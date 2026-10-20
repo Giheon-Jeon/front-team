@@ -281,14 +281,10 @@ test("리더보드 표는 모든 열과 긴 팀명, 원래 1~3위 이미지를 �
   assert.equal((html.match(/scope="col"/g) || []).length, 14);
 });
 
-test("순위표는 모바일에서도 모든 열과 점수를 유지하고 같은 화면의 확대 도구를 제공한다", () => {
+test("순위표는 모바일에서도 모든 열과 점수를 유지하고 표 안에서만 가로 이동한다", () => {
   const root = css("features/leaderboard/components/LeaderboardScreen.module.css");
   assert.ok(declarations(root, ".rankingGrid").some(([key, value]) => key === "width" && value === "100%"));
-  root.walkRules(rule => {
-    if (rule.selector === ".tableContainer") {
-      rule.walkDecls("overflow-x", () => assert.fail("표를 좌우 스크롤하거나 숨기지 않는다"));
-    }
-  });
+  assert.ok(declarations(root, ".tableContainer").some(([key, value]) => key === "overflow-x" && value === "auto"));
   assert.ok(!declarations(root, ".rankingGrid tbody tr").some(([key]) => key === "grid-template-columns"));
   assert.ok(!declarations(root, ".rankingGrid thead").some(([key]) => key === "clip-path"));
   const html = render("Leaderboard", {
@@ -300,9 +296,10 @@ test("순위표는 모바일에서도 모든 열과 점수를 유지하고 같�
     assert.ok(html.includes(`>${value}</span>`));
   }
   assert.equal((html.match(/scope="col"/g) || []).length, 14);
-  assert.match(html, /id="leaderboard-viewport"[^>]*data-view="fit"/);
-  assert.match(html, /aria-controls="leaderboard-viewport" aria-pressed="false" aria-label="스코어보드 읽기 크기로 확대"/);
-  assert.match(html, /<h1[^>]*>SCOREBOARD<\/h1>/);
+  assert.match(html, /id="leaderboard-viewport"/);
+  assert.doesNotMatch(html, /스코어보드 읽기 크기로 확대/);
+  assert.match(html, /좌우로 밀어 모든 분야의 점수를 확인하세요/);
+  assert.match(html, /<h1[^>]*>[\s\S]*SCOREBOARD[\s\S]*?<\/h1>/);
   assert.doesNotMatch(html, />LEADERBOARD<|background-plaza|panel-board/);
 });
 
@@ -353,7 +350,7 @@ test("관리자 빠른 작업에는 실제 동작 이름만 표시하고 다른 
   }
 });
 
-test("모바일 로그인은 원래 장식을 유지하고 리더보드 확대 버튼은 충분한 조작 영역을 둔다", () => {
+test("모바일 로그인과 순위 페이지 이동 버튼은 충분한 조작 영역을 둔다", () => {
   const loginCss = css("features/auth/components/LoginScreen.module.css");
   assert.doesNotMatch(loginCss.toString(), /--scale|1920px|scale\(/);
   assert.ok(declarations(loginCss, ".panel").some(([property, value]) => property === "width" && value === "min(100%, 560px)"));
@@ -369,8 +366,8 @@ test("모바일 로그인은 원래 장식을 유지하고 리더보드 확대 �
     assert.ok(found, path);
   }
   const root = css("features/leaderboard/components/LeaderboardScreen.module.css");
-  assert.ok(declarations(root, ".screenZoom").some(([property, value]) => property === "min-height" && value === "44px"));
-  assert.ok(declarations(root, ".screenZoom").some(([property, value]) => property === "min-width" && parseInt(value, 10) >= 44));
+  assert.ok(declarations(root, ".pagination button, .refreshControls button").some(([property, value]) => property === "min-height" && value === "44px"));
+  assert.ok(declarations(root, ".pagination button, .refreshControls button").some(([property, value]) => property === "min-width" && parseInt(value, 10) >= 44));
 });
 
 test("모바일 보드 메뉴는 기존 금색 아이콘과 여섯 이동 기능을 유지한다", () => {
@@ -857,17 +854,26 @@ test("라인 점수표는 행과 합계의 열을 맞추고 좁은 데스크톱�
   assert.ok(declarations(root, ".lineList li button").some(([property, value]) => property === "min-height" && parseInt(value) >= 44));
   assert.ok(declarations(root, ".lineName").some(([property, value]) => property === "overflow-wrap" && value === "anywhere"));
   assert.ok(declarations(root, ".lineScore, .lineScoreTotals > :not(:first-child)").some(([property, value]) => property === "font-variant-numeric" && value === "tabular-nums"));
-  assert.ok(root.nodes.some((node) => node.type === "atrule" && node.params.trim() === "game-scene (min-width: 1101px)" && node.toString().includes(".openPanel:has(.lineSummary[open])") && node.toString().includes("clamp(300px, 23cqw, 410px)")));
+  assert.ok(root.nodes.some((node) => node.type === "atrule" && node.params === "(min-width: 1101px)" && node.toString().includes(".openPanel:has(.lineSummary[open])") && node.toString().includes("clamp(300px, 23cqw, 410px)")));
 });
 
-test("원본 무대의 열린 문제는 모바일에서도 양피지 패널과 내부 스크롤을 유지한다", () => {
+test("모바일 열린 문제는 독립 포털과 내부 스크롤을 사용하고 보드 배경을 잠근다", () => {
   const root = css("features/board/components/BoardScreen.module.css");
-  assert.ok(declarations(root, ".openPanelBody").some(([key, value]) => key === "overflow-y" && value === "auto"));
+  const overlay = Object.fromEntries(declarations(root, ".mobileOpenOverlay"));
+  assert.equal(overlay.position, "fixed");
+  assert.equal(overlay.height, "100dvh");
+  assert.ok(overlay.padding.includes("safe-area-inset"));
+  const body = Object.fromEntries(declarations(root, ".mobileOpenOverlay .openPanelBody"));
+  assert.equal(body["min-height"], "0");
+  assert.equal(body["overflow-y"], "auto");
+  assert.equal(body.flex, "1 1 auto");
   const source = readFileSync(new URL("./features/board/components/OpenChallengesSidePanel.jsx", import.meta.url), "utf8");
-  assert.match(source, /open-challenges-panel\.webp/);
+  assert.match(source, /isMobile \? createPortal/);
+  assert.match(source, /aria-modal/);
   const hook = readFileSync(new URL("./features/board/hooks/useMobileBoardOverlay.js", import.meta.url), "utf8");
-  assert.match(hook, /useMobileOverlay = isMobile && !scene/);
-  assert.match(hook, /if \(!useMobileOverlay\) return/);
+  assert.match(hook, /app\.inert = true/);
+  assert.match(hook, /window\.scrollTo\(x, y\)/);
+  assert.match(hook, /previousFocus\.focus/);
 });
 
 test("칸별 독점 border 없이 마지막 문제 정답과 완료 확정 후에만 독립 rail이 생긴다", () => {

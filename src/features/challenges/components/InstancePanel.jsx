@@ -7,6 +7,7 @@ import {
 import { formatRemaining, toKst } from "../../../utils/time.js";
 import { getInstanceFailureNotice } from "../utils/instanceFailureNotice.js";
 import styles from "./ChallengeDetailScene.module.css";
+import PanelTexture from "../../../components/common/PanelTexture.jsx";
 
 function Endpoint({ endpoint, compact }) {
   const [copied, setCopied] = useState(false);
@@ -146,6 +147,7 @@ export default function InstancePanel({ instance, otherInstance, error }) {
       aria-labelledby="instance-heading"
       tabIndex={-1}
     >
+      <PanelTexture />
       <h2 id="instance-heading" className={styles.bakedLabel}>
         인스턴스
       </h2>

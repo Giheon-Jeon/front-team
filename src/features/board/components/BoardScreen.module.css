@@ -1,12 +1,13 @@
 .desktopOnly, .boardViewport, .boardArea, .boardTools, .boardScene { display: contents; }
 .mobileNav, .boardControls, .boardHint, .sceneBackdrop, .mobileCellInfo { display: none; }
 .frame { background: #21150d; }
-.diceReadout { display: grid; gap: 0.2cqw; padding-block: 0.2cqw; font-size: clamp(10px, 0.66cqw, 14px); line-height: 1.5; }
+.track { position: absolute; left: calc(448 / 1920 * 100%); top: calc(289 / 1080 * 100%); width: calc(951 / 1920 * 100%); aspect-ratio: 1772 / 1330; }
+.diceReadout { display: grid; gap: 0.2cqw; padding-block: 0; font-size: clamp(11px, 0.72cqw, 14px); line-height: 1.5; }
 .diceCountRow { display: flex; align-items: center; justify-content: space-between; gap: 0.3cqw; white-space: nowrap; }
 .diceReadout strong { font-variant-numeric: tabular-nums; }
 .diceChallengeRow { color: #e7c68f; text-align: right; font-size: clamp(10px, 0.66cqw, 14px); line-height: 1.5; white-space: nowrap; }
 .diceChallengeRow strong { font-variant-numeric: tabular-nums; }
-.diceStatusMessage { font-size: clamp(9px, 0.5cqw, 11px); line-height: 1.5; overflow-wrap: anywhere; }
+.diceStatusMessage { top: 59%; left: 12.5%; width: 77%; font-size: clamp(10px, 0.58cqw, 12px); line-height: 1.5; overflow-wrap: anywhere; }
 .airportTitleRow { position: relative; display: flex; align-items: center; justify-content: center; min-height: 36px; }
 .airportConfirm .trainSoundButton {
   position: absolute; right: -4px; display: grid; place-items: center;
@@ -35,19 +36,19 @@
 }
 /* 풍경은 FixedAspectStage의 배경 한 장으로 화면 전체를 채운다
    원판과 조작 패널은 기존 1920×1080 무대에서 같은 비율로 축소한다 */
-@container game-scene (min-width: 1101px)  {
+@media (min-width: 1101px) {
   .frame {
-    --board-scene-width: min(calc(var(--scene-vw, 1vw) * 100), calc(calc(var(--scene-vh, 1vh) * 100) * 16 / 9));
+    --board-scene-width: min(100vw, calc(100vh * 16 / 9));
     --board-scene-height: calc(var(--board-scene-width) * 9 / 16);
     /* 원본 바닥 중심 (917, 630)을 보드와 같은 무대 좌표에 고정한다.
        이 점에서 네 화면 끝까지 덮는 최소 크기를 택해 비율과 여백을 함께 지킨다. */
-    --board-floor-x: calc((calc(var(--scene-vw, 1vw) * 100) - var(--board-scene-width)) / 2 + var(--board-scene-width) * 917 / 1920);
-    --board-floor-y: calc((calc(var(--scene-vh, 1vh) * 100) - var(--board-scene-height)) / 2 + var(--board-scene-height) * 630 / 1080);
+    --board-floor-x: calc((100vw - var(--board-scene-width)) / 2 + var(--board-scene-width) * 917 / 1920);
+    --board-floor-y: calc((100vh - var(--board-scene-height)) / 2 + var(--board-scene-height) * 630 / 1080);
     --board-backdrop-width: max(
       calc(var(--board-floor-x) * 1920 / 917),
-      calc((calc(var(--scene-vw, 1vw) * 100) - var(--board-floor-x)) * 1920 / 1003),
+      calc((100vw - var(--board-floor-x)) * 1920 / 1003),
       calc(var(--board-floor-y) * 1920 / 630),
-      calc((calc(var(--scene-vh, 1vh) * 100) - var(--board-floor-y)) * 1920 / 450)
+      calc((100vh - var(--board-floor-y)) * 1920 / 450)
     );
   }
   .frame > img {
@@ -67,8 +68,6 @@
     height: var(--board-scene-height);
     transform: translate(-50%, -50%);
   }
-  /* 축소해도 원본 패널의 샘플 타이머가 실제 상태 뒤로 드러나지 않게 한다. */
-  .diceReadout { min-height: 12%; align-content: center; }
 }
 /* 열린 문제 패널 제목은 데스크톱에선 패널 이미지에 그려져 있어 스크린리더에만 노출 */
 .mobileOpenTitle { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -248,24 +247,24 @@
 .linePreviewNote { margin: 12px 0; color: #795c39; font-size: 0.9em; line-height: 1.6; word-break: keep-all; }
 
 /* 라인 점수를 펼친 동안만 종이를 넓혀 배점과 획득점수를 같은 행에서 읽는다 */
-@container game-scene (min-width: 1101px)  {
+@media (min-width: 1101px) {
   .stage .openPanel:has(.lineSummary[open]) { width: clamp(300px, 23cqw, 410px); }
 }
 
-@container game-scene (min-width: 1101px) and (max-width: 1500px)  {
+@media (min-width: 1101px) and (max-width: 1500px) {
   .openFilterRow { grid-template-columns: minmax(0, 1fr); }
   .openFilterRow select { font-size: 12px; }
 }
 
-@container game-scene (max-width: 1100px)  {
-  .frame.frame { position: relative; min-height: calc(var(--scene-vh, 1vh) * 100); overflow: visible; background: #21150d; }
+@media (max-width: 1100px) {
+  .frame.frame { position: relative; min-height: 100svh; overflow: visible; background: #21150d; }
   .frame > img { display: none; }
   .frame .stage {
     position: relative;
     inset: auto;
     width: min(100%, 900px);
     height: auto;
-    min-height: calc(var(--scene-vh, 1vh) * 100);
+    min-height: 100svh;
     margin: auto;
     padding: 0 0 24px;
     transform: none;
@@ -294,7 +293,7 @@
   .mobileMenu > summary { display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 12px; cursor: pointer; list-style: none; }
   .mobileMenu > summary::-webkit-details-marker { display: none; }
   .mobileMenu > summary:focus-visible { outline: 2px solid #f1cb79; }
-  .mobileMenuItems { position: absolute; top: 100%; right: 12px; width: min(280px, calc(calc(var(--scene-vw, 1vw) * 100) - 24px)); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 12px; border: 1px solid #ae7c42; border-radius: 8px; background: #2a180af5; box-shadow: 0 6px 18px #120a0499; }
+  .mobileMenuItems { position: absolute; top: 100%; right: 12px; width: min(280px, calc(100vw - 24px)); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 12px; border: 1px solid #ae7c42; border-radius: 8px; background: #2a180af5; box-shadow: 0 6px 18px #120a0499; }
   .mobileNav .mobileMenuItems :is(a, button) { justify-content: flex-start; padding: 8px; }
   .stage .diceStatus { position: relative; inset: auto; order: -1; width: auto; height: auto; margin: 0 16px; padding: 9px 0 3px; border-top: 1px solid #b58a5640; display: grid; }
   .diceStatus > img { display: none; }
@@ -305,7 +304,7 @@
   .diceStatus[data-roll-ready="true"] > p { display: none; }
   .boardArea { display: flex; flex-direction: column; min-width: 0; }
   .boardTools { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 16px; }
-  .mobileCellInfo { display: block; margin: 0; padding: 6px 16px; font: 12px/1.5 "Pretendard", sans-serif; color: #e7d2ad; background: #3c3c4440; word-break: keep-all; }
+  .mobileCellInfo { display: block; margin: 0; padding: 8px 16px; font: 16px/1.5 "Pretendard", sans-serif; color: #f8ead0; background: #21150dcc; word-break: keep-all; }
   .boardControls { display: flex; align-items: center; color: #f3dfb9; text-shadow: 0 1px 4px #1d1008; }
   .boardHint { display: none; }
   .boardZoomButton { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 4px; border: 0; background: none; color: inherit; font: inherit; font-size: 14px; cursor: pointer; }
@@ -317,7 +316,7 @@
      원판의 원본 위치(448, 289)도 이 장면 안에 고정해 바닥 문양에서 미끄러지지 않게 한다 */
   .boardScene { display: block; position: relative; width: 100%; aspect-ratio: 951 / 960; overflow: hidden; isolation: isolate; }
   .sceneBackdrop { display: block; position: absolute; left: -47.1083%; top: -12.5%; width: 201.8927%; height: 112.5%; max-width: none; pointer-events: none; user-select: none; }
-  .stage .track { position: absolute; inset: auto; left: 0; top: 17.6042%; width: 100%; height: auto; aspect-ratio: 1772 / 1330; }
+  .stage .track { inset: auto; left: 0; top: calc(169 / 960 * 100%); width: 100%; }
   .boardViewport[data-zoomed="true"] { overflow-x: auto; overscroll-behavior-x: contain; }
   .boardViewport[data-zoomed="true"] .boardScene { width: max(150%, 620px); }
   .lineSummary { font-size: 15px; }
@@ -330,7 +329,7 @@
     position: fixed;
     inset: auto 12px 16px;
     width: min(calc(100% - 24px), 620px);
-    max-height: calc(var(--scene-vh, 1vh) * 80);
+    max-height: 80dvh;
     margin-inline: auto;
     padding: 20px;
     border-width: 2px;
@@ -358,7 +357,7 @@
     z-index: 45;
     width: min(calc(100% - 24px), 520px);
     height: auto;
-    max-height: calc(var(--scene-vh, 1vh) * 80);
+    max-height: 80dvh;
     display: flex;
     flex-direction: column;
     margin-inline: auto;
@@ -371,7 +370,7 @@
   }
   .openPanel > img, .openPaperGap, .openPaperDivider { display: none; }
   .openPanel .mobileOpenTitle { position: static; flex-shrink: 0; width: auto; height: auto; overflow: visible; clip: auto; margin: 0 48px 12px 0; font: 24px/1.4 "Song Myung", serif; color: #613d15; }
-  .openPanel .openPanelBody { position: static; flex: 0 1 auto; min-height: 0; width: auto; height: auto; max-height: calc(var(--scene-vh, 1vh) * 60); }
+  .openPanel .openPanelBody { position: static; flex: 0 1 auto; min-height: 0; width: auto; height: auto; max-height: 60dvh; }
   .openPanel .openClose { top: 8px; left: auto; right: 8px; width: 44px; height: 44px; padding: 10px; transform: none; }
   .openChallengeList li button { height: auto; min-height: 56px; gap: 12px; padding: 8px 0; }
   .openChallengeList li button > span:first-child { width: 28px; height: 30px; }
@@ -387,7 +386,7 @@
 
   /* 포털은 보드의 transform/container와 분리해 화면 전체를 사용한다. */
   .mobileOpenOverlay {
-    position: fixed; inset: 0; z-index: 1100; height: calc(var(--scene-vh, 1vh) * 100);
+    position: fixed; inset: 0; z-index: 1100; height: 100dvh;
     display: flex; justify-content: center; align-items: stretch;
     padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
     background: #1c100bd9; overscroll-behavior: none;
@@ -419,4 +418,34 @@
   .airportConfirm strong { font-size: 18px; }
   .airportConfirm button { min-height: 44px; padding: 8px 16px; }
 
+}
+
+.mobileDiceIcon { display: none; }
+@media (max-width: 1100px) {
+  .mobileNav { gap: 8px; padding-top: 10px; padding-bottom: 10px; }
+  .mobileNav a.mobileNavPrimary { flex-direction: column; gap: 3px; font-size: 14px; }
+  .mobileNavIcon { flex-basis: 36px; width: 36px; height: 36px; }
+  .mobileMenuItems .mobileNavIcon { flex-basis: 28px; width: 28px; height: 28px; }
+  .mobileNav .mobileMenuItems .mobileNavPrimary { flex-direction: row; gap: 8px; }
+  .stage .diceStatus { isolation: isolate; grid-template-columns: 44px minmax(0, 1fr); gap: 6px 12px; margin: 0 12px 6px; padding: 12px; border: 8px solid transparent; border-image: url("/assets/mypage/panel-score.png") 24 / 8px stretch; border-radius: 0; background: #2c1c11; }
+  .diceStatus > .mobileDiceIcon { display: block; position: static; width: 44px; height: 44px; grid-row: 1 / 3; align-self: center; object-fit: contain; }
+  .diceStatus .diceReadout { grid-column: 2; grid-row: 1; font-size: 16px; }
+  .diceStatus .diceChallengeRow { grid-column: 2; grid-row: 2; font-size: 14px; text-align: left; }
+  .diceStatus > p { grid-column: 1 / -1; grid-row: 3; }
+}
+
+@media (max-width: 1100px) {
+  .frame > img { display: block; position: absolute; inset: auto; left: var(--mobile-background-left, 0px); top: var(--mobile-background-top, 0px); width: var(--mobile-background-width, 100%); height: var(--mobile-background-height, auto); max-width: none; object-fit: fill; }
+  .sceneBackdrop { display: none; }
+  .boardViewport { mask-image: none; }
+}
+
+@media (max-width: 1100px) { .frame.frame { overflow: clip; } }
+
+.diceStatus > svg { display: none; }
+.diceStatus > .dicePanelArtwork { display: block; position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+@media (max-width: 1100px) {
+  .diceStatus > svg { display: block; }
+  .diceStatus > .dicePanelArtwork { display: none; }
+  .mobileNav a.mobileNavPrimary { min-width: 44px; }
 }

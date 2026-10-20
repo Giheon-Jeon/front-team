@@ -1,12 +1,12 @@
 import { formatRemaining } from "../../../utils/time.js";
 import styles from "./BoardScreen.module.css";
+import PanelTexture from "../../../components/common/PanelTexture.jsx";
 
 const MAX_DICE_ROLLS = 3;
 
-// Figma node 5:19 "주사위판" (캔버스 좌상단, 표시 영역 378x223). 주사위 그림 /
-// "Time remaining" 라벨 / 스노우플레이크 아이콘 / 진행바 테두리 + 샘플 값이 한 장에
-// 합쳐진 원본이다. asset 픽셀은 수정하지 않고, 샘플 값 영역만 런타임 readout으로
-// 대체해 API 값이 이미지의 고정값과 혼동되지 않게 한다.
+// Keep the original frame and dice. A blank crop from the same wood replaces
+// the baked sample values and gauge together, so no black cover or gauge tip
+// can protrude around the live text at a different viewport size.
 export default function DiceStatusPanel({
   rollsLeft,
   canRoll,
@@ -25,14 +25,16 @@ export default function DiceStatusPanel({
       data-roll-ready={canRoll && !blockedMessage}
       aria-label={`주사위 보유 ${rollsLeft}/${MAX_DICE_ROLLS}. ${statusLabel}${rechargeVisible ? `, 충전까지 ${formatRemaining(resetInSeconds)}` : ""}${challengeRemainingSeconds == null ? "" : `, 문제 제한 ${formatRemaining(challengeRemainingSeconds)}`}`}
     >
-      <img
-        src="/assets/board/panel-dice-status.png"
-        alt=""
-        aria-hidden="true"
-        className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-      />
+      <PanelTexture />
+      <img src="/assets/board/dice.png" className={styles.mobileDiceIcon} alt="" aria-hidden="true" />
+      <svg viewBox="0 0 378 223" className={styles.dicePanelArtwork} aria-hidden="true" focusable="false">
+        <image href="/assets/board/panel-dice-status.png" width="378" height="223" />
+        <svg x="46" y="103" width="295" height="38" viewBox="145 60 170 25" preserveAspectRatio="xMidYMid slice">
+          <image href="/assets/board/panel-dice-status.png" width="378" height="223" />
+        </svg>
+      </svg>
 
-      <div className={`${styles.diceReadout} absolute left-[12%] top-[44%] z-10 w-[78%] bg-[#21150d] px-[0.35cqw] font-inria-serif text-[#f8ead0]`}>
+      <div className={`${styles.diceReadout} absolute left-[12.5%] top-[45%] z-10 w-[77%] font-inria-serif text-[#f8ead0]`}>
         {/* 기능 명세(2026-09-28): 보유 횟수/3 표시. 3/3이면 서버가 next_dice_reset_at을 비워 충전 타이머가 멈춘다. */}
         <div className={styles.diceCountRow}>
           <span>주사위 {rollsLeft}/{MAX_DICE_ROLLS}</span>

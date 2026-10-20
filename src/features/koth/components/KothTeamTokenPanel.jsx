@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import { useGameScene } from "../../../components/common/GameSceneContext.js";
 import { toKst } from "../../../utils/time.js";
 import styles from "./KothScreen.module.css";
 
@@ -11,8 +9,6 @@ export default function KothTeamTokenPanel({
   onRetry,
   onClose,
 }) {
-  const scene = useGameScene();
-  const viewportModal = scene?.compact;
   const panel = useRef(null);
   useEffect(() => {
     const previous = document.activeElement;
@@ -39,8 +35,8 @@ export default function KothTeamTokenPanel({
     }
   };
 
-  const content = (
-    <div className={`${styles.tokenBackdrop} ${viewportModal ? styles.viewportTokenBackdrop : ""}`} role="presentation">
+  return (
+    <div className={styles.tokenBackdrop} role="presentation">
       <section
         className={styles.tokenPanel}
         ref={panel}
@@ -104,5 +100,4 @@ export default function KothTeamTokenPanel({
       </section>
     </div>
   );
-  return viewportModal && typeof document !== "undefined" ? createPortal(content, document.body) : content;
 }

@@ -238,55 +238,59 @@
 .refreshNote { position: absolute; left: 340px; top: 135px; width: 1270px; text-align: center; font-size: 15px; }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
+
+.mobileTitleArtwork { display: block; width: 100%; height: auto; }
+.mobileTableHint { display: none; }
+.responsivePaper { display: contents; }
+.mobilePaperArtwork, .mobileFooterArtwork { display: none; }
 @media (max-width: 1100px) {
-  .expandedPage {
-    overflow: auto;
-    padding: 12px 12px max(76px, calc(64px + env(safe-area-inset-bottom)));
-    touch-action: pan-x pan-y pinch-zoom;
-    overscroll-behavior: contain;
-  }
+  .page { position: relative; inset: auto; min-height: 100svh; padding: 16px 10px 24px; overflow: visible; isolation: isolate; background: none; }
+  .page::before { content: ""; position: fixed; inset: 0; z-index: -1; background: #e6d2a4 url("/assets/leaderboard/leaderboard-scene-v1.webp") center / cover; pointer-events: none; }
+  .stage { position: relative; inset: auto; width: min(100%, 900px); height: auto; margin-inline: auto; transform: none; overflow: visible; }
+  .designCanvas { position: relative; width: 100%; height: auto; transform: none; display: grid; gap: 0; padding: 0; }
+  .responsivePaper { position: relative; isolation: isolate; display: grid; gap: 16px; padding: 20px 18px 32px; }
+  .mobilePaperArtwork { display: grid; position: absolute; z-index: -1; inset: 0; grid-template-columns: 20px minmax(0, 1fr) 20px; grid-template-rows: 20px minmax(0, 1fr) 20px; pointer-events: none; }
+  .mobilePaperArtwork > svg { width: 100%; height: 100%; }
+  .mobilePaperArtwork > svg[data-material] { inset: 20px; width: calc(100% - 40px); height: calc(100% - 40px); }
+  .mobileFooterArtwork { position: relative; display: block; width: 200px; max-width: 65%; height: auto; margin: -16px auto 0; }
+  .leaderboardArtwork { display: none; }
+  .responsiveTitle { position: static; width: auto; height: auto; margin: 12px 0 26px; padding: 0 32px; overflow: visible; clip: auto; white-space: normal; }
+  .backButton { left: 0; top: 4px; width: 44px; height: 44px; padding: 10px; }
+  .scoreBoard { position: relative; inset: auto; width: 100%; height: 300px; margin: 0; }
+  .leaderboardChart { position: static; width: auto; height: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 12px; padding: 8px 0 16px; border-bottom: 1px solid #a37e4f88; }
+  .legendRow { position: static; width: auto; height: auto; min-height: 36px; gap: 8px; }
+  .legendLeaf { position: static; flex: 0 0 24px; width: 24px; height: 24px; }
+  .legendName, .compactLegend .legendName { font-size: 14px; }
+  .legendState { position: static; grid-column: 1 / -1; font-size: 14px; }
+  .rankingPanel { position: static; width: 100%; min-width: 0; }
+  .rankingToolbar { height: auto; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 6px; }
+  .rankingTitle { font-size: 16px; }
+  .pagination { grid-column: 1 / -1; grid-row: 2; flex-wrap: wrap; gap: 2px; font-size: 14px; }
+  .pagination button, .refreshControls button { min-width: 44px; min-height: 44px; height: auto; padding: 6px; gap: 4px; }
+  .pageTotal { font-size: 13px; margin-left: 3px; }
+  .refreshControls { flex-wrap: wrap; gap: 4px; font-size: 13px; }
+  .refreshControls time { font-size: 12px; }
+  .refreshControls svg { width: 16px; height: 16px; }
+  .mobileTableHint { display: block; margin: 12px 0 8px; font: 13px/1.6 "Pretendard", sans-serif; color: #754315; }
+  .tableContainer { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: #a98550 transparent; }
+  .rankingGrid { min-width: 960px; font-size: 14px; }
+  .rankingGrid thead th { font-size: 15px; height: 44px; }
+  .rankingGrid tbody tr { height: 48px; }
+  .rankingGrid .rankCell { font-size: 22px; }
+  .rankArtwork { width: 36px; height: 27px; }
+  .refreshNote { position: static; width: auto; margin: 0; font-size: 14px; line-height: 1.6; }
+}
+@media (min-width: 640px) and (max-width: 1100px) {
+  .leaderboardChart { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .scoreBoard { height: 340px; }
+}
 
-  .expandedPage .stage {
-    position: relative;
-    inset: auto;
-    width: max(100%, 1920px);
-    height: auto;
-    aspect-ratio: 16 / 9;
-    transform: none;
-  }
-
-  .screenZoom {
-    position: fixed;
-    right: max(12px, env(safe-area-inset-right));
-    bottom: max(12px, env(safe-area-inset-bottom));
-    z-index: 20;
-    display: inline-flex;
-    min-width: 112px;
-    min-height: 44px;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 10px 14px;
-    border: 1px solid #8d6034;
-    border-radius: 6px;
-    color: #4f3018;
-    background: rgb(248 232 197 / 96%);
-    box-shadow: 0 2px 8px rgb(47 25 10 / 18%);
-    font: 600 14px/1.4 "Libre Baskerville", Georgia, serif;
-    cursor: pointer;
-  }
-
-  .screenZoom svg {
-    width: 20px;
-    height: 20px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.8;
-    stroke-linecap: round;
-  }
-
-  .screenZoom:focus-visible {
-    outline: 2px solid #4f3018;
-    outline-offset: 3px;
-  }
+@media (max-width: 1100px) {
+  .rankingGrid col { width: 54px; }
+  .rankingGrid col:first-child { width: 48px; }
+  .rankingGrid col:nth-child(2) { width: 152px; }
+  .rankingGrid col:nth-child(3) { width: 84px; }
+  .rankingGrid col:nth-child(4) { width: 56px; }
+  .rankingGrid col:nth-last-child(-n + 2) { width: 72px; }
+  .rankingGrid thead th { white-space: nowrap; }
 }

@@ -6,19 +6,20 @@ import { getBoothProgress } from "../utils/festivalBrand.js";
 import ClubBrand from "../components/ClubBrand.jsx";
 import BoothAchievement from "../components/BoothAchievement.jsx";
 import styles from "../components/SignatureFestival.module.css";
+import PanelTexture from "../../../components/common/PanelTexture.jsx";
 
-function FestivalBooth({ club, status, onPreview }) {
+function FestivalBooth({ club, status, onPreview, compact = false }) {
   const ready = status === "success";
   const available = ready && club.problems.length > 0;
   const progress = getBoothProgress(club, status);
   const { complete, visited } = progress;
-  const linkClass = styles.booth;
+  const linkClass = compact ? styles.mobileBoothLink : styles.booth;
   const contents = (
     <>
       <span className={styles.boothSign}>
         <ClubBrand name={club.name} />
       </span>
-      {visited && (
+      {visited && !compact && (
         <>
           <span className={styles.boothGlow} aria-hidden="true" />
           {complete && (
@@ -53,10 +54,12 @@ function FestivalBooth({ club, status, onPreview }) {
   );
   return (
     <li
-      className={styles.boothPosition}
-      data-booth={club.position}
+      className={compact ? styles.mobileBooth : styles.boothPosition}
+      data-booth={compact ? undefined : club.position}
+      data-directory-booth={compact ? club.position : undefined}
       data-progress={complete ? "complete" : visited ? "partial" : "open"}
     >
+      {compact && <PanelTexture />}
       {onPreview ? (
         <button type="button" className={linkClass} onClick={onPreview} aria-label={club.name + " 문제 메뉴 열기"}>
           {contents}
@@ -143,6 +146,12 @@ export function SignatureFestivalScreen({ state, onPreviewClub }) {
           </button>
         </footer>
       </div>
+      <ul className={styles.mobileBoothList} aria-label="동아리 부스 안내 및 입장">
+        {booths.map((club) => (
+          <FestivalBooth key={club.key} club={club} status={state.status} compact
+            onPreview={onPreviewClub ? () => onPreviewClub(club) : undefined} />
+        ))}
+      </ul>
       {state.status === "success" && otherClubs.length > 0 && (
         <section className={styles.otherClubs} aria-label="추가 동아리 부스">
           <h2>함께하는 부스</h2>
