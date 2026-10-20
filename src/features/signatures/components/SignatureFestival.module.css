@@ -700,10 +700,15 @@
 
 @media (max-width: 600px), (max-aspect-ratio: 5/4) {
   .mobileBoothList { gap: 10px; padding: 0; border: 0; background: none; }
-  .mobileBooth { position: relative; isolation: isolate; border: 8px solid transparent; border-image: url("/assets/mypage/panel-score.png") 24 / 8px stretch; background: #2c1c11; }
+  .mobileBooth { position: relative; isolation: isolate; border: 8px solid transparent; border-image: url("/assets/mypage/panel-score.png") 24 / 8px stretch; background: #2c1c11; background-clip: padding-box; }
   .mobileBooth + .mobileBooth { border-top: 8px solid transparent; }
   .mobileBoothLink { min-height: 90px; padding: 10px; }
   .mobileBoothLink .brandName { font-size: 17px; color: #ffe0a5; }
 }
 
 @media (max-width: 600px), (max-aspect-ratio: 5/4) { .mobileBooth > svg { display: block; } }
+
+@media (min-width: 601px) and (max-width: 1100px) and (min-aspect-ratio: 5/4) {
+  .festivalLayout::before { content: ""; position: absolute; z-index: 1; inset: 0 0 auto; height: 132px; background: linear-gradient(#211307dd, #211307cc 80px, transparent); pointer-events: none; }
+  .festivalHeader > span { font-size: 14px; }
+}

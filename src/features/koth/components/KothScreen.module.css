@@ -396,7 +396,7 @@
   }
   .background { display: none; }
   .mobileTitle { display: block; margin: 6px 0 24px; padding-left: 36px; font: 28px/1.3 "IM Fell English", Georgia, serif; text-align: center; }
-  .mainNavigationButton { left: 8px; top: 20px; width: 44px; height: 44px; padding: 12px; }
+  .mainNavigationButton { left: 8px; top: 20px; width: 44px; height: 44px; padding: 4px; }
   .teamSummary {
     position: relative;
     inset: auto;
