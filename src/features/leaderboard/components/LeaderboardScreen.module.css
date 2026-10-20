@@ -263,7 +263,7 @@
   .legendRow { position: static; width: auto; height: auto; min-height: 36px; gap: 8px; }
   .legendLeaf { position: static; flex: 0 0 24px; width: 24px; height: 24px; }
   .legendName, .compactLegend .legendName { font-size: 14px; }
-  .legendState { position: static; grid-column: 1 / -1; font-size: 14px; }
+  .legendState { position: static; grid-column: 1 / -1; font-size: 14px; color: #472a14; }
   .rankingPanel { position: static; width: 100%; min-width: 0; }
   .rankingToolbar { height: auto; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 6px; }
   .rankingTitle { font-size: 16px; }
