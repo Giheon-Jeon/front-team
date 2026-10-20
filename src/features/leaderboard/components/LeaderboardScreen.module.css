@@ -26,22 +26,13 @@
   position: fixed;
   inset: 0;
   overflow: hidden;
-  background: #674326 url("/assets/login/background-plaza.webp") center / cover fixed;
-}
-
-/* 원화가 화면 전체를 덮으면 바깥 배경을 추가로 내려받지 않는다 */
-@media (min-width: 1101px) and (aspect-ratio: 16/9) {
-  .page { background-image: none; }
+  background: #e6d2a4;
 }
 
 .stage {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  width: min(100vw, 177.78vh);
-  height: min(100vh, 56.25vw);
-  transform: translate(-50%, -50%);
-  container-type: inline-size;
+  inset: 0;
+  container-type: size;
   overflow: hidden;
   color: #2f190a;
   font-family: "Libre Baskerville", Georgia, serif;
@@ -50,33 +41,36 @@
 .mobileTitle { display: none; }
 
 .designCanvas {
+  /* 원화와 UI 위치는 화면에 맞추고 글자와 버튼은 같은 가로·세로 배율을 유지한다. */
+  --ui-scale: min(calc(100cqw / 1920px), calc(100cqh / 1080px));
+  --canvas-scale-y: calc(100cqh / 1080px / var(--ui-scale));
   position: absolute;
   top: 0;
   left: 0;
-  width: 1920px;
-  height: 1080px;
-  transform: scale(calc(100cqw / 1920px));
+  width: calc(100cqw / var(--ui-scale));
+  height: calc(100cqh / var(--ui-scale));
+  transform: scale(var(--ui-scale));
   transform-origin: top left;
 }
 
 .leaderboardArtwork {
   position: absolute;
-  top: -9px;
-  left: -14px;
+  top: -0.833333%;
+  left: -0.729167%;
   z-index: 0;
   display: block;
-  width: 1935px;
+  width: 100.78125%;
   max-width: none;
-  height: 1089px;
-  object-fit: cover;
+  height: 100.833333%;
+  object-fit: fill;
   pointer-events: none;
   user-select: none;
 }
 
 .backButton {
   position: absolute;
-  top: 83px;
-  left: 45px;
+  top: 7.685185%;
+  left: 2.34375%;
   z-index: 5;
   display: flex;
   width: 43px;
@@ -116,11 +110,11 @@
 
 .scoreBoard {
   position: absolute;
-  top: 197px;
-  left: 220px;
+  top: 18.240741%;
+  left: 11.458333%;
   z-index: 2;
-  width: 1280px;
-  height: 392px;
+  width: 66.666667%;
+  height: 36.296296%;
 }
 
 .scoreArtwork,
@@ -140,11 +134,11 @@
 
 .leaderboardChart {
   position: absolute;
-  top: 224px;
-  left: 1573px;
+  top: 20.740741%;
+  left: 81.927083%;
   z-index: 3;
-  width: 168px;
-  height: 262px;
+  width: 8.75%;
+  height: 24.259259%;
   color: #402e26;
 }
 
@@ -179,9 +173,10 @@
 
 .rankingPanel {
   position: absolute;
-  top: 606px;
-  left: 201px;
-  width: 1520px;
+  top: 56.111111%;
+  left: 10.46875%;
+  width: 79.166667%;
+  height: 31.296296%;
   z-index: 3;
   color: #402e26;
 }
@@ -189,7 +184,7 @@
   display: grid;
   grid-template-columns: 240px 1fr 260px;
   align-items: center;
-  height: 44px;
+  height: 13.017751%;
 }
 .rankingTitle { font-family: "Libre Caslon Text", Georgia, serif; font-size: 20px; color: #754315; letter-spacing: 0.04em; }
 .pagination { display: flex; justify-content: center; align-items: center; gap: 5px; font-size: 19px; }
@@ -212,8 +207,8 @@
 .rankingGrid { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 16px; font-weight: 400; font-variant-numeric: tabular-nums; }
 .rankingGrid col { width: var(--column-width); }
 .rankingGrid th, .rankingGrid td { box-sizing: border-box; min-width: 0; padding: 6px 4px; overflow-wrap: anywhere; text-align: center; vertical-align: middle; }
-.rankingGrid thead th { height: 36px; border-bottom: 1px solid rgb(131 81 37 / 45%); font-family: "Libre Caslon Text", Georgia, serif; font-size: 18px; font-weight: 400; color: #794519; }
-.rankingGrid tbody tr { height: 43px; }
+.rankingGrid thead th { height: calc(36px * var(--canvas-scale-y)); border-bottom: 1px solid rgb(131 81 37 / 45%); font-family: "Libre Caslon Text", Georgia, serif; font-size: 18px; font-weight: 400; color: #794519; }
+.rankingGrid tbody tr { height: calc(43px * var(--canvas-scale-y)); }
 .rankingGrid tbody th, .rankingGrid tbody td { border-bottom: 1px solid rgb(145 92 43 / 16%); }
 .rankingGrid th + th, .rankingGrid th + td, .rankingGrid td + th, .rankingGrid td + td { border-left: 1px solid rgb(145 92 43 / 16%); }
 .rankingGrid .teamNameCell { padding-inline: 10px; text-align: left; font-weight: 400; }
@@ -227,8 +222,8 @@
 .rankingGrid .tableState { height: 240px; color: #745436; font-size: 20px; border: 0; }
 
 .legendState { position: absolute; top: 42%; left: 0; width: 100%; margin: 0; color: rgb(71 42 20 / 76%); font-size: 12px; font-weight: 600; text-align: center; line-height: 1.35; }
-.legendLeaf { position: absolute; left: -44px; top: 0; width: 29px; height: 29px; }
-.refreshNote { position: absolute; left: 340px; top: 135px; width: 1270px; text-align: center; font-size: 15px; }
+.legendLeaf { position: absolute; left: -44px; top: calc(50% - 14px); width: 29px; height: 29px; }
+.refreshNote { position: absolute; left: 17.708333%; top: 12.5%; width: 66.145833%; text-align: center; font-size: 15px; }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 @media (max-width: 1100px) {
@@ -237,6 +232,7 @@
     min-height: 100svh;
     overflow: visible;
     padding: 20px 12px 36px;
+    background: #674326 url("/assets/login/background-plaza.webp") center / cover fixed;
   }
   .stage {
     position: relative;
@@ -245,6 +241,7 @@
     height: auto;
     margin: 0 auto;
     transform: none;
+    container-type: inline-size;
     overflow: visible;
     border: 8px solid transparent;
     border-image: url("/assets/challenge-detail/panel-board.webp") 32 stretch;
@@ -287,7 +284,7 @@
   .legendLeaf { left: 0; top: 2px; width: 22px; height: 22px; }
   .legendName, .compactLegend .legendName { font-size: 14px; }
   .legendState { position: static; grid-column: 1 / -1; font-size: 14px; }
-  .rankingPanel { position: static; width: 100%; }
+  .rankingPanel { position: static; width: 100%; height: auto; }
   .rankingToolbar { height: auto; grid-template-columns: 1fr auto; gap: 12px 8px; margin-bottom: 12px; }
   .rankingTitle { font-size: 17px; }
   .pagination { grid-column: 1 / -1; grid-row: 2; flex-wrap: wrap; gap: 0; font-size: 14px; }

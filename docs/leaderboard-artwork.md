@@ -18,6 +18,14 @@ SVG viewBox로 해당 영역을 분리하고 종이색만 투명하게 처리
 
 그래프 축과 점수선은 API 데이터로 렌더링하며 고정 시간이나 가짜 점수를 배경에 넣지 않음
 
+## 화면 비율에 따른 배치
+
+데스크톱은 원화 한 장으로 화면 전체를 채우며 별도의 바깥 배경을 요청하지 않음
+원화에 제목, 그래프 틀, 순위표 바탕이 함께 있으므로 화면 비율에 맞춰 원화 프레임의 가로와 세로를 조정
+1920×1080 기준 UI 좌표는 백분율로 환산하고 그래프의 실제 축과 표의 행 높이도 같은 위치에 맞춤
+글자, 버튼, 순위 장식은 화면에 들어가는 단일 배율을 적용해 가로세로 비례를 유지
+모바일 1100px 이하의 세로 흐름과 기존 모바일 배경, 카드형 순위표는 유지
+
 ## 배경 편집 프롬프트
 
 Use case: precise-object-edit. Asset type: existing web game's scoreboard background, exact restoration not a redesign. Image 1 is the edit target. Make ONLY the following removals with seamless matching parchment inpainting: (1) remove the numeric vertical graph scale 0 1500 3000 4500 6000 7500, and the bottom time labels 09:00 through 21:00, but KEEP the thin axis strokes, tick marks and entire grid in EXACTLY the same positions; (2) remove all six small colored maple leaves in the legend area on the right of the upper graph; (3) remove the numbers and wreaths for ranks 1,2,3,4,5,6 in the leftmost column of the lower table, keeping all table lines. Everything else MUST stay identical: same 1672:941 landscape aspect ratio, composition, full frame edges, warm parchment texture and colors, autumn leaves, mountain/lake, lantern, books, title SCOREBOARD, leaf icon and text POINTS, footer MSG CTF. Do not add any elements, borders, data, labels, UI, badges or new decoration. No flat-color patches, gradients, rectangles or blurred edges where objects were removed; continue the existing paper grain naturally. Preserve sharpness and the exact positioning of the two large panels and all grid lines. Return the edited full background only, highest available resolution.
