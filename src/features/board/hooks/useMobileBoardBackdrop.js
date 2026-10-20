@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { getMobileBoardBackdrop } from "../utils/boardViewport.js";
+import { getMobileBoardBackdrop, getMobileBoardFitWidth } from "../utils/boardViewport.js";
 
 export default function useMobileBoardBackdrop(frameRef, viewportRef) {
   useEffect(() => {
@@ -12,10 +12,16 @@ export default function useMobileBoardBackdrop(frameRef, viewportRef) {
       if (!window.matchMedia("(max-width: 1100px)").matches) return;
       const bounds = frame.getBoundingClientRect(), board = scene.getBoundingClientRect();
       if (!board.width || !board.height) return;
+      const viewportBounds = viewport.getBoundingClientRect();
+      const fitSceneWidth = getMobileBoardFitWidth(viewport.clientWidth, window.innerHeight);
+      const fitSceneHeight = fitSceneWidth * 960 / 951;
+      const fitSceneLeft = viewportBounds.left - bounds.left + (viewport.clientWidth - fitSceneWidth) / 2;
+      const fitFrameHeight = Math.max(window.innerHeight, bounds.height - viewportBounds.height + fitSceneHeight);
       const image = getMobileBoardBackdrop({
         width: bounds.width, height: bounds.height,
         sceneLeft: board.left - bounds.left, sceneTop: board.top - bounds.top,
         sceneWidth: board.width, sceneHeight: board.height,
+        fitSceneWidth, fitSceneLeft, fitFrameHeight,
       });
       for (const key of ["left", "top", "width", "height"]) frame.style.setProperty(`--mobile-background-${key}`, `${image[key]}px`);
     };
