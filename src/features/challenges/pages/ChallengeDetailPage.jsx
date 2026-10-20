@@ -9,6 +9,7 @@ import {
 } from "../../../api/instances.js";
 import { ROUTES } from "../../../routes/routePaths.js";
 import { isSuccess } from "../../../utils/response.js";
+import { startVisiblePolling } from "../../../utils/visiblePolling.js";
 import { TERMINAL_INSTANCE_STATUSES } from "../../../constants/enums.js";
 import ChallengeDetailScreen from "../components/ChallengeDetailScreen.jsx";
 import useChallengeDetailData from "../hooks/useChallengeDetailData.js";
@@ -50,10 +51,10 @@ function ChallengeDetailContent({ challengeId }) {
 
   useEffect(() => {
     mounted.current = true;
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    const stopClock = startVisiblePolling(() => setNow(Date.now()), { intervalMs: 1000, immediate: false });
     return () => {
       mounted.current = false;
-      window.clearInterval(timer);
+      stopClock();
     };
   }, []);
 

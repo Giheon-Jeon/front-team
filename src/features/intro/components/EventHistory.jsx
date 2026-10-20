@@ -58,7 +58,7 @@ export default function EventHistory() {
               aria-label="2025 MSG CTF 포스터 원본 새 창"
             >
               <img
-                src="/assets/intro/msg-ctf-2025-poster.png"
+                src="/assets/intro/msg-ctf-2025-poster.webp"
                 width="2527"
                 height="3572"
                 alt="2025 MSG CTF 공식 포스터, 11월 9일 올댓마인드 문래점에서 열린 행사"

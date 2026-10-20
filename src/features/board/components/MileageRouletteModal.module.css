@@ -62,7 +62,7 @@
     padding: 30px 24px 24px;
     overflow-y: auto;
     overscroll-behavior: contain;
-    background: #eed8ad url("/assets/challenge-detail/panel-board.png") center / 100% 100% no-repeat;
+    background: #eed8ad url("/assets/challenge-detail/panel-board.webp") center / 100% 100% no-repeat;
   }
   .panelArtwork { display: none; }
   .title { position: static; width: auto; height: auto; overflow: visible; clip: auto; margin: 0 14px 8px; white-space: normal; font: 400 clamp(22px, 7cqw, 28px)/1.15 "Alegreya", "Abyssinica SIL", serif; letter-spacing: 0.02em; text-align: center; }

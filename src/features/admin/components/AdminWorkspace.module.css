@@ -125,7 +125,7 @@
 .notice { margin: 12px 0; padding: 12px 14px; background: #f0f5ee; border-radius: 7px; color: #31503a; }
 .danger { color: #a53e2d; border-color: #cbaa9f; }
 .overlay { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 24px; background: #24180dc4; backdrop-filter: blur(3px); }
-.dialog { display: flex; flex-direction: column; width: min(1080px, 100%); max-height: calc(100dvh - 48px); border: 8px solid transparent; border-image: url("/assets/challenge-detail/panel-board.png") 32 stretch; border-radius: 0; background: #f5e8ca; background-clip: padding-box; box-shadow: 0 24px 100px #1e120e66; outline: none; }
+.dialog { display: flex; flex-direction: column; width: min(1080px, 100%); max-height: calc(100dvh - 48px); border: 8px solid transparent; border-image: url("/assets/challenge-detail/panel-board.webp") 32 stretch; border-radius: 0; background: #f5e8ca; background-clip: padding-box; box-shadow: 0 24px 100px #1e120e66; outline: none; }
 .dialogHeader { display: flex; flex-shrink: 0; align-items: center; gap: 16px; padding: 24px 32px; border-bottom: 1px solid var(--admin-line); }
 .dialogHeading { flex: 1; min-width: 0; }
 .dialogHeader h2 { font: 24px/1.4 "Song Myung", serif; color: #613d15; letter-spacing: -.025em; overflow-wrap: anywhere; min-width: 0; }

@@ -216,7 +216,7 @@ export default function BoardScreen({
   useEffect(() => { setDismissedSelectionKey(null); }, [selectionKey]);
 
   return (
-    <FixedAspectStage backdropSrc="/assets/board/bg-1920x1080.webp" frameClassName={styles.frame} className={styles.stage}>
+    <FixedAspectStage backdropSrc="/assets/board/bg-1920x1080-display.webp" frameClassName={styles.frame} className={styles.stage}>
       <BoardDiceStatusPanel
         rollsLeft={diceStatus?.diceRollsLeft ?? myBoard?.diceRollsLeft ?? 0}
         canRoll={canRoll}

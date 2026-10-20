@@ -19,7 +19,7 @@ export default function OnsiteGuide() {
         <article className="onsite-item">
           <img
             className="onsite-illustration"
-            src="/assets/intro/preparation-laptop-v1.png"
+            src="/assets/intro/preparation-laptop-v1.webp"
             width="1254"
             height="1254"
             alt=""
@@ -33,7 +33,7 @@ export default function OnsiteGuide() {
         <article className="onsite-item">
           <img
             className="onsite-illustration"
-            src="/assets/intro/preparation-identity-v1.png"
+            src="/assets/intro/preparation-identity-v1.webp"
             width="1254"
             height="1254"
             alt=""

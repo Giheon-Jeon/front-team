@@ -1,9 +1,9 @@
 import { Suspense, forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
+import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DICE_CAMERA, DICE_FLOOR_Y, DICE_LOOK_AT, DICE_STARTS, restingDie, sampleDiceMotion } from "./dicePose.js";
 import { createDiceMotionClient } from "./diceMotionClient.js";
-import { DiceFallback } from "./DiceFallback.jsx";
+import DiceCanvas from "./DiceCanvas.jsx";
 
 const DicePair = forwardRef(function DicePair({ onReady, reducedMotion }, ref) {
   // 현재 모델에는 Draco·Meshopt 압축이 없어 추가 디코더나 전체 도우미 묶음이 필요 없다
@@ -77,7 +77,6 @@ const DicePair = forwardRef(function DicePair({ onReady, reducedMotion }, ref) {
 
 const Dice3D = forwardRef(function Dice3D({ onReady }, ref) {
   const pairRef = useRef(null);
-  const fallbackRef = useRef(null);
   const [reducedMotion, setReducedMotion] = useState(() => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   useEffect(() => {
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -85,21 +84,19 @@ const Dice3D = forwardRef(function Dice3D({ onReady }, ref) {
     preference.addEventListener("change", update);
     return () => preference.removeEventListener("change", update);
   }, []);
-  useImperativeHandle(ref, () => ({ startRoll: (result) => (pairRef.current || fallbackRef.current)?.startRoll(result) }), []);
+  useImperativeHandle(ref, () => ({ startRoll: (result) => pairRef.current?.startRoll(result) }), []);
 
   return (
     <div className="absolute left-[-75%] top-[-175%] h-[450%] w-[250%] pointer-events-none" aria-hidden="true" data-dice-visual="true">
-      <Canvas
+      <DiceCanvas
         // Canvas 기본값 auto가 부모의 none을 덮으므로 이 레이어도 명시적으로 끈다
         // 주사위 입력은 BoardTrack의 원래 버튼 영역에서만 받는다
-        style={{ pointerEvents: "none" }}
         camera={DICE_CAMERA}
         onCreated={({ camera }) => camera.lookAt(...DICE_LOOK_AT)}
         gl={{ alpha: true, antialias: true }}
         shadows
         dpr={[1, 1.5]}
         frameloop="demand"
-        fallback={<DiceFallback ref={fallbackRef} onReady={onReady} inCanvas />}
       >
         <ambientLight intensity={0.85} />
         <hemisphereLight args={["#ffe4b5", "#67452d", 0.65]} />
@@ -114,7 +111,7 @@ const Dice3D = forwardRef(function Dice3D({ onReady }, ref) {
             <shadowMaterial transparent opacity={0.48} color="#140d07" depthWrite={false} />
           </mesh>
         </Suspense>
-      </Canvas>
+      </DiceCanvas>
     </div>
   );
 });

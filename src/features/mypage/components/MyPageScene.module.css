@@ -1,3 +1,5 @@
+@import "../../../styles/pretendard/mypage.generated.css";
+
 @font-face {
   font-family: "MyPage Fell";
   src: url("/assets/intro/fonts/IMFeENrm28P.ttf") format("truetype");
@@ -12,14 +14,6 @@
   font-weight: 400;
   font-display: swap;
 }
-@font-face {
-  font-family: "MyPage Pretendard";
-  src: url("/assets/fonts/pretendard/PretendardVariable.woff2") format("woff2");
-  font-style: normal;
-  font-weight: 100 900;
-  font-display: swap;
-}
-
 /* 1u = Figma 1920×1080 캔버스(MyPage 28:94)의 1px. 좁은 화면에서는 1px로 돌아가 일반 흐름 레이아웃이 된다 */
 .page {
   --u: 1px;
@@ -520,7 +514,7 @@
 }
 
 /* ───────── 데스크톱: 1920×1080 무대를 화면 높이/너비에 맞춰 한 화면에 고정(스크롤 없음) ─────────
-   문제 상세와 같은 숲 배경 + 보드판(panel-board.png)을 쓰고, 그 위에 Figma 28:94 패널을 놓는다.
+   문제 상세와 같은 숲 배경 + 보드판(panel-board.webp)을 쓰고, 그 위에 Figma 28:94 패널을 놓는다.
    보드판 안쪽선은 무대 x 115~1801, y 147~983. Figma 원본 좌표(위 195~아래 995)를 30 올려 안쪽선 안에 맞춘다 */
 @media (min-width: 1101px) and (min-height: 620px) {
   .page {
@@ -548,7 +542,7 @@
     top: calc(var(--u) * 130);
     width: calc(var(--u) * 1720);
     height: calc(var(--u) * 870);
-    background: url("/assets/challenge-detail/panel-board.png") center / 100% 100% no-repeat;
+    background: url("/assets/challenge-detail/panel-board.webp") center / 100% 100% no-repeat;
     pointer-events: none;
   }
   .backButton {

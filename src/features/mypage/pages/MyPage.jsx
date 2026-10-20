@@ -6,6 +6,7 @@ import { getMyMileageHistory, getMyProfile, getMySolves, issueMyQrToken } from "
 import { getMyRanking, getMyMemberRanking } from "../../../api/leaderboard.js";
 import { ROUTES } from "../../../routes/routePaths.js";
 import { isSuccess } from "../../../utils/response.js";
+import { startVisiblePolling } from "../../../utils/visiblePolling.js";
 import MyPageScreen from "../components/MyPageScreen.jsx";
 import { PREVIEW_MY_PAGE_DATA } from "../data/previewMyPageData.js";
 import { mapMileageHistory, mapSolveHistory, mapTeamProfile, mapMemberRanking, getQrRemainingSeconds } from "../utils/myPageData.js";
@@ -38,7 +39,6 @@ export default function MyPage() {
     const controller = new AbortController();
     const config = { signal: controller.signal, timeout: 10000 };
     let active = true;
-    let timer;
     async function load() {
       setRefreshing(true);
       const results = await Promise.allSettled([
@@ -63,10 +63,9 @@ export default function MyPage() {
         }
       })));
       setRefreshing(false);
-      timer = window.setTimeout(load, 30000);
     }
-    load();
-    return () => { active = false; controller.abort(); window.clearTimeout(timer); };
+    const stopPolling = startVisiblePolling(load);
+    return () => { stopPolling(); active = false; controller.abort(); };
   }, [isPreview, revision]);
 
   const requestQr = useCallback(async () => {

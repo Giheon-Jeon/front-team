@@ -12,6 +12,7 @@ import {
   rollbackTeam,
 } from "../../../api/admin.js";
 import { isSuccess } from "../../../utils/response.js";
+import { startVisiblePolling } from "../../../utils/visiblePolling.js";
 import { toKst } from "../../../utils/time.js";
 import AdminLayout, { AdminStatusMessage } from "../components/AdminLayout.jsx";
 import Modal from "../components/AdminDialog.jsx";
@@ -333,14 +334,9 @@ export default function AdminDashboardPage() {
     dashboard.reload(), events.reload(), instances.reload(), resources.reload(),
   ]), [dashboard.reload, events.reload, instances.reload, resources.reload]);
   useEffect(() => {
-    let active = true;
-    let timer;
-    const poll = async () => {
-      if (!openModal) await reloadAll();
-      if (active) timer = setTimeout(poll, 30000);
-    };
-    timer = setTimeout(poll, 30000);
-    return () => { active = false; clearTimeout(timer); };
+    if (openModal) return undefined;
+    // Resource hooks perform the initial reads. Only schedule subsequent reads.
+    return startVisiblePolling(reloadAll, { immediate: false });
   }, [reloadAll, openModal]);
 
   return (

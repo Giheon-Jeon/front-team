@@ -37,7 +37,7 @@ test("데스크톱 바닥과 무대는 같은 크기와 중심을 사용하고 �
   // 16:9 밖 여백은 같은 배경을 cover로 깔아 채운다(갈색 빈 여백 금지)
   const fill = mediaRule(path, condition, ".frame::before");
   assert.equal(fill.inset, "0");
-  assert.match(fill.background, /bg-1920x1080\.webp.*cover/);
+  assert.match(fill.background, /bg-1920x1080-display\.webp.*cover/);
   assert.equal(background["mask-composite"], "intersect");
   const common = readFileSync(new URL("../../../components/common/FixedAspectStage.jsx", import.meta.url), "utf8");
   assert.match(common, /object-cover/);

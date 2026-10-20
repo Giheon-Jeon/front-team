@@ -6,7 +6,7 @@ const source = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 test("황금열쇠 결과는 공통 원본 이미지와 동적 카드 텍스트를 쓴다", () => {
   const card = source("./components/GoldenKeyCard.jsx");
   for (const id of ["card_reroll", "card_roll_twice_choose", "card_move_offset", "card_free_travel", "card_extra_roll"]) assert.ok(card.includes(id));
-  assert.match(card, /golden-key-original.png/);
+  assert.match(card, /golden-key-original.webp/);
   assert.match(card, /card.description/);
   assert.doesNotMatch(card, /card.effect/);
   assert.match(card, /Escape/);

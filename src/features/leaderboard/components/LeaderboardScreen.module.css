@@ -231,7 +231,7 @@
     min-height: 100svh;
     overflow: visible;
     padding: 20px 12px 36px;
-    background: #674326 url("/assets/login/background-plaza.png") center / cover fixed;
+    background: #674326 url("/assets/login/background-plaza.webp") center / cover fixed;
   }
   .stage {
     position: relative;
@@ -242,7 +242,7 @@
     transform: none;
     overflow: visible;
     border: 8px solid transparent;
-    border-image: url("/assets/challenge-detail/panel-board.png") 32 stretch;
+    border-image: url("/assets/challenge-detail/panel-board.webp") 32 stretch;
     background: #eddbb6;
     background-clip: padding-box;
   }
@@ -332,6 +332,10 @@
   .mobileCellLabel { display: block; margin-bottom: 6px; font-size: 11px; font-weight: 400; color: #794519; }
   .rankingGrid td[data-column="teamScore"] .cellValue { font-size: 17px; }
   .rankingGrid .tableState { grid-column: 1 / -1; height: auto; padding: 24px 8px; }
+}
+
+@media (max-width: 1100px) and (max-aspect-ratio: 9/10) {
+  .page { background-image: url("/assets/login/background-plaza-portrait.webp"); }
 }
 
 @media (max-width: 400px) {
