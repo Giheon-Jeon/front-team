@@ -43,6 +43,7 @@ export function mapChallengeDetail(data) {
     accessStatus: data.status ?? null,
     openedAt: data.opened_at ?? null,
     description: typeof data.description === "string" ? data.description : "",
+    requiresInstance: data.requires_instance !== false,
     attachments: Array.isArray(data.files)
       ? data.files
           .filter((file) => file && typeof file === "object")

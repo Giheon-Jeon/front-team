@@ -129,7 +129,10 @@ function ChallengeDetailContent({ challengeId }) {
   };
 
   const runInstanceAction = async (action) => {
-    if (actionInFlight.current || unavailable || detail.status !== "success")
+    if (
+      actionInFlight.current || unavailable || detail.status !== "success" ||
+      (challenge?.requiresInstance === false && !instance)
+    )
       return;
     const allowed = {
       create: controls.canCreate,
