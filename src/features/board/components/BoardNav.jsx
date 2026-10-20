@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useRef } from "react";
+import { useId, useRef } from "react";
 import { performLogout } from "../../../api/auth.js";
 import { ROUTES } from "../../../routes/routePaths.js";
 import styles from "./BoardScreen.module.css";
@@ -17,8 +17,8 @@ const BUTTONS = [
     label: "규칙 설명서",
     mobileLabel: "규칙",
     src: "/assets/board/nav-rules.png",
-    mobileImageWidth: "192.31%",
-    mobileImageAnchor: "translate(-49.5%, -46%)",
+    mobileViewBox: "46 8 108 108",
+    imageSize: [201, 134],
     // 원본 PNG가 두 원형 버튼보다 장식을 크게 채워 실제 보이는 크기를 따로 줄인다.
     box: { left: 77.83 - NAV_SHIFT, top: 3.97, width: 7.46, height: 8.81 },
     hitArea: "left-[49.5%] top-[46%] w-[52%]",
@@ -30,8 +30,8 @@ const BUTTONS = [
     mobileLabel: "마이페이지",
     // 흰 테두리를 지운 뒤에도 브라우저가 예전 이미지를 캐시로 보여줘 주소에 버전을 붙였다
     src: "/assets/board/nav-mypage.png?v=2",
-    mobileImageWidth: "256.41%",
-    mobileImageAnchor: "translate(-50%, -48%)",
+    mobileViewBox: "78 29.5 100 100",
+    imageSize: [257, 171],
     box: { left: 82.09 - NAV_SHIFT, top: 2.54, width: 9.88, height: 11.68 },
     hitArea: "left-1/2 top-[48%] w-[39%]",
   },
@@ -41,8 +41,8 @@ const BUTTONS = [
     label: "스코어보드",
     mobileLabel: "순위",
     src: "/assets/board/nav-scoreboard.png",
-    mobileImageWidth: "238.1%",
-    mobileImageAnchor: "translate(-50%, -48%)",
+    mobileViewBox: "67 26 100 100",
+    imageSize: [235, 157],
     box: { left: 87.98 - NAV_SHIFT, top: 2.69, width: 9.04, height: 10.69 },
     hitArea: "left-1/2 top-[48%] w-[42%]",
   },
@@ -52,12 +52,28 @@ const BUTTONS = [
     label: "로그아웃",
     mobileLabel: "로그아웃",
     src: "/assets/board/nav-logout.png",
-    mobileImageWidth: "238.1%",
-    mobileImageAnchor: "translate(-50%, -48%)",
+    mobileViewBox: "67 26 100 100",
+    imageSize: [235, 157],
     box: { left: 87.98, top: 2.69, width: 9.04, height: 10.69 },
     hitArea: "left-1/2 top-[48%] w-[42%]",
   },
 ];
+
+// Normalize the visible artwork, including a small transparent margin, instead
+// of enlarging each PNG's different empty canvas inside a clipped square.
+function MobileNavArtwork({ button, menu = false }) {
+  const id = useId();
+  return (
+    <svg className={styles.mobileNavIcon} viewBox={button.mobileViewBox} aria-hidden="true" focusable="false" data-mobile-nav-icon={menu ? "menu" : button.key}>
+      <image href={button.src} width={button.imageSize[0]} height={button.imageSize[1]} />
+      {menu && <>
+        <defs><linearGradient id={id} x2="0" y2="1"><stop stopColor="#513615" /><stop offset="1" stopColor="#211609" /></linearGradient></defs>
+        <circle cx="117" cy="76" r="30" fill={`url(#${id})`} />
+        <path d="M101 65h32M101 76h32M101 87h32" fill="none" stroke="#f1cf7f" strokeWidth="5" strokeLinecap="round" />
+      </>}
+    </svg>
+  );
+}
 
 export default function BoardNav() {
   const navigate = useNavigate();
@@ -68,22 +84,15 @@ export default function BoardNav() {
     <>
       <nav className={styles.mobileNav} aria-label="대회 메뉴">
         {BUTTONS.filter(button => button.to).map(button => <Link key={button.key} to={button.to} className={styles.mobileNavPrimary}>
-          <span className={styles.mobileNavIcon} aria-hidden="true"><img src={button.src} alt="" draggable={false} style={{ width: button.mobileImageWidth, transform: button.mobileImageAnchor }} /></span>
+          <MobileNavArtwork button={button} />
           <span>{button.mobileLabel}</span>
         </Link>)}
         <details ref={mobileMenu} className={styles.mobileMenu} onKeyDown={event => { if (event.key === "Escape") { closeMenu(); mobileMenu.current?.querySelector("summary")?.focus(); } }}>
-          <summary aria-label="대회 전체 메뉴"><span aria-hidden="true">☰</span> 메뉴</summary>
+          <summary aria-label="대회 전체 메뉴"><MobileNavArtwork button={BUTTONS[3]} menu /><span>메뉴</span></summary>
           <div className={styles.mobileMenuItems} onClick={closeMenu}>
         {BUTTONS.filter(button => !button.to).map((button) => {
           const content = <>
-            <span className={styles.mobileNavIcon} aria-hidden="true">
-              <img
-                src={button.src}
-                alt=""
-                draggable={false}
-                style={{ width: button.mobileImageWidth, transform: button.mobileImageAnchor }}
-              />
-            </span>
+            <MobileNavArtwork button={button} />
             <span>{button.mobileLabel}</span>
           </>;
           return button.to

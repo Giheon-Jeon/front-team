@@ -121,8 +121,8 @@
 .interactionArea { cursor: crosshair; touch-action: pan-x pan-y pinch-zoom; }
 .zoomSelection { fill: rgb(153 94 32 / 18%); stroke: #925725; stroke-width: 1; pointer-events: none; }
 
-.graph[data-compact="true"] .axisScore { right: calc(100% - 46px); font-size: 13px; }
-.graph[data-compact="true"] .axisTime { font-size: 13px; }
+.graph[data-compact="true"] .axisScore { right: calc(100% - 46px); font-size: 14px; }
+.graph[data-compact="true"] .axisTime { font-size: 14px; }
 .graph[data-compact="true"] .zoomControls { top: 0; }
 .graph[data-compact="true"] .zoomControls button { height: 44px; }
 .graph[data-compact="true"] .zoomHint { display: none; }

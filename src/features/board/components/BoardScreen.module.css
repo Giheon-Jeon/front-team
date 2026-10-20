@@ -275,23 +275,28 @@
   }
   .desktopOnly { display: none; }
   .mobileNav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    --nav-icon-size: clamp(40px, 10vw, 48px);
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: start;
+    justify-items: center;
+    gap: 8px;
+    isolation: isolate;
     position: relative;
     z-index: 60;
     order: -2;
-    padding: 6px 12px 0;
+    padding: 10px 12px;
     color: #f3dfb9;
     font: 14px/1.4 "Song Myung", serif;
   }
+  .mobileNav::before { content: ""; position: absolute; z-index: -1; top: 0; bottom: -16px; left: 50%; width: 100vw; transform: translateX(-50%); background: linear-gradient(#211307e6, #211307d9 calc(100% - 16px), transparent); pointer-events: none; }
   .mobileNav a, .mobileNav button { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 4px; text-decoration: none; border: 0; background: none; color: inherit; font: inherit; }
-  .mobileNav a.mobileNavPrimary { flex-direction: row; gap: 4px; padding: 0; font-size: 13px; white-space: nowrap; }
-  .mobileNavIcon { position: relative; display: block; flex: 0 0 28px; width: 28px; height: 28px; overflow: hidden; }
-  .mobileNavIcon img { position: absolute; left: 50%; top: 50%; height: auto; max-width: none; pointer-events: none; }
+  .mobileNav a.mobileNavPrimary { width: 100%; flex-direction: column; gap: 4px; padding: 0; font-size: 14px; white-space: nowrap; }
+  .mobileNavIcon { display: block; flex: none; width: var(--nav-icon-size); height: var(--nav-icon-size); pointer-events: none; }
   .mobileNav a:hover, .mobileNav button:hover { color: #ffd98a; }
   .mobileNav a:focus-visible, .mobileNav button:focus-visible { outline: 2px solid #f1cb79; outline-offset: -3px; }
-  .mobileMenu > summary { display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 12px; cursor: pointer; list-style: none; }
+  .mobileMenu { width: 100%; }
+  .mobileMenu > summary { display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 44px; padding: 0; cursor: pointer; list-style: none; }
   .mobileMenu > summary::-webkit-details-marker { display: none; }
   .mobileMenu > summary:focus-visible { outline: 2px solid #f1cb79; }
   .mobileMenuItems { position: absolute; top: 100%; right: 12px; width: min(280px, calc(100vw - 24px)); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 12px; border: 1px solid #ae7c42; border-radius: 8px; background: #2a180af5; box-shadow: 0 6px 18px #120a0499; }
@@ -306,9 +311,9 @@
   .boardArea { display: flex; flex-direction: column; min-width: 0; }
   .boardTools { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 16px; }
   .mobileCellInfo { display: block; margin: 0; padding: 8px 16px; font: 16px/1.5 "Pretendard", sans-serif; color: #f8ead0; background: #21150dcc; word-break: keep-all; }
-  .boardControls { display: flex; flex: 0 0 auto; align-items: center; color: #f3dfb9; text-shadow: 0 1px 4px #1d1008; }
+  .boardControls { display: flex; flex: 0 0 auto; align-items: center; color: #f8ead0; }
   .boardHint { display: none; }
-  .boardZoomButton { display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px; width: 7em; min-height: 44px; padding: 8px 4px; border: 0; background: none; color: inherit; font: inherit; font-size: 14px; white-space: nowrap; cursor: pointer; }
+  .boardZoomButton { display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 7em; min-height: 44px; padding: 8px 4px; border: 1px solid #ae7c42; border-radius: 6px; background: linear-gradient(#3d2515, #2a180a); box-shadow: inset 0 0 0 1px #100802; color: inherit; font: inherit; font-size: 14px; white-space: nowrap; cursor: pointer; }
   .boardZoomButton svg { width: 20px; height: 20px; }
   .boardZoomButton:focus-visible { outline: 2px solid #ffe090; outline-offset: 2px; }
   .boardZoomButton:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -372,7 +377,7 @@
   .openPanel > img, .openPaperGap, .openPaperDivider { display: none; }
   .openPanel .mobileOpenTitle { position: static; flex-shrink: 0; width: auto; height: auto; overflow: visible; clip: auto; margin: 0 48px 12px 0; font: 24px/1.4 "Song Myung", serif; color: #613d15; }
   .openPanel .openPanelBody { position: static; flex: 0 1 auto; min-height: 0; width: auto; height: auto; max-height: 60dvh; }
-  .openPanel .openClose { top: 8px; left: auto; right: 8px; width: 44px; height: 44px; padding: 10px; transform: none; }
+  .openPanel .openClose { top: 8px; left: auto; right: 8px; width: 44px; height: 44px; padding: 4px; transform: none; }
   .openChallengeList li button { height: auto; min-height: 56px; gap: 12px; padding: 8px 0; }
   .openChallengeList li button > span:first-child { width: 28px; height: 30px; }
   .openChallengeList li button > span:first-child > span { font-size: 12px; }
@@ -383,6 +388,7 @@
   .openFilters, .openNotice, .openInstance { font-size: 14px; }
   .openSearch input, .openFilterRow select { font-size: 16px; }
   .openCounts, .openInstance button, .openInstance strong { font-size: 14px; }
+  .openCounts span { color: #684316; }
   .openFilterRow { gap: 14px; }
 
   /* 포털은 보드의 transform/container와 분리해 화면 전체를 사용한다. */
@@ -400,7 +406,7 @@
   }
   .mobileOpenOverlay .openPanelHeader { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-shrink: 0; padding-bottom: 10px; border-bottom: 1px solid #9c754875; }
   .mobileOpenOverlay .mobileOpenTitle { margin: 0; white-space: normal; font-size: 24px; }
-  .mobileOpenOverlay .openClose { position: static; flex: 0 0 44px; width: 44px; height: 44px; min-height: 44px; padding: 10px; transform: none; }
+  .mobileOpenOverlay .openClose { position: static; flex: 0 0 44px; width: 44px; height: 44px; min-height: 44px; padding: 4px; transform: none; }
   .mobileOpenOverlay .openPanelBody { position: static; width: 100%; height: auto; max-height: none; flex: 1 1 auto; min-height: 0; padding: 8px 6px 12px 0; overflow-x: hidden; overflow-y: auto; }
   .mobileOpenOverlay .lineSummary { font-size: 18px; margin-bottom: 10px; }
   .mobileOpenOverlay .lineProgressStatus { flex-direction: row; flex-wrap: wrap; gap: 4px 12px; font-size: 14px; }
@@ -423,12 +429,9 @@
 
 .mobileDiceIcon { display: none; }
 @media (max-width: 1100px) {
-  .mobileNav { gap: 8px; padding-top: 10px; padding-bottom: 10px; }
-  .mobileNav a.mobileNavPrimary { flex-direction: column; gap: 3px; font-size: 14px; }
-  .mobileNavIcon { flex-basis: 36px; width: 36px; height: 36px; }
-  .mobileMenuItems .mobileNavIcon { flex-basis: 28px; width: 28px; height: 28px; }
+  .mobileMenuItems .mobileNavIcon { width: 32px; height: 32px; }
   .mobileNav .mobileMenuItems .mobileNavPrimary { flex-direction: row; gap: 8px; }
-  .stage .diceStatus { isolation: isolate; grid-template-columns: 44px minmax(0, 1fr); gap: 6px 12px; margin: 0 12px 6px; padding: 12px; border: 8px solid transparent; border-image: url("/assets/mypage/panel-score.png") 24 / 8px stretch; border-radius: 0; background: #2c1c11; }
+  .stage .diceStatus { isolation: isolate; grid-template-columns: 44px minmax(0, 1fr); gap: 6px 12px; margin: 0 12px 6px; padding: 12px; border: 8px solid transparent; border-image: url("/assets/mypage/panel-score.png") 24 / 8px stretch; border-radius: 0; background: #2c1c11; background-clip: padding-box; }
   .diceStatus > .mobileDiceIcon { display: block; position: static; width: 44px; height: 44px; grid-row: 1 / 3; align-self: center; object-fit: contain; }
   .diceStatus .diceReadout { grid-column: 2; grid-row: 1; font-size: 16px; }
   .diceStatus .diceChallengeRow { grid-column: 2; grid-row: 2; font-size: 14px; text-align: left; }

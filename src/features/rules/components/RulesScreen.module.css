@@ -155,7 +155,7 @@
   .rulesList { position: static; overflow: visible; gap: 24px; padding: 0; -webkit-mask-image: none; mask-image: none; }
   .ruleTitle { font-size: 18px; }
   .ruleDescription { margin-top: 8px; font-size: 16px; }
-  .mainNavigationButton { top: 10px; right: 10px; left: auto; width: 44px; height: 44px; padding: 10px; }
+  .mainNavigationButton { top: 10px; right: 10px; left: auto; width: 44px; height: 44px; padding: 4px; }
 }
 
 .mainNavigationButton:hover .layerImage {
