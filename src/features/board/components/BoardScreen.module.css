@@ -342,6 +342,13 @@
     background: #f2d7a7;
     overscroll-behavior: contain;
   }
+  .stage .eventPanel[data-inline="true"] {
+    position: relative;
+    inset: auto;
+    flex-shrink: 0;
+    max-height: none;
+    margin: 16px auto 0;
+  }
   .eventPanel h2 { font-size: 20px; }
   .eventPanel > div:first-child { margin-bottom: 12px; }
   .eventPanel :is(p, li, span, label, button) { font-size: 14px; line-height: 1.6; }
