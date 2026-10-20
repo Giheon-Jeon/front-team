@@ -674,7 +674,8 @@ test("모바일에서 반복 안내를 줄여도 주사위 상태와 제한 시�
   });
   assert.match(waiting, /data-roll-ready="false"/);
   assert.match(waiting, /문제 제한 15:00/);
-  assert.match(waiting, /<p[^>]*>문제 풀이 제한 시간이 끝나면 다시 이동할 수 있습니다<\/p>/);
+  assert.match(waiting, /title="문제 풀이 제한 시간이 끝나면 다시 이동할 수 있습니다"/);
+  assert.match(waiting, /<span[^>]*>문제 풀이 제한 시간이 끝나면 다시 이동할 수 있습니다<\/span>/);
   const root = css("features/board/components/BoardScreen.module.css");
   assert.deepEqual(declarations(root, '.diceStatus[data-roll-ready="true"] > p'), [["display", "none"]]);
 });
