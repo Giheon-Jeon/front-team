@@ -26,7 +26,12 @@
   position: fixed;
   inset: 0;
   overflow: hidden;
-  background: #e6d2a4;
+  background: #674326 url("/assets/login/background-plaza.webp") center / cover fixed;
+}
+
+/* 원화가 화면 전체를 덮으면 바깥 배경을 추가로 내려받지 않는다 */
+@media (min-width: 1101px) and (aspect-ratio: 16/9) {
+  .page { background-image: none; }
 }
 
 .stage {
@@ -61,6 +66,7 @@
   z-index: 0;
   display: block;
   width: 1935px;
+  max-width: none;
   height: 1089px;
   object-fit: cover;
   pointer-events: none;
@@ -231,7 +237,6 @@
     min-height: 100svh;
     overflow: visible;
     padding: 20px 12px 36px;
-    background: #674326 url("/assets/login/background-plaza.webp") center / cover fixed;
   }
   .stage {
     position: relative;
