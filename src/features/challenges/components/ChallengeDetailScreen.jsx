@@ -8,6 +8,7 @@ import FlagSubmitPanel from "./FlagSubmitPanel.jsx";
 import RequestFeedback from "./RequestFeedback.jsx";
 import { formatRemaining } from "../../../utils/time.js";
 import styles from "./ChallengeDetailScene.module.css";
+import PanelTexture from "../../../components/common/PanelTexture.jsx";
 
 export default function ChallengeDetailScreen({
   loading,
@@ -53,6 +54,7 @@ export default function ChallengeDetailScreen({
         <div className={styles.boardFrame} aria-hidden="true" />
         <BackButton onClick={onBack} />
         <main className={styles.board} aria-label="문제 상세">
+          <PanelTexture material="paper" />
           {loading && (
             <div className={styles.stateBox} role="status" aria-busy="true">
               <div className={styles.skeletonTitle} aria-hidden="true" />

@@ -118,7 +118,7 @@
 .zoomControls button:disabled { opacity: 0.4; cursor: not-allowed; }
 .zoomControls button:focus-visible { outline: 2px solid #8d410d; outline-offset: 1px; }
 .zoomHint { margin-right: 8px; font-size: 14px; }
-.interactionArea { cursor: crosshair; touch-action: pan-y; }
+.interactionArea { cursor: crosshair; touch-action: pan-x pan-y pinch-zoom; }
 .zoomSelection { fill: rgb(153 94 32 / 18%); stroke: #925725; stroke-width: 1; pointer-events: none; }
 
 .graph[data-compact="true"] .axisScore { right: calc(100% - 46px); font-size: 13px; }

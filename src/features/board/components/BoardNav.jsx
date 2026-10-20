@@ -67,12 +67,14 @@ export default function BoardNav() {
   return (
     <>
       <nav className={styles.mobileNav} aria-label="대회 메뉴">
-        <Link to={ROUTES.mypage} className={styles.mobileNavPrimary}>마이페이지</Link>
-        <Link to={ROUTES.leaderboard} className={styles.mobileNavPrimary}>순위</Link>
+        {BUTTONS.filter(button => button.to).map(button => <Link key={button.key} to={button.to} className={styles.mobileNavPrimary}>
+          <span className={styles.mobileNavIcon} aria-hidden="true"><img src={button.src} alt="" draggable={false} style={{ width: button.mobileImageWidth, transform: button.mobileImageAnchor }} /></span>
+          <span>{button.mobileLabel}</span>
+        </Link>)}
         <details ref={mobileMenu} className={styles.mobileMenu} onKeyDown={event => { if (event.key === "Escape") { closeMenu(); mobileMenu.current?.querySelector("summary")?.focus(); } }}>
           <summary aria-label="대회 전체 메뉴"><span aria-hidden="true">☰</span> 메뉴</summary>
           <div className={styles.mobileMenuItems} onClick={closeMenu}>
-        {BUTTONS.map((button) => {
+        {BUTTONS.filter(button => !button.to).map((button) => {
           const content = <>
             <span className={styles.mobileNavIcon} aria-hidden="true">
               <img

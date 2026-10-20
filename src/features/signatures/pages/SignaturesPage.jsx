@@ -6,6 +6,7 @@ import { getBoothProgress } from "../utils/festivalBrand.js";
 import ClubBrand from "../components/ClubBrand.jsx";
 import BoothAchievement from "../components/BoothAchievement.jsx";
 import styles from "../components/SignatureFestival.module.css";
+import PanelTexture from "../../../components/common/PanelTexture.jsx";
 
 function FestivalBooth({ club, status, onPreview, compact = false }) {
   const ready = status === "success";
@@ -58,6 +59,7 @@ function FestivalBooth({ club, status, onPreview, compact = false }) {
       data-directory-booth={compact ? club.position : undefined}
       data-progress={complete ? "complete" : visited ? "partial" : "open"}
     >
+      {compact && <PanelTexture />}
       {onPreview ? (
         <button type="button" className={linkClass} onClick={onPreview} aria-label={club.name + " 문제 메뉴 열기"}>
           {contents}

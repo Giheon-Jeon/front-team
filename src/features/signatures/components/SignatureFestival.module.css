@@ -697,3 +697,13 @@
     animation: none;
   }
 }
+
+@media (max-width: 600px), (max-aspect-ratio: 5/4) {
+  .mobileBoothList { gap: 10px; padding: 0; border: 0; background: none; }
+  .mobileBooth { position: relative; isolation: isolate; border: 8px solid transparent; border-image: url("/assets/mypage/panel-score.png") 24 / 8px stretch; background: #2c1c11; }
+  .mobileBooth + .mobileBooth { border-top: 8px solid transparent; }
+  .mobileBoothLink { min-height: 90px; padding: 10px; }
+  .mobileBoothLink .brandName { font-size: 17px; color: #ffe0a5; }
+}
+
+@media (max-width: 600px), (max-aspect-ratio: 5/4) { .mobileBooth > svg { display: block; } }

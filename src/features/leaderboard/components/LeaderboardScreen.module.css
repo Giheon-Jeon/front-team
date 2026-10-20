@@ -26,14 +26,14 @@
   position: fixed;
   inset: 0;
   overflow: hidden;
-  background: #e6d2a4;
+  background: #e6d2a4 url("/assets/leaderboard/leaderboard-scene-v1.webp") center / cover no-repeat;
 }
 
 .stage {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: min(100vw, 177.78vh);
+  width: min(100vw, 177.7777778vh);
   height: min(100vh, 56.25vw);
   transform: translate(-50%, -50%);
   container-type: inline-size;
@@ -42,7 +42,7 @@
   font-family: "Libre Baskerville", Georgia, serif;
 }
 
-.mobileTitle { display: none; }
+.screenZoom { display: none; }
 
 .designCanvas {
   position: absolute;
@@ -61,10 +61,22 @@
   z-index: 0;
   display: block;
   width: 1935px;
-  height: 1089px;
-  object-fit: cover;
+  max-width: none;
+  height: auto;
   pointer-events: none;
   user-select: none;
+}
+
+.artworkDefinitions {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.paperCorner {
+  transform: translateX(9.258373px) scaleX(-1);
 }
 
 .backButton {
@@ -96,6 +108,7 @@
   display: block;
   width: 100%;
   height: 100%;
+  filter: drop-shadow(0 1px 2px #2f190a) drop-shadow(0 0 1px #2f190a);
 }
 
 .backButton:hover .backIcon {
@@ -225,120 +238,59 @@
 .refreshNote { position: absolute; left: 340px; top: 135px; width: 1270px; text-align: center; font-size: 15px; }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
+
+.mobileTitleArtwork { display: block; width: 100%; height: auto; }
+.mobileTableHint { display: none; }
+.responsivePaper { display: contents; }
+.mobilePaperArtwork, .mobileFooterArtwork { display: none; }
 @media (max-width: 1100px) {
-  .page {
-    position: relative;
-    min-height: 100svh;
-    overflow: visible;
-    padding: 20px 12px 36px;
-    background: #674326 url("/assets/login/background-plaza.webp") center / cover fixed;
-  }
-  .stage {
-    position: relative;
-    inset: auto;
-    width: min(100%, 900px);
-    height: auto;
-    margin: 0 auto;
-    transform: none;
-    overflow: visible;
-    border: 8px solid transparent;
-    border-image: url("/assets/challenge-detail/panel-board.webp") 32 stretch;
-    background: #eddbb6;
-    background-clip: padding-box;
-  }
-  .designCanvas {
-    position: relative;
-    inset: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    width: 100%;
-    height: auto;
-    padding: 20px 14px 24px;
-    transform: none;
-  }
+  .page { position: relative; inset: auto; min-height: 100svh; padding: 16px 10px 24px; overflow: visible; isolation: isolate; background: none; }
+  .page::before { content: ""; position: fixed; inset: 0; z-index: -1; background: #e6d2a4 url("/assets/leaderboard/leaderboard-scene-v1.webp") center / cover; pointer-events: none; }
+  .stage { position: relative; inset: auto; width: min(100%, 900px); height: auto; margin-inline: auto; transform: none; overflow: visible; }
+  .designCanvas { position: relative; width: 100%; height: auto; transform: none; display: grid; gap: 0; padding: 0; }
+  .responsivePaper { position: relative; isolation: isolate; display: grid; gap: 16px; padding: 20px 18px 32px; }
+  .mobilePaperArtwork { display: grid; position: absolute; z-index: -1; inset: 0; grid-template-columns: 20px minmax(0, 1fr) 20px; grid-template-rows: 20px minmax(0, 1fr) 20px; pointer-events: none; }
+  .mobilePaperArtwork > svg { width: 100%; height: 100%; }
+  .mobilePaperArtwork > svg[data-material] { inset: 20px; width: calc(100% - 40px); height: calc(100% - 40px); }
+  .mobileFooterArtwork { position: relative; display: block; width: 200px; max-width: 65%; height: auto; margin: -16px auto 0; }
   .leaderboardArtwork { display: none; }
-  .mobileTitle {
-    display: block;
-    margin: 0;
-    padding: 10px 0 10px 46px;
-    font: 24px/1.4 "Libre Caslon Text", Georgia, serif;
-    text-align: center;
-    letter-spacing: 0.02em;
-  }
-  .backButton { top: 25px; left: 12px; width: 44px; height: 44px; }
-  .backIcon { width: 24px; height: 32px; }
-  .backIcon img { filter: brightness(0.4); }
-  .scoreBoard { position: relative; inset: auto; width: 100%; height: 340px; }
-  .leaderboardChart {
-    position: static;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px 16px;
-    width: 100%;
-    height: auto;
-  }
-  .legendRow { position: relative; inset: auto; width: 100%; height: auto; min-height: 28px; padding-left: 28px; }
-  .legendLeaf { left: 0; top: 2px; width: 22px; height: 22px; }
+  .responsiveTitle { position: static; width: auto; height: auto; margin: 12px 0 26px; padding: 0 32px; overflow: visible; clip: auto; white-space: normal; }
+  .backButton { left: 0; top: 4px; width: 44px; height: 44px; padding: 10px; }
+  .scoreBoard { position: relative; inset: auto; width: 100%; height: 300px; margin: 0; }
+  .leaderboardChart { position: static; width: auto; height: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 12px; padding: 8px 0 16px; border-bottom: 1px solid #a37e4f88; }
+  .legendRow { position: static; width: auto; height: auto; min-height: 36px; gap: 8px; }
+  .legendLeaf { position: static; flex: 0 0 24px; width: 24px; height: 24px; }
   .legendName, .compactLegend .legendName { font-size: 14px; }
   .legendState { position: static; grid-column: 1 / -1; font-size: 14px; }
-  .rankingPanel { position: static; width: 100%; }
-  .rankingToolbar { height: auto; grid-template-columns: 1fr auto; gap: 12px 8px; margin-bottom: 12px; }
-  .rankingTitle { font-size: 17px; }
-  .pagination { grid-column: 1 / -1; grid-row: 2; flex-wrap: wrap; gap: 0; font-size: 14px; }
-  .pagination button, .refreshControls button { min-width: 44px; height: 44px; padding: 0 8px; }
-  .pageTotal { font-size: 14px; }
-  .refreshControls { font-size: 14px; gap: 4px; flex-wrap: wrap; }
-  .refreshControls time { display: none; }
-  .rankingGrid { width: 100%; font-size: clamp(10px, 1.2vw, 13px); }
-  .rankingGrid col:first-child { width: 5%; }
-  .rankingGrid col:nth-child(2) { width: 20%; }
-  .rankingGrid col:nth-child(3) { width: 12%; }
-  .rankingGrid col:nth-child(n+5):nth-child(-n+12) { width: 5.25%; }
-  .rankingGrid th, .rankingGrid td { padding-inline: 2px; }
-  .rankingGrid thead th { height: 44px; font-size: clamp(9px, 1.2vw, 13px); }
-  .rankingGrid tbody tr { height: 52px; }
-  .rankingGrid .teamNameCell { padding-inline: 6px; }
-  .rankArtwork { width: min(100%, 44px); height: 34px; }
-  .rankingGrid .tableState { font-size: 16px; text-align: left; padding: 24px; }
+  .rankingPanel { position: static; width: 100%; min-width: 0; }
+  .rankingToolbar { height: auto; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 6px; }
+  .rankingTitle { font-size: 16px; }
+  .pagination { grid-column: 1 / -1; grid-row: 2; flex-wrap: wrap; gap: 2px; font-size: 14px; }
+  .pagination button, .refreshControls button { min-width: 44px; min-height: 44px; height: auto; padding: 6px; gap: 4px; }
+  .pageTotal { font-size: 13px; margin-left: 3px; }
+  .refreshControls { flex-wrap: wrap; gap: 4px; font-size: 13px; }
+  .refreshControls time { font-size: 12px; }
+  .refreshControls svg { width: 16px; height: 16px; }
+  .mobileTableHint { display: block; margin: 12px 0 8px; font: 13px/1.6 "Pretendard", sans-serif; color: #754315; }
+  .tableContainer { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: #a98550 transparent; }
+  .rankingGrid { min-width: 960px; font-size: 14px; }
+  .rankingGrid thead th { font-size: 15px; height: 44px; }
+  .rankingGrid tbody tr { height: 48px; }
+  .rankingGrid .rankCell { font-size: 22px; }
+  .rankArtwork { width: 36px; height: 27px; }
   .refreshNote { position: static; width: auto; margin: 0; font-size: 14px; line-height: 1.6; }
 }
-
-@media (max-width: 767px) {
-  .rankingGrid,
-  .rankingGrid tbody { display: block; width: 100%; }
-  .rankingGrid colgroup { display: none; }
-  /* 표 헤더는 접근성 트리에 남기고 각 셀에 시각적인 분야 라벨을 표시한다. */
-  .rankingGrid thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-  .rankingGrid tbody { display: grid; gap: 16px; }
-  .rankingGrid tbody tr {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    height: auto;
-    padding: 12px 8px;
-    border: 1px solid #ac8757;
-    border-radius: 4px;
-    background: rgb(255 244 217 / 25%);
-  }
-  .rankingGrid tbody th,
-  .rankingGrid tbody td { padding: 10px 4px; border: 0; font-size: 13px; }
-  .rankingGrid .rankCell { grid-column: 1; display: grid; align-items: center; font-size: 22px; }
-  .rankingGrid .teamNameCell { grid-column: 2 / -1; padding: 8px; font-size: 15px; }
-  .rankingGrid td[data-column] { border-top: 1px solid rgb(145 92 43 / 22%); }
-  .rankingGrid td[data-column="teamScore"],
-  .rankingGrid td[data-column="solveCount"],
-  .rankingGrid td[data-column="kothScore"],
-  .rankingGrid td[data-column="signatureScore"] { grid-column: span 2; }
-  .mobileCellLabel { display: block; margin-bottom: 6px; font-size: 11px; font-weight: 400; color: #794519; }
-  .rankingGrid td[data-column="teamScore"] .cellValue { font-size: 17px; }
-  .rankingGrid .tableState { grid-column: 1 / -1; height: auto; padding: 24px 8px; }
+@media (min-width: 640px) and (max-width: 1100px) {
+  .leaderboardChart { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .scoreBoard { height: 340px; }
 }
 
-@media (max-width: 1100px) and (max-aspect-ratio: 9/10) {
-  .page { background-image: url("/assets/login/background-plaza-portrait.webp"); }
-}
-
-@media (max-width: 400px) {
-  .mobileTitle { font-size: 20px; }
-  .designCanvas { padding-inline: 10px; }
+@media (max-width: 1100px) {
+  .rankingGrid col { width: 54px; }
+  .rankingGrid col:first-child { width: 48px; }
+  .rankingGrid col:nth-child(2) { width: 152px; }
+  .rankingGrid col:nth-child(3) { width: 84px; }
+  .rankingGrid col:nth-child(4) { width: 56px; }
+  .rankingGrid col:nth-last-child(-n + 2) { width: 72px; }
+  .rankingGrid thead th { white-space: nowrap; }
 }

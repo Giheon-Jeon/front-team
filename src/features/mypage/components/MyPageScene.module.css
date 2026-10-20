@@ -873,3 +873,39 @@
     transition: none;
   }
 }
+
+/* 모바일도 원본의 종이·목재·금테를 사용하고 내용은 읽기 크기로 재배치한다. */
+@media (max-width: 1100px), (max-height: 619px) {
+  .page { isolation: isolate; background: none; }
+  .page::before { content: ""; position: fixed; inset: 0; z-index: -1; background: linear-gradient(#20170e55, #20170e88), url("/assets/challenge-detail/bg-forest.webp") center / cover; pointer-events: none; }
+  .teamCard, .historyPanel { border: 8px solid transparent; border-image: url("/assets/challenge-detail/panel-board.webp") 32 / 8px stretch; border-radius: 0; background: none; }
+  .teamCard .bakedLabel:first-child { min-width: 70%; padding: 8px 24px; clip-path: polygon(0 0, 100% 0, 94% 50%, 100% 100%, 0 100%, 6% 50%); background: #842b28; }
+  .metricPanel { isolation: isolate; border: 8px solid transparent; border-image: url("/assets/mypage/panel-score.png") 24 / 8px stretch; border-radius: 0; background: #2c1c11; }
+  .metricPanel .bakedLabel { font-size: 15px; }
+  .refreshButton, .historyPagination button { min-width: 44px; min-height: 44px; }
+  .rank, .unit { position: static; margin-top: 8px; text-align: right; }
+  .historyTable { font-size: 15px; }
+  .historyPanel { container-type: inline-size; }
+  .historyEmpty > span { display: block; width: 100cqw; max-width: 100%; padding-block: 10px; white-space: normal; overflow-wrap: anywhere; }
+}
+@media (min-width: 640px) and (max-width: 1100px), (min-width: 640px) and (max-height: 619px) {
+  .board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .statusBar, .historyPanel { grid-column: 1 / -1; }
+  .teamCard { grid-row: span 2; }
+}
+
+@media (max-width: 1100px), (max-height: 619px) { .logoutButton { min-height: 44px; } }
+
+@media (max-width: 1100px), (max-height: 619px) {
+  .teamName { white-space: normal; overflow: visible; overflow-wrap: anywhere; font-size: clamp(24px, 7vw, 30px); }
+  .members li, .personalRank h2 { white-space: normal; overflow: visible; overflow-wrap: anywhere; }
+}
+
+@media (max-width: 1100px), (max-height: 619px) {
+  .board { position: relative; isolation: isolate; padding: 10px; border: 10px solid transparent; border-image: url("/assets/challenge-detail/panel-board.webp") 32 / 10px stretch; gap: 12px; }
+  .backButton { border: 0; background: none; }
+}
+
+@media (max-width: 1100px), (max-height: 619px) {
+  .teamCard > h2 { position: static; width: 100%; height: auto; margin: 4px 0; padding-top: 16px; overflow: visible; clip: auto; border-top: 1px solid #ac8c5c66; font: 15px/1.4 var(--label); font-weight: 400; letter-spacing: .16em; color: #8a6a3e; }
+}

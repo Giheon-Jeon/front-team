@@ -281,17 +281,12 @@ test("리더보드 표는 모든 열과 긴 팀명, 원래 1~3위 이미지를 �
   assert.equal((html.match(/scope="col"/g) || []).length, 14);
 });
 
-test("순위표는 고정 픽셀 너비 대신 비율을 사용하고 모바일 모든 분야를 여러 줄로 표시한다", () => {
+test("순위표는 모바일에서도 모든 열과 점수를 유지하고 표 안에서만 가로 이동한다", () => {
   const root = css("features/leaderboard/components/LeaderboardScreen.module.css");
   assert.ok(declarations(root, ".rankingGrid").some(([key, value]) => key === "width" && value === "100%"));
-  root.walkRules(rule => {
-    if (rule.selector === ".tableContainer") {
-      rule.walkDecls("overflow-x", () => assert.fail("표를 좌우 스크롤하거나 숨기지 않는다"));
-    }
-  });
-  const mobile = root.nodes.find(node => node.type === "atrule" && node.params === "(max-width: 767px)");
-  assert.ok(declarations(mobile, ".rankingGrid tbody tr").some(([key, value]) => key === "grid-template-columns" && value === "repeat(4, minmax(0, 1fr))"));
-  assert.ok(declarations(mobile, ".mobileCellLabel").some(([key, value]) => key === "display" && value === "block"));
+  assert.ok(declarations(root, ".tableContainer").some(([key, value]) => key === "overflow-x" && value === "auto"));
+  assert.ok(!declarations(root, ".rankingGrid tbody tr").some(([key]) => key === "grid-template-columns"));
+  assert.ok(!declarations(root, ".rankingGrid thead").some(([key]) => key === "clip-path"));
   const html = render("Leaderboard", {
     teams: [], leaderboardStatus: "empty", rankingStatus: "success",
     rankings: [{ key: "all-fields", rank: 1, teamName: "전체 점수 확인", teamScore: 1234567.89,
@@ -300,6 +295,12 @@ test("순위표는 고정 픽셀 너비 대신 비율을 사용하고 모바일 
   for (const value of ["11", "22", "33", "44", "55", "66", "77", "88", "999.99", "1,234.56", "1,234,567.89"]) {
     assert.ok(html.includes(`>${value}</span>`));
   }
+  assert.equal((html.match(/scope="col"/g) || []).length, 14);
+  assert.match(html, /id="leaderboard-viewport"/);
+  assert.doesNotMatch(html, /스코어보드 읽기 크기로 확대/);
+  assert.match(html, /좌우로 밀어 모든 분야의 점수를 확인하세요/);
+  assert.match(html, /<h1[^>]*>[\s\S]*SCOREBOARD[\s\S]*?<\/h1>/);
+  assert.doesNotMatch(html, />LEADERBOARD<|background-plaza|panel-board/);
 });
 
 test("규칙 문단은 원문을 유지하고 한 줄 고정과 항목별 절대 좌표를 사용하지 않는다", () => {
@@ -349,7 +350,7 @@ test("관리자 빠른 작업에는 실제 동작 이름만 표시하고 다른 
   }
 });
 
-test("모바일 로그인은 원래 장식을 유지하고 리더보드와 함께 충분한 조작 영역을 둔다", () => {
+test("모바일 로그인과 순위 페이지 이동 버튼은 충분한 조작 영역을 둔다", () => {
   const loginCss = css("features/auth/components/LoginScreen.module.css");
   assert.doesNotMatch(loginCss.toString(), /--scale|1920px|scale\(/);
   assert.ok(declarations(loginCss, ".panel").some(([property, value]) => property === "width" && value === "min(100%, 560px)"));
@@ -365,7 +366,8 @@ test("모바일 로그인은 원래 장식을 유지하고 리더보드와 함�
     assert.ok(found, path);
   }
   const root = css("features/leaderboard/components/LeaderboardScreen.module.css");
-  assert.ok(declarations(root, ".pagination button, .refreshControls button").some(([property, value]) => property === "height" && value === "44px"));
+  assert.ok(declarations(root, ".pagination button, .refreshControls button").some(([property, value]) => property === "min-height" && value === "44px"));
+  assert.ok(declarations(root, ".pagination button, .refreshControls button").some(([property, value]) => property === "min-width" && parseInt(value, 10) >= 44));
 });
 
 test("모바일 보드 메뉴는 기존 금색 아이콘과 여섯 이동 기능을 유지한다", () => {

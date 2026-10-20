@@ -4,6 +4,7 @@ import { BLOCKED_REASON_MESSAGES } from "../data/boardContent.js";
 import { getBoardZoomScrollLeft } from "../utils/boardViewport.js";
 import useTrainTravel from "../hooks/useTrainTravel.js";
 import useTrainWhistle from "../hooks/useTrainWhistle.js";
+import useMobileBoardBackdrop from "../hooks/useMobileBoardBackdrop.js";
 import { preloadBoardTrain } from "./BoardTrain.jsx";
 import { prepareBoardLines } from "../utils/boardLines.js";
 import { normalizeBoardListView } from "../utils/boardChallengeList.js";
@@ -94,6 +95,8 @@ export default function BoardScreen({
   const activeLineId = lines.find((line) => line.lineId === selectedLineId)?.lineId ?? lines[0]?.lineId ?? null;
   const boardRegionId = useId();
   const boardViewport = useRef(null);
+  const frameRef = useRef(null);
+  useMobileBoardBackdrop(frameRef, boardViewport);
   const trainTravel = useTrainTravel();
   const trainWhistle = useTrainWhistle();
   const followTrain = (pose) => {
@@ -216,7 +219,7 @@ export default function BoardScreen({
   useEffect(() => { setDismissedSelectionKey(null); }, [selectionKey]);
 
   return (
-    <FixedAspectStage backdropSrc="/assets/board/bg-1920x1080-display.webp" frameClassName={styles.frame} className={styles.stage}>
+    <FixedAspectStage frameRef={frameRef} backdropSrc="/assets/board/bg-1920x1080-display.webp" frameClassName={styles.frame} className={styles.stage}>
       <BoardDiceStatusPanel
         rollsLeft={diceStatus?.diceRollsLeft ?? myBoard?.diceRollsLeft ?? 0}
         canRoll={canRoll}

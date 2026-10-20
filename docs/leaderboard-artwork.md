@@ -18,6 +18,29 @@ SVG viewBox로 해당 영역을 분리하고 종이색만 투명하게 처리
 
 그래프 축과 점수선은 API 데이터로 렌더링하며 고정 시간이나 가짜 점수를 배경에 넣지 않음
 
+## 풍경과 전경 분리
+
+모든 화면의 풍경은 leaderboard-scene-v1.webp 한 장을 cover로 표시하며 원래 가로세로 비율을 유지
+제목, 종이 패널, 하단 로고는 기존 leaderboard-layout.webp에서 SVG 클리핑과 잉크 필터로 표시
+전경과 실제 UI는 기존 1920×1080 좌표와 단일 축소 배율을 유지하며 화면에 맞추려고 가로·세로를 따로 늘리지 않음
+원본의 책이 가린 패널 모서리는 반대편 원본 모서리를 대칭으로 사용
+모바일에서도 같은 제목, 그래프, 오른쪽 범례와 14열 순위표를 같은 좌표로 표시
+별도 모바일 제목, 로그인 배경과 카드형 순위표로 바꾸지 않으며 먼저 전체 16:9 구성을 화면에 맞춤
+1100px 이하에서는 확대 보기로 원래 1920×1080 읽기 크기의 화면을 열고 가로·세로로 이동 가능
+화면 맞춤으로 전체 구성을 복원하고 1100px를 넘어가면 확대 상태를 해제
+같은 WebP 전경을 네 영역에 클리핑하며 브라우저는 전경 한 번과 풍경 한 번만 요청
+
+풍경 생성에는 내장 imagegen을 사용했으며 표시용 WebP는 아래 명령으로 크기 변경 없이 인코딩
+기존 전경 원본은 수정하지 않으며 새 풍경은 Q90, 286902바이트, 원본 대비 PSNR 37.41dB
+
+```
+python scripts/optimize-leaderboard-scene.py /path/to/generated-scene.png
+```
+
+### 풍경 분리 프롬프트
+
+Use case: precise-object-edit. Input image 1 is an existing autumn fantasy scoreboard illustration. Produce the BACKGROUND SCENE LAYER for this exact artwork. Remove the entire large central parchment scoreboard and its ornamental borders, both upper and lower paper panels, ALL graph axes/grid/ticks, the SCOREBOARD heading and decorative title sprigs, the POINTS label and leaf, and the MSG CTF sign/logo at the bottom. Seamlessly reconstruct the autumn landscape that was behind these removed UI objects: a single continuous softly painted warm misty mountain lake with the existing distant castle and autumn trees, and the existing wooden ground below. Preserve the original scene's camera perspective, soft golden parchment-like haze, painterly texture, lighting, subdued warm palette, and overall composition. Keep the existing autumn branches around the top corners, original lake/mountains/castle at the side edges, lantern at bottom left and books at bottom right in their original positions and ORIGINAL proportions; do not enlarge them, move them or add duplicates. Match the existing edge scenery rather than introducing a brighter photoreal sunset or a new composition. The entire result must be one coherent background with no leftover paper, panel, letters, numbers, borders, axes, UI, rectangles, patches, blurred fillers or watermark. No text at all. Return the full 1672:941 landscape aspect ratio background only.
+
 ## 배경 편집 프롬프트
 
 Use case: precise-object-edit. Asset type: existing web game's scoreboard background, exact restoration not a redesign. Image 1 is the edit target. Make ONLY the following removals with seamless matching parchment inpainting: (1) remove the numeric vertical graph scale 0 1500 3000 4500 6000 7500, and the bottom time labels 09:00 through 21:00, but KEEP the thin axis strokes, tick marks and entire grid in EXACTLY the same positions; (2) remove all six small colored maple leaves in the legend area on the right of the upper graph; (3) remove the numbers and wreaths for ranks 1,2,3,4,5,6 in the leftmost column of the lower table, keeping all table lines. Everything else MUST stay identical: same 1672:941 landscape aspect ratio, composition, full frame edges, warm parchment texture and colors, autumn leaves, mountain/lake, lantern, books, title SCOREBOARD, leaf icon and text POINTS, footer MSG CTF. Do not add any elements, borders, data, labels, UI, badges or new decoration. No flat-color patches, gradients, rectangles or blurred edges where objects were removed; continue the existing paper grain naturally. Preserve sharpness and the exact positioning of the two large panels and all grid lines. Return the edited full background only, highest available resolution.
