@@ -317,7 +317,8 @@
   .boardZoomButton svg { width: 20px; height: 20px; }
   .boardZoomButton:focus-visible { outline: 2px solid #ffe090; outline-offset: 2px; }
   .boardZoomButton:disabled { opacity: 0.5; cursor: not-allowed; }
-  .boardViewport { display: block; width: 100%; min-width: 0; overflow: hidden; mask-image: linear-gradient(to bottom, transparent, #000 32px, #000 calc(100% - 24px), transparent); }
+  .boardViewport { display: block; width: 100%; min-width: 0; overflow: hidden; scrollbar-width: none; mask-image: linear-gradient(to bottom, transparent, #000 32px, #000 calc(100% - 24px), transparent); }
+  .boardViewport::-webkit-scrollbar { display: none; }
   /* 원본 무대의 x=448, y=120, 951×960 영역을 같은 비율로 표시한다
      원판의 원본 위치(448, 289)도 이 장면 안에 고정해 바닥 문양에서 미끄러지지 않게 한다 */
   .boardScene { display: block; position: relative; width: min(100%, calc(1100px * 951 / 1920), calc(100dvh * 951 / 1080)); margin-inline: auto; aspect-ratio: 951 / 960; overflow: hidden; isolation: isolate; }
@@ -341,6 +342,13 @@
     border-width: 2px;
     background: #f2d7a7;
     overscroll-behavior: contain;
+  }
+  .stage .eventPanel[data-inline="true"] {
+    position: relative;
+    inset: auto;
+    flex-shrink: 0;
+    max-height: none;
+    margin: 16px auto 0;
   }
   .eventPanel h2 { font-size: 20px; }
   .eventPanel > div:first-child { margin-bottom: 12px; }
