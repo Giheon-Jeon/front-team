@@ -7,18 +7,18 @@ import ClubBrand from "../components/ClubBrand.jsx";
 import BoothAchievement from "../components/BoothAchievement.jsx";
 import styles from "../components/SignatureFestival.module.css";
 
-function FestivalBooth({ club, status, onPreview, compact = false }) {
+function FestivalBooth({ club, status, onPreview }) {
   const ready = status === "success";
   const available = ready && club.problems.length > 0;
   const progress = getBoothProgress(club, status);
   const { complete, visited } = progress;
-  const linkClass = compact ? styles.mobileBoothLink : styles.booth;
+  const linkClass = styles.booth;
   const contents = (
     <>
       <span className={styles.boothSign}>
         <ClubBrand name={club.name} />
       </span>
-      {visited && !compact && (
+      {visited && (
         <>
           <span className={styles.boothGlow} aria-hidden="true" />
           {complete && (
@@ -53,9 +53,8 @@ function FestivalBooth({ club, status, onPreview, compact = false }) {
   );
   return (
     <li
-      className={compact ? styles.mobileBooth : styles.boothPosition}
-      data-booth={compact ? undefined : club.position}
-      data-directory-booth={compact ? club.position : undefined}
+      className={styles.boothPosition}
+      data-booth={club.position}
       data-progress={complete ? "complete" : visited ? "partial" : "open"}
     >
       {onPreview ? (
@@ -144,12 +143,6 @@ export function SignatureFestivalScreen({ state, onPreviewClub }) {
           </button>
         </footer>
       </div>
-      <ul className={styles.mobileBoothList} aria-label="동아리 부스 안내 및 입장">
-        {booths.map((club) => (
-          <FestivalBooth key={club.key} club={club} status={state.status} compact
-            onPreview={onPreviewClub ? () => onPreviewClub(club) : undefined} />
-        ))}
-      </ul>
       {state.status === "success" && otherClubs.length > 0 && (
         <section className={styles.otherClubs} aria-label="추가 동아리 부스">
           <h2>함께하는 부스</h2>

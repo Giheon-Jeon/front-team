@@ -61,64 +61,95 @@ async (page) => {
     window.Date = class extends OriginalDate { constructor(...args) { super(...(args.length ? args : [fixed])); } static now() { return fixed; } };
   });
   const errors=[];
-  page.on('pageerror',error=>errors.push(error.message));
+  const onError=error=>errors.push(error.message);
+  page.on('pageerror',onError);
   await page.emulateMedia({reducedMotion:'reduce'});
-  const cdp=await page.context().newCDPSession(page);
-  const current=new URL(origin).port!=='4173';
-  const results=[];
-  for (const [width,height,dpr] of [[390,844,1],[844,390,1],[1100,900,1],[1101,900,1],[460,512,1],[461,512,1],[390,844,2],[1440,900,2]]) {
+  const cdp = await page.context().newCDPSession(page);
+  const results = [];
+  const reference = {};
+  const paths = ['/board', '/koth', '/rules', '/mypage', '/challenges/challenge-1', '/signatures', '/leaderboard', '/admin'];
+  const sizes = [[1920,1080,1],[320,568,1],[390,844,1],[844,390,1],[768,1024,1],[1024,768,1],[1100,900,1],[1101,900,1],[1440,900,1],[1600,600,1],[390,844,2],[1440,900,2]];
+  for (const [width,height,dpr] of sizes) {
     await page.setViewportSize({width,height});
-    await cdp.send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:dpr,mobile:false});
-    for (const path of ['/leaderboard','/koth','/admin','/board']) {
+    for (const path of paths) {
+      // Playwright screenshots reset device metrics; apply them before every measurement.
+      await cdp.send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:dpr,mobile:false});
       await page.goto(origin+path);
       await page.locator('main, [data-board-layer="track"]').first().waitFor();
       await page.evaluate(()=>document.fonts.ready);
-      await page.waitForLoadState('networkidle',{timeout:15000});
-      if(path==='/board') await page.waitForFunction(()=>document.querySelector('button[aria-label="주사위 굴리기"]')?.disabled===false && document.querySelector('canvas'));
-      const record=await page.evaluate(({path,width,height,dpr,current})=>{
-        const root=path==='/admin'?document.querySelector('[style*="--admin-background"],div.min-h-screen[style*="background-image"]'):document.querySelector('main');
-        const backdrop=path==='/board'?'':getComputedStyle(root).backgroundImage;
-        const artwork=document.querySelector('img[src*="leaderboard-layout"], img[src*="koth-trail-background"]');
-        const portrait=width<=1100 && width/height<=.9;
-        if(current && path!=='/board' && path!=='/leaderboard' && backdrop.includes('portrait')!==portrait) throw new Error('Wrong cover source '+path+' '+width+'x'+height+' '+backdrop);
-        if(current && path==='/koth' && artwork && (artwork.currentSrc.startsWith('data:')!==(width<=1100))) throw new Error('Wrong artwork source '+path);
-        const resources=performance.getEntriesByType('resource').filter(x=>x.name.startsWith(location.origin)).map(x=>({path:new URL(x.name).pathname,bytes:x.decodedBodySize}));
-        if(current && path==='/koth' && artwork && width<=1100 && resources.some(x=>/koth-trail-background/.test(x.path))) throw new Error('Hidden desktop artwork downloaded');
-        if(current && path==='/leaderboard') {
-          const stage=root.firstElementChild,canvas=stage.firstElementChild,frame=stage.getBoundingClientRect(),matrix=new DOMMatrix(getComputedStyle(canvas).transform);
-          if(!backdrop.includes('leaderboard-scene-v1.webp') || artwork?.naturalWidth!==1672) throw new Error('Wrong scoreboard artwork source');
-          if(Math.abs(frame.width/frame.height-16/9)>.001 || Math.abs(matrix.a-matrix.d)>.00001) throw new Error('Scoreboard proportions changed');
-          if(getComputedStyle(root.querySelector('table')).display!=='table' || getComputedStyle(root.querySelector('tbody tr')).display!=='table-row') throw new Error('Scoreboard reflowed into mobile cards');
-          if(resources.some(x=>/background-plaza|panel-board/.test(x.path))) throw new Error('Separate scoreboard backdrop downloaded');
-        }
-        if(current && path==='/board') {
-          const scene=document.querySelector('[data-board-layer="scene"]'),stage=scene.closest('[class*="_stage_"]'),frame=stage.parentElement;
-          const background=frame.querySelector(':scope > img'),mobile=scene.querySelector('[data-board-layer="background"]');
-          const visible=node=>{const box=node.getBoundingClientRect();return box.width>0 && box.height>0 && getComputedStyle(node).visibility!=='hidden';};
-          const fill=getComputedStyle(frame,'::before');
-          if(Number(visible(background))+Number(visible(mobile))+Number(fill.content!=='none' && fill.backgroundImage!=='none')!==1) throw new Error('Board background painted more than once');
-          if(width>1100) {
-            const picture=background.getBoundingClientRect(),board=stage.getBoundingClientRect();
-            if(picture.left>1 || picture.top>1 || picture.right<width-1 || picture.bottom<height-1) throw new Error('Board background leaves a gap');
-            if(Math.abs(picture.width/picture.height-16/9)>.001 || Math.abs(board.width/board.height-16/9)>.001) throw new Error('Board scene proportions changed');
-            const actual=[picture.left+picture.width*917/1920,picture.top+picture.height*630/1080];
-            const expected=[board.left+board.width*917/1920,board.top+board.height*630/1080];
-            if(actual.some((value,index)=>Math.abs(value-expected[index])>1)) throw new Error('Board floor slipped away from the track');
-          }
-        }
-        if(current && portrait && path!=='/board' && resources.some(x=>x.path.endsWith('/background-plaza.webp'))) throw new Error('Full plaza downloaded in portrait');
-        if(innerWidth!==width || innerHeight!==height || Math.abs(devicePixelRatio-dpr)>.001) throw new Error('Device metrics mismatch');
+      if(path==='/board') await page.waitForFunction(()=>document.querySelector('button[aria-label="주사위 굴리기"]')?.disabled===false && document.querySelector('canvas'),null,{polling:100,timeout:20000});
+      await page.evaluate(async () => Promise.all([...document.images].filter(img=>img.getBoundingClientRect().width).map(img=>img.decode().catch(()=>{}))));
+      const record = await page.evaluate(({path,width,height,dpr})=>{
+        const visible = node => {const rect=node.getBoundingClientRect();return rect.width>0 && rect.height>0 && getComputedStyle(node).visibility!=='hidden';};
+        const assert = (condition,message) => {if(!condition) throw new Error(path+' '+width+'x'+height+' '+message);};
+        assert(innerWidth===width && innerHeight===height && Math.abs(devicePixelRatio-dpr)<.001,'Device metrics mismatch');
         const broken=[...document.images].filter(x=>x.complete && x.naturalWidth===0).map(x=>x.src);
         const overflow=document.documentElement.scrollWidth>innerWidth+1;
-        const alerts=[...document.querySelectorAll('[role="alert"]')].map(x=>x.textContent);
-        if(broken.length || overflow || alerts.length) throw new Error(JSON.stringify({path,width,broken,overflow,alerts}));
-        return {path,width,height,dpr,backdrop,artwork:artwork?.currentSrc,nodes:[...document.querySelectorAll('h1,h2,button,[data-board-layer]')].filter(x=>x.getBoundingClientRect().width && x.getBoundingClientRect().height && getComputedStyle(x).visibility!=='hidden').map(x=>({tag:x.tagName,label:x.getAttribute('aria-label'),text:x.textContent,rect:[x.getBoundingClientRect().x,x.getBoundingClientRect().y,x.getBoundingClientRect().width,x.getBoundingClientRect().height]})),resources};
-      },{path,width,height,dpr,current});
-      await page.screenshot({path:`${output}/responsive-${current?'current':'baseline'}-${path.slice(1)}-${width}-${height}-${dpr}.png`,animations:'disabled'});
+        const alerts=[...document.querySelectorAll('[role="alert"]')].filter(visible).map(x=>x.textContent);
+        assert(!broken.length && !overflow && !alerts.length,JSON.stringify({broken,overflow,alerts}));
+        const viewport=document.querySelector('[data-game-viewport]');
+        let geometry=null,artwork=[];
+        if(viewport) {
+          const compact=width<=1100 || height<620;
+          const canvas=viewport.querySelector('[data-game-canvas]');
+          const rect=canvas.getBoundingClientRect();
+          const scale=rect.width/canvas.offsetWidth;
+          assert(viewport.dataset.compact===String(compact),'Wrong scene mode');
+          assert(Math.abs(scale-rect.height/canvas.offsetHeight)<.00001,'Canvas stretched');
+          if(compact) {
+            assert(canvas.offsetWidth===1920 && canvas.offsetHeight===1080,'Mobile layout lost original canvas');
+            assert(rect.left>=-1 && rect.top>=-1 && rect.right<=width+1 && rect.bottom<=height+1,'Fit view crops the artwork');
+            assert(viewport.scrollWidth<=width+1 && viewport.scrollHeight<=height+1,'Fit view has hidden overflow');
+            assert(getComputedStyle(canvas.firstElementChild).backgroundImage==='none','Duplicate page background');
+            const control=[...document.querySelectorAll('button')].find(x=>x.textContent==='확대 보기');
+            assert(control?.getBoundingClientRect().height>=44,'View control is too small');
+          }
+          const selector='img, [data-board-layer="track"], [class*="_boardFrame_"], [class*="_sceneViewport_"], [class*="_boothPosition_"], [class*="_rulesPanel_"], [class*="_descriptionPanel_"]';
+          artwork=[...canvas.querySelectorAll(selector)].filter(visible).filter(node=>!node.getAttribute('src')?.includes('bg-1920x1080-display')).map(node=>{
+            const r=node.getBoundingClientRect();
+            return {key:node.getAttribute('src')||node.getAttribute('data-board-layer')||node.className,rect:[(r.left-rect.left)/scale,(r.top-rect.top)/scale,r.width/scale,r.height/scale]};
+          });
+          if(path==='/koth') assert(artwork.some(x=>x.key.includes('koth-trail-background.webp')),'KoTH original map missing');
+          if(path==='/signatures') {
+            assert([...canvas.querySelectorAll('[class*="_boothPosition_"]')].filter(visible).length===6,'Booth targets missing');
+            assert(![...canvas.querySelectorAll('[class*="_mobileBoothList_"]')].some(visible),'Festival changed into mobile directory');
+          }
+          if(path==='/board') {
+            const track=canvas.querySelector('[data-board-layer="track"]'),stage=track.closest('[class*="_stage_"]');
+            const background=compact?viewport.querySelector('[data-game-backdrop]'):stage.parentElement.querySelector(':scope > img');
+            const all=[...viewport.querySelectorAll('img[src*="bg-1920x1080-display"]')].filter(visible);
+            assert(all.length===1,'Board background painted more than once');
+            const picture=background.getBoundingClientRect(),board=stage.getBoundingClientRect();
+            assert(picture.left<=1 && picture.top<=1 && picture.right>=width-1 && picture.bottom>=height-1,'Board backdrop leaves a gap');
+            assert(Math.abs(picture.width/picture.height-16/9)<.001 && Math.abs(board.width/board.height-16/9)<.001,'Board proportions changed');
+            const a=[picture.left+picture.width*917/1920,picture.top+picture.height*630/1080];
+            const b=[board.left+board.width*917/1920,board.top+board.height*630/1080];
+            assert(a.every((value,i)=>Math.abs(value-b[i])<1),'Floor anchor slipped');
+          }
+          geometry={compact,scale,canvas:[rect.left,rect.top,rect.width,rect.height]};
+        } else if(path==='/leaderboard') {
+          const root=document.querySelector('main'),stage=root.firstElementChild,canvas=stage.firstElementChild,frame=stage.getBoundingClientRect(),matrix=new DOMMatrix(getComputedStyle(canvas).transform);
+          assert(getComputedStyle(root).backgroundImage.includes('leaderboard-scene-v1.webp'),'Wrong scoreboard backdrop');
+          assert(Math.abs(frame.width/frame.height-16/9)<.001 && Math.abs(matrix.a-matrix.d)<.00001,'Scoreboard proportions changed');
+          assert(getComputedStyle(root.querySelector('table')).display==='table' && getComputedStyle(root.querySelector('tbody tr')).display==='table-row','Scoreboard became mobile cards');
+        }
+        return {path,width,height,dpr,geometry,artwork,broken,overflow,alerts};
+      },{path,width,height,dpr});
+      if(width===1920 && height===1080) reference[path]=record.artwork;
+      else if(record.geometry?.compact) {
+        if(record.artwork.length!==reference[path].length) throw new Error('Artwork count changed '+path+' '+width+' '+JSON.stringify({actual:record.artwork,reference:reference[path]}));
+        record.maxCoordinateDifference=Math.max(0,...record.artwork.flatMap((node,i)=>{
+          if(node.key!==reference[path][i].key) throw new Error('Artwork source changed '+path);
+          return node.rect.map((value,j)=>Math.abs(value-reference[path][i].rect[j]));
+        }));
+        if(record.maxCoordinateDifference>1) throw new Error('Artwork/click target coordinates changed '+path+' '+record.maxCoordinateDifference);
+      }
+      if((width===390 || width===1440) && dpr===1) await page.screenshot({path:`${output}/responsive-${path.slice(1).replaceAll('/','-')}-${width}-${height}.png`,animations:'disabled'});
       results.push(record);
     }
   }
   if(errors.length || unknown.length) throw new Error(JSON.stringify({errors,unknown}));
+  page.removeListener('pageerror',onError);
   await cdp.detach();
   return {results,errors,unknown};
 }

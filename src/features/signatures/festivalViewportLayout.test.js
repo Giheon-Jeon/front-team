@@ -15,15 +15,12 @@ test("축제 원화와 클릭 오버레이는 모든 너비에서 같은 3:2 좌
   assert.equal((main.match(/club-festival-v1\.webp/g) || []).length, 1, "메인 화면의 중복 원화·확장 배경 없음");
   assert.doesNotMatch(main, /blur\(/);
   assert.doesNotMatch(css.match(/\.scene\s*\{[^}]*\}/)?.[0] || "", /scale\(/);
-  assert.match(css, /--art-height: clamp\(52vw, calc\(100dvh - 44px\), 74vw\)/);
+  assert.match(css, /--art-height: clamp\(calc\(var\(--scene-vw, 1vw\) \* 52\)/);
 });
 
-test("모바일은 원화를 확대·분할하지 않고 읽을 수 있는 부스 안내 목록을 제공한다", () => {
-  const mobile = css.slice(css.indexOf("@media (max-width: 600px)"), css.indexOf("/* 개별 동아리"));
-  assert.match(mobile, /\.sceneViewport\s*\{[^}]*position: relative;/);
-  assert.doesNotMatch(mobile, /background-size|background-position|\.boothPosition|scale\(/);
-  assert.match(mobile, /\.mobileBoothList\s*\{[^}]*display: grid;/);
-  assert.match(mobile, /\.mobileBoothLink\s*\{[^}]*min-height: 76px;/);
+test("모바일에서도 축제 부스를 카드 목록으로 바꾸는 분기가 없다", () => {
+  const main = css.slice(0, css.indexOf("/* 개별 동아리"));
+  assert.doesNotMatch(main, /mobileBooth|@media|@container/);
 });
 
 test("1440부터 768까지 줄였다 늘려도 원화 크기는 연속적이고 역방향 확대가 없다", () => {

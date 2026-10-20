@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+import { useGameScene } from "../../../components/common/GameSceneContext.js";
 import { getKothConnection } from "../utils/kothChallengeState.js";
 import KothChallengeButton from "./KothChallengeButton.jsx";
 import KothTeamTokenPanel from "./KothTeamTokenPanel.jsx";
@@ -28,20 +30,22 @@ export default function KothScreen({
   onOpenTeamToken,
   onCloseTeamToken,
 }) {
+  const scene = useGameScene();
+  const detailPanel = useRef(null);
+  useEffect(() => {
+    if (scene?.expanded && selectedChallenge) scene.reveal(detailPanel.current);
+  }, [scene?.expanded, scene?.reveal, selectedChallenge?.kothChallengeId]);
   const detailReady = clubDetail.status === "success";
   const connection = clubsStale || !detailReady ? null : getKothConnection(selectedChallenge);
   return (
     <main className={styles.page} aria-label="King of the Hill 문제 선택">
       <div className={styles.stage}>
-        <picture style={{ display: "contents" }}>
-        <source style={{ display: "none" }} media="(max-width: 1100px)" srcSet="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" />
         <img
           src="/assets/koth/koth-trail-background.webp"
           alt=""
           aria-hidden="true"
           className={styles.background}
         />
-        </picture>
 
         <h1 className={styles.mobileTitle}>King of the Hill</h1>
 
@@ -99,7 +103,7 @@ export default function KothScreen({
         )}
 
         {selectedChallenge && (
-          <section className={styles.challengeDetail} aria-label="선택한 KoTH 문제 정보">
+          <section ref={detailPanel} className={styles.challengeDetail} aria-label="선택한 KoTH 문제 정보">
             <button
               type="button"
               className={styles.panelCloseButton}

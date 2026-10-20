@@ -857,26 +857,17 @@ test("라인 점수표는 행과 합계의 열을 맞추고 좁은 데스크톱�
   assert.ok(declarations(root, ".lineList li button").some(([property, value]) => property === "min-height" && parseInt(value) >= 44));
   assert.ok(declarations(root, ".lineName").some(([property, value]) => property === "overflow-wrap" && value === "anywhere"));
   assert.ok(declarations(root, ".lineScore, .lineScoreTotals > :not(:first-child)").some(([property, value]) => property === "font-variant-numeric" && value === "tabular-nums"));
-  assert.ok(root.nodes.some((node) => node.type === "atrule" && node.params === "(min-width: 1101px)" && node.toString().includes(".openPanel:has(.lineSummary[open])") && node.toString().includes("clamp(300px, 23cqw, 410px)")));
+  assert.ok(root.nodes.some((node) => node.type === "atrule" && node.params.trim() === "game-scene (min-width: 1101px)" && node.toString().includes(".openPanel:has(.lineSummary[open])") && node.toString().includes("clamp(300px, 23cqw, 410px)")));
 });
 
-test("모바일 열린 문제는 독립 포털과 내부 스크롤을 사용하고 보드 배경을 잠근다", () => {
+test("원본 무대의 열린 문제는 모바일에서도 양피지 패널과 내부 스크롤을 유지한다", () => {
   const root = css("features/board/components/BoardScreen.module.css");
-  const overlay = Object.fromEntries(declarations(root, ".mobileOpenOverlay"));
-  assert.equal(overlay.position, "fixed");
-  assert.equal(overlay.height, "100dvh");
-  assert.ok(overlay.padding.includes("safe-area-inset"));
-  const body = Object.fromEntries(declarations(root, ".mobileOpenOverlay .openPanelBody"));
-  assert.equal(body["min-height"], "0");
-  assert.equal(body["overflow-y"], "auto");
-  assert.equal(body.flex, "1 1 auto");
+  assert.ok(declarations(root, ".openPanelBody").some(([key, value]) => key === "overflow-y" && value === "auto"));
   const source = readFileSync(new URL("./features/board/components/OpenChallengesSidePanel.jsx", import.meta.url), "utf8");
-  assert.match(source, /isMobile \? createPortal/);
-  assert.match(source, /aria-modal/);
+  assert.match(source, /open-challenges-panel\.webp/);
   const hook = readFileSync(new URL("./features/board/hooks/useMobileBoardOverlay.js", import.meta.url), "utf8");
-  assert.match(hook, /app\.inert = true/);
-  assert.match(hook, /window\.scrollTo\(x, y\)/);
-  assert.match(hook, /previousFocus\.focus/);
+  assert.match(hook, /useMobileOverlay = isMobile && !scene/);
+  assert.match(hook, /if \(!useMobileOverlay\) return/);
 });
 
 test("칸별 독점 border 없이 마지막 문제 정답과 완료 확정 후에만 독립 rail이 생긴다", () => {

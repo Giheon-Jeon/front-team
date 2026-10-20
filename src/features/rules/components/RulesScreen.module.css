@@ -5,11 +5,11 @@
 .page {
   position: fixed;
   inset: 0;
-  min-height: 100vh;
+  min-height: calc(var(--scene-vh, 1vh) * 100);
   overflow: hidden;
   background: #674326 url("/assets/login/background-plaza.webp") center / cover;
 }
-@media (max-width: 1100px) and (max-aspect-ratio: 9/10) {
+@container game-scene (max-width: 1100px) and (max-aspect-ratio: 9/10)  {
   .page { background-image: url("/assets/login/background-plaza-portrait.webp"); }
 }
 
@@ -17,8 +17,8 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: min(100vw, 177.7778vh);
-  height: min(100vh, 56.25vw);
+  width: min(calc(var(--scene-vw, 1vw) * 100), calc(var(--scene-vh, 1vh) * 177.7778));
+  height: min(calc(var(--scene-vh, 1vh) * 100), calc(var(--scene-vw, 1vw) * 56.25));
   transform: translate(-50%, -50%);
   container-type: inline-size;
 }
@@ -133,8 +133,8 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-@media (max-width: 900px) {
-  .page { position: relative; min-height: 100svh; overflow: visible; padding: 20px 12px; }
+@container game-scene (max-width: 900px)  {
+  .page { position: relative; min-height: calc(var(--scene-vh, 1vh) * 100); overflow: visible; padding: 20px 12px; }
   .stage {
     position: relative;
     inset: auto;

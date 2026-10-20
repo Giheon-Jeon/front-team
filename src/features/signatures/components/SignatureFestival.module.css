@@ -13,7 +13,7 @@
   display: flow-root;
   position: relative;
   isolation: isolate;
-  min-height: 100dvh;
+  min-height: calc(var(--scene-vh, 1vh) * 100);
   color: #fff0cf;
   background: #23170f;
   font-family: "Pretendard Variable", "Pretendard", "Malgun Gothic", sans-serif;
@@ -26,7 +26,7 @@
 .festivalLayout {
   /* 52~74vw로 부스 안전 영역을 보존한다. 극단적으로 낮은 화면은
      부스를 자르는 대신 페이지 스크롤을 허용한다. 하단 44px는 안내/새로고침 영역이다. */
-  --art-height: clamp(52vw, calc(100dvh - 44px), 74vw);
+  --art-height: clamp(calc(var(--scene-vw, 1vw) * 52), calc(calc(var(--scene-vh, 1vh) * 100) - 44px), calc(var(--scene-vw, 1vw) * 74));
   position: relative;
   container-type: inline-size;
   width: 100%;
@@ -427,7 +427,7 @@
 }
 .clubBoard {
   max-width: 1000px;
-  margin-top: clamp(24px, 6vh, 72px);
+  margin-top: clamp(24px, calc(var(--scene-vh, 1vh) * 6), 72px);
 }
 .clubHeader {
   display: flex;
@@ -544,105 +544,7 @@
   text-decoration: underline;
   text-underline-offset: 6px;
 }
-/* 원화와 클릭 영역은 모든 너비에서 같은 좌표계를 사용한다.
-   휴대폰만 읽기 편한 안내 목록을 추가하며 원화를 재배치하지 않는다. */
-.mobileBoothList { display: none; }
-
-@media (max-width: 600px), (max-aspect-ratio: 5/4) {
-  .festivalLayout {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    width: 100%;
-    height: auto;
-  }
-  .sceneViewport {
-    position: relative;
-    inset: auto;
-    flex: none;
-    height: var(--art-height);
-  }
-  .navigation {
-    position: static;
-    padding: max(8px, env(safe-area-inset-top)) 12px 0;
-  }
-  .navigation a {
-    font-size: 12px;
-  }
-  .festivalHeader {
-    position: static;
-    padding-inline: 12px;
-  }
-  .festivalHeader p {
-    font-size: 11px;
-  }
-  .festivalHeader h1 {
-    font-size: clamp(30px, 7.8vw, 46px);
-  }
-  .festivalHeader > span {
-    font-size: 12px;
-    margin-top: 9px;
-  }
-  .scene .brandName { font-size: 1.6cqw; }
-  .scene .boothCaption { display: none; }
-  .sceneFooter {
-    position: static;
-    padding-inline: 12px;
-    font-size: 12px;
-    gap: 4px;
-  }
-  .sceneFooter button {
-    margin-left: auto;
-  }
-  .sceneNotice {
-    position: relative;
-    top: auto;
-    left: auto;
-    transform: none;
-    max-width: none;
-    width: 100%;
-    margin-top: 24px;
-    font-size: 13px;
-  }
-  .mobileBoothList {
-    display: grid;
-    gap: 0;
-    margin: 12px;
-    padding: 4px 14px;
-    list-style: none;
-    border: 1px solid #c5a66c70;
-    background: #28170ed9;
-  }
-  .mobileBooth + .mobileBooth { border-top: 1px solid #c5a66c45; }
-  .mobileBoothLink {
-    display: grid;
-    grid-template-columns: minmax(90px, 0.8fr) minmax(0, 1.2fr);
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    min-height: 76px;
-    padding: 12px 0;
-    border: 0;
-    background: none;
-    color: #fff0cf;
-    text-decoration: none;
-    cursor: pointer;
-  }
-  .mobileBoothLink .boothSign,
-  .mobileBoothLink .boothCaption {
-    position: static;
-    width: auto;
-    height: auto;
-    padding: 0;
-    background: none;
-  }
-  .mobileBoothLink .brand { justify-content: start; }
-  .mobileBoothLink .brandName { font-size: 16px; }
-  .mobileBoothLink .university { font-size: 13px; word-break: keep-all; }
-  .mobileBoothLink .enterLabel { font-size: 13px; }
-  .mobileBoothLink .boothCaption { align-items: start; text-align: left; }
-  .mobileBoothLink:focus-visible { outline: 2px solid #ffe3a7; outline-offset: 2px; }
-}
+/* 축제장은 모든 화면에서 같은 원화와 부스 좌표를 사용한다. */
 
 /* 개별 동아리 문제 목록의 기존 반응형 규칙: 메인 장면과 별개다. */
 @media (max-width: 900px) {

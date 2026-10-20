@@ -7,8 +7,8 @@ import { getBoardZoomScrollLeft } from "./boardViewport.js";
 function mediaRule(path, condition, selector) {
   const root = postcss.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
   const values = {};
-  root.walkAtRules("media", (media) => {
-    if (media.params !== condition) return;
+  root.walkAtRules((media) => {
+    if (!["media", "container"].includes(media.name) || media.params.replace(/^game-scene\s+/, "").trim() !== condition) return;
     media.walkRules(selector, (rule) => rule.walkDecls((decl) => { values[decl.prop] = decl.value; }));
   });
   return values;
@@ -26,7 +26,7 @@ test("데스크톱 풍경은 한 번만 표시하고 보드와 패널은 원래 
   const frame = mediaRule(path, condition, ".frame");
   const scene = mediaRule(path, condition, ".frame > .stage");
   const background = mediaRule(path, condition, ".frame > img");
-  assert.equal(frame["--board-scene-width"], "min(100vw, calc(100vh * 16 / 9))");
+  assert.equal(frame["--board-scene-width"], "min(calc(var(--scene-vw, 1vw) * 100), calc(calc(var(--scene-vh, 1vh) * 100) * 16 / 9))");
   assert.equal(frame["--board-scene-height"], "calc(var(--board-scene-width) * 9 / 16)");
   assert.deepEqual(scene, {
     position: "absolute", inset: "auto", left: "50%", top: "50%",

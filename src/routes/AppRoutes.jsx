@@ -6,6 +6,7 @@ import RouteLoadBoundary from "./RouteLoadBoundary.jsx";
 import { ROUTES } from "./routePaths.js";
 import useRouteTitle from "./useRouteTitle.js";
 import usePageResources from "./usePageResources.js";
+import GameViewportRoute from "./GameViewportRoute.jsx";
 
 // 현재 화면에 필요한 코드만 읽는다 관리자 화면과 QR 기능은 참가자 진입에서 제외한다
 const LoginPage = lazy(() => import("../features/auth/pages/LoginPage.jsx"));
@@ -114,9 +115,10 @@ export default function AppRoutes() {
         {import.meta.env.DEV && <Route path="/dev/booth-menu-preview" element={<BoothMenuPreviewPage />} />}
         {import.meta.env.DEV && <Route path="/dev/golden-key-preview" element={<GoldenKeyPreviewPage />} />}
         <Route element={<AuthenticatedRoute />}>
+        <Route path={ROUTES.openChallenges} element={<OpenChallengesPage />} />
+        <Route element={<GameViewportRoute />}>
         <Route path={ROUTES.board} element={<BoardPage />} />
         {import.meta.env.DEV && <Route path={ROUTES.lineRailPreview} element={<LineRailPreviewPage />} />}
-        <Route path={ROUTES.openChallenges} element={<OpenChallengesPage />} />
         <Route
           path="/challenges/:challengeId"
           element={<ChallengeDetailPage />}
@@ -137,6 +139,10 @@ export default function AppRoutes() {
             </Suspense>
           }
         />
+        <Route path={ROUTES.mypage} element={<MyPage />} />
+        <Route path={ROUTES.koth} element={<KothPage />} />
+        <Route path={ROUTES.rules} element={<RulesPage />} />
+        </Route>
         <Route
           path="/signatures/:signatureId"
           element={
@@ -146,10 +152,7 @@ export default function AppRoutes() {
           }
         />
         <Route path={ROUTES.leaderboard} element={<LeaderboardPage />} />
-        <Route path={ROUTES.mypage} element={<MyPage />} />
         <Route path="/timer" element={<TimerPage />} />
-        <Route path={ROUTES.koth} element={<KothPage />} />
-        <Route path={ROUTES.rules} element={<RulesPage />} />
         <Route
           path={ROUTES.adminDashboard}
           element={

@@ -12,17 +12,21 @@
 // — 배경(자유 반응형)과 무대(고정 16:9) 두 레이어는 서로 다른 비율로 축소되므로
 // 같은 카드 그림을 양쪽에 겹치면 두 겹으로 보인다. 카드/패널의 실제 모양은
 // 무대 안 프레임 컴포넌트(children)가 각자의 에셋으로 그린다.
+import { useGameScene } from "./GameSceneContext.js";
+
 export default function FixedAspectStage({ backdropSrc, children, className = "", frameClassName = "" }) {
+  const scene = useGameScene();
   return (
     <div className={`fixed inset-0 overflow-hidden ${frameClassName}`}>
-      {backdropSrc && <img
+      {backdropSrc && !scene?.compact && <img
         src={backdropSrc}
         alt=""
         aria-hidden="true"
         className="absolute inset-0 w-full h-full object-cover pointer-events-none"
       />}
       <div
-        className={`absolute left-1/2 top-1/2 w-[min(100vw,177.78vh)] h-[min(100vh,56.25vw)] [transform:translate(-50%,-50%)] @container ${className}`}
+        className={`absolute left-1/2 top-1/2 [transform:translate(-50%,-50%)] @container ${className}`}
+        style={{ width: "min(calc(var(--scene-vw, 1vw) * 100), calc(var(--scene-vh, 1vh) * 177.7778))", height: "min(calc(var(--scene-vh, 1vh) * 100), calc(var(--scene-vw, 1vw) * 56.25))" }}
       >
         {children}
       </div>

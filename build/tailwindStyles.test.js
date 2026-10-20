@@ -19,7 +19,9 @@ test("Tailwind 4도 기존 게임 폰트와 사용자 팔레트를 빌드한다"
 
 test("@container와 cqw 화면 크기 유틸리티를 유지한다", () => {
   assert.ok(declarations.some((declaration) => declaration.prop === "container-type" && declaration.value === "inline-size"));
-  assert.ok(declarations.some((declaration) => declaration.prop === "width" && declaration.value.replace(/\s/g, "") === "min(100vw,177.78vh)"));
+  const stage = readFileSync(new URL("../src/components/common/FixedAspectStage.jsx", import.meta.url), "utf8");
+  assert.match(stage, /var\(--scene-vw, 1vw\)/);
+  assert.match(stage, /var\(--scene-vh, 1vh\)/);
   assert.ok(declarations.some((declaration) => declaration.prop === "font-size" && declaration.value.includes("cqw")));
 });
 

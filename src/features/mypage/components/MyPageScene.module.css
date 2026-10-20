@@ -27,7 +27,7 @@
   --label: "MyPage Caslon", "MyPage Fell", "MyPage Pretendard", "Pretendard", serif;
   --number: "MyPage Caslon", "MyPage Pretendard", "Pretendard", serif;
   --sans: "MyPage Pretendard", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
-  min-height: 100dvh;
+  min-height: calc(var(--scene-vh, 1vh) * 100);
   padding: 12px 10px 24px;
   color: var(--brown);
   font-family: var(--sans);
@@ -516,11 +516,11 @@
 /* ───────── 데스크톱: 1920×1080 무대를 화면 높이/너비에 맞춰 한 화면에 고정(스크롤 없음) ─────────
    문제 상세와 같은 숲 배경 + 보드판(panel-board.webp)을 쓰고, 그 위에 Figma 28:94 패널을 놓는다.
    보드판 안쪽선은 무대 x 115~1801, y 147~983. Figma 원본 좌표(위 195~아래 995)를 30 올려 안쪽선 안에 맞춘다 */
-@media (min-width: 1101px) and (min-height: 620px) {
+@container game-scene (min-width: 1101px) and (min-height: 620px)  {
   .page {
     display: grid;
     place-items: center;
-    height: 100dvh;
+    height: calc(var(--scene-vh, 1vh) * 100);
     min-height: 0;
     padding: 0;
     overflow: hidden;
@@ -530,8 +530,8 @@
     --u: calc(100cqw / 1920);
     position: relative;
     container-type: size;
-    width: min(100vw, calc(100dvh * 16 / 9));
-    height: min(100dvh, calc(100vw * 9 / 16));
+    width: min(calc(var(--scene-vw, 1vw) * 100), calc(calc(var(--scene-vh, 1vh) * 100) * 16 / 9));
+    height: min(calc(var(--scene-vh, 1vh) * 100), calc(calc(var(--scene-vw, 1vw) * 100) * 9 / 16));
     max-width: none;
     margin: 0;
   }
