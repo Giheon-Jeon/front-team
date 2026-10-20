@@ -1,4 +1,5 @@
 import LeaderboardChart from "./LeaderboardChart.jsx";
+import LeaderboardArtwork from "./LeaderboardArtwork.jsx";
 import LeaderboardScoreGraph from "./LeaderboardScoreGraph.jsx";
 import RankingTable from "./RankingTable.jsx";
 import RankingToolbar from "./RankingToolbar.jsx";
@@ -20,18 +21,10 @@ export default function LeaderboardScreen({
 
   return (
     <main className={styles.page} data-leaderboard-source={dataStatus}>
-      {/* 제목과 로고가 포함된 원화는 한 번만 그려 비율이 다른 화면에서도 중복되지 않게 한다 */}
+      {/* 풍경은 페이지 전체에 이어지고 전경과 UI는 원본 비율로 함께 축소한다. */}
       <div className={styles.stage}>
         <div className={styles.designCanvas}>
-          <picture style={{ display: "contents" }}>
-          <source style={{ display: "none" }} media="(max-width: 1100px)" srcSet="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" />
-          <img
-            src={`${ASSET_BASE}leaderboard-layout.webp`}
-            alt=""
-            aria-hidden="true"
-            className={styles.leaderboardArtwork}
-          />
-          </picture>
+          <LeaderboardArtwork />
 
           <button type="button" className={styles.backButton} onClick={onBack} aria-label="이전 페이지">
             <span className={styles.backIcon}>

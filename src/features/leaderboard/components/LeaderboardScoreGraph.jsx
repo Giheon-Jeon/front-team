@@ -34,11 +34,9 @@ export default function LeaderboardScoreGraph({ teams, status }) {
     return () => observer.disconnect();
   }, []);
   const compact = size.width < 720;
-  const scaleX = Math.max(1, size.width / VIEW_WIDTH);
-  const scaleY = Math.max(1, size.height / VIEW_HEIGHT);
   const PLOT = compact
     ? { left: 54, top: 62, right: 24, bottom: 48 }
-    : { left: 42 * scaleX, top: 30 * scaleY, right: 4 * scaleX, bottom: 48 * scaleY };
+    : { left: 42, top: 30, right: 4, bottom: 48 };
   const [hoverX, setHoverX] = useState(null);
   const [zoom, setZoom] = useState(null);
   const [drag, setDrag] = useState(null);
@@ -111,7 +109,7 @@ export default function LeaderboardScoreGraph({ teams, status }) {
     </div>}
     {hasSeries && Array.from({ length: 6 }, (_, index) => {
       const value = niceAxisMax(chartData.maxScore) * index / 5;
-      return <span key={index} className={styles.axisScore} style={{ right: !compact && scaleX > 1 ? size.width - PLOT.left + 12 : undefined, top: PLOT.top + scales.y(value) - 10 }}>{formatScore(value)}</span>;
+      return <span key={index} className={styles.axisScore} style={{ top: PLOT.top + scales.y(value) - 10 }}>{formatScore(value)}</span>;
     })}
     {hasSeries && Array.from({ length: compact ? 3 : 5 }, (_, index) => {
       const time = range[0] + (range[1] - range[0]) * index / (compact ? 2 : 4);

@@ -36,10 +36,10 @@ const STATUS_MESSAGE = {
 
 function toTextBoxStyle(box) {
   return {
-    "--text-left": `${box.x / 168 * 100}%`,
-    "--text-top": `${box.y / 262 * 100}%`,
-    "--text-width": `${box.width / 168 * 100}%`,
-    "--text-height": `${box.height / 262 * 100}%`,
+    "--text-left": `${box.x}px`,
+    "--text-top": `${box.y}px`,
+    "--text-width": `${box.width}px`,
+    "--text-height": `${box.height}px`,
   };
 }
 

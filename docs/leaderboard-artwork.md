@@ -18,13 +18,25 @@ SVG viewBox로 해당 영역을 분리하고 종이색만 투명하게 처리
 
 그래프 축과 점수선은 API 데이터로 렌더링하며 고정 시간이나 가짜 점수를 배경에 넣지 않음
 
-## 화면 비율에 따른 배치
+## 풍경과 전경 분리
 
-데스크톱은 원화 한 장으로 화면 전체를 채우며 별도의 바깥 배경을 요청하지 않음
-원화에 제목, 그래프 틀, 순위표 바탕이 함께 있으므로 화면 비율에 맞춰 원화 프레임의 가로와 세로를 조정
-1920×1080 기준 UI 좌표는 백분율로 환산하고 그래프의 실제 축과 표의 행 높이도 같은 위치에 맞춤
-글자, 버튼, 순위 장식은 화면에 들어가는 단일 배율을 적용해 가로세로 비례를 유지
-모바일 1100px 이하의 세로 흐름과 기존 모바일 배경, 카드형 순위표는 유지
+데스크톱의 풍경은 leaderboard-scene-v1.webp 한 장을 cover로 표시하며 원래 가로세로 비율을 유지
+제목, 종이 패널, 하단 로고는 기존 leaderboard-layout.webp에서 SVG 클리핑과 잉크 필터로 표시
+전경과 실제 UI는 기존 1920×1080 좌표와 단일 축소 배율을 유지하며 화면에 맞추려고 가로·세로를 따로 늘리지 않음
+원본의 책이 가린 패널 모서리는 반대편 원본 모서리를 대칭으로 사용
+1100px 이하의 모바일 배경, 글꼴, 간격과 카드 배치는 기존대로 유지하며 데스크톱 풍경은 요청하지 않음
+picture의 display: contents를 사용할 때 source도 display: none으로 지정해야 모바일 flex 간격이 생기지 않음
+
+풍경 생성에는 내장 imagegen을 사용했으며 표시용 WebP는 아래 명령으로 크기 변경 없이 인코딩
+기존 전경 원본은 수정하지 않으며 새 풍경은 Q90, 286902바이트, 원본 대비 PSNR 37.41dB
+
+```
+python scripts/optimize-leaderboard-scene.py /path/to/generated-scene.png
+```
+
+### 풍경 분리 프롬프트
+
+Use case: precise-object-edit. Input image 1 is an existing autumn fantasy scoreboard illustration. Produce the BACKGROUND SCENE LAYER for this exact artwork. Remove the entire large central parchment scoreboard and its ornamental borders, both upper and lower paper panels, ALL graph axes/grid/ticks, the SCOREBOARD heading and decorative title sprigs, the POINTS label and leaf, and the MSG CTF sign/logo at the bottom. Seamlessly reconstruct the autumn landscape that was behind these removed UI objects: a single continuous softly painted warm misty mountain lake with the existing distant castle and autumn trees, and the existing wooden ground below. Preserve the original scene's camera perspective, soft golden parchment-like haze, painterly texture, lighting, subdued warm palette, and overall composition. Keep the existing autumn branches around the top corners, original lake/mountains/castle at the side edges, lantern at bottom left and books at bottom right in their original positions and ORIGINAL proportions; do not enlarge them, move them or add duplicates. Match the existing edge scenery rather than introducing a brighter photoreal sunset or a new composition. The entire result must be one coherent background with no leftover paper, panel, letters, numbers, borders, axes, UI, rectangles, patches, blurred fillers or watermark. No text at all. Return the full 1672:941 landscape aspect ratio background only.
 
 ## 배경 편집 프롬프트
 
