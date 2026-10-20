@@ -9,6 +9,7 @@ async (page) => {
   const signatures = clubs.map((club_name, i) => ({ signature_id: `signature-${i + 1}`, club_id: `club-${i + 1}`, club_name, title: `QA ${club_name}`, description: '한글과 영문이 함께 표시되는 문제 안내입니다. QA description.', score: 100, is_solved: false, solved_at: null, solved_team_count: 0 }));
   const teams = Array.from({ length: 8 }, (_, i) => ({ team_id: `team-${i + 1}`, team_name: `QA ${['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf', 'Hotel'][i]}`, team_score: 800 - i * 100, is_top3: i < 3, solves: [{ challenge_id: 'challenge-1', solved_at: iso(-300000), points: 800 - i * 100, source_type: 'JEOPARDY' }] }));
   const cells = Array.from({ length: 36 }, (_, index) => ({ cell_index: index + 1, type: ({1:'START',7:'CHANCE',16:'ROULETTE',21:'AIRPORT',25:'ROULETTE',30:'CHANCE'})[index+1] || 'CHALLENGE', difficulty: 'EASY', name: `QA ${index+1}`, line_number: Math.floor(index / 6) + 1 }));
+  const openedChallenges = cells.filter(cell=>cell.type==='CHALLENGE').map(cell=>({challenge_id:`challenge-${cell.cell_index}`,cell_index:cell.cell_index,title:`QA ${cell.cell_index}`,category:'WEB',score:100,is_solved:false,opened_at:iso(-60000)}));
   const progress = challenges.map((challenge, i) => ({ koth_challenge_id: challenge.koth_challenge_id, earned_score: 50, rank: i + 1, solved_at: iso(-60000) }));
   let piece=1, rolls=0;
   const unknown = [];
@@ -30,7 +31,7 @@ async (page) => {
     else if (path === '/board/dice/status') data = { can_roll: true, dice_rolls_left: rolls ? 2 : 3, timer_running: true, blocked_reason: null, server_time: now, next_dice_reset_at: iso(600000) };
     else if (path === '/board/chance/catalog') data = { cards: [] };
     else if (path === '/board/cell/current') data = { cell_index: 1, type: 'START', challenge_candidates: [] };
-    else if (path === '/board/opened_challenges') data = { opened_challenges: [], total_count: 0 };
+    else if (path === '/board/opened_challenges') data = { opened_challenges: openedChallenges, total_count: openedChallenges.length };
     else if (path === '/timer') data = { name: 'QA MSG CTF', status: 'RUNNING', start_time: iso(-3600000), end_time: iso(3600000), server_time: now, remaining_seconds: 3600 };
     else if (path === '/leaderboard') data = { teams };
     else if (path === '/ranking') data = { rankings: teams.slice(0, 6).map((team,i) => ({...team, rank:i+1, mileage:1000, last_solved_at:iso(-300000)})), total_count: 8 };
@@ -121,7 +122,7 @@ async (page) => {
   const measure=()=>{
     const scene=document.querySelector('[data-board-layer="scene"]'),stage=scene.closest('[class*="_stage_"]');
     const background=stage.parentElement.querySelector(':scope > img').getBoundingClientRect(),track=scene.querySelector('[data-board-layer="track"]').getBoundingClientRect();
-    return {trackWidth:track.width,backgroundWidth:background.width,relativeScale:(background.width/1920)/(track.width/951),viewportWidth:scene.parentElement.clientWidth};
+    return {trackWidth:track.width,backgroundWidth:background.width,relativeScale:(background.width/1920)/(track.width/951),viewportWidth:scene.parentElement.clientWidth,sceneTop:scene.getBoundingClientRect().top-stage.getBoundingClientRect().top};
   };
   const settle=async()=>{
     await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
@@ -167,6 +168,7 @@ async (page) => {
         await region.evaluate(node=>{node.scrollLeft=0;});
         const geometry=await settle();
         const scaleDrift=Math.abs(geometry.relativeScale/base.relativeScale-1);
+        if(Math.abs(geometry.sceneTop-base.sceneTop)>.1) throw new Error('Zoom label reflow moved the board '+JSON.stringify({width,height,percent,base,geometry}));
         if(scaleDrift>.0005) throw new Error('Backdrop/track scale changed during zoom '+JSON.stringify({width,height,percent,base,geometry,scaleDrift}));
         results.push({case:'zoom-one-percent',percent,scaleDrift,...geometry});
         if(percent%25===0) {
