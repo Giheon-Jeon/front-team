@@ -2,7 +2,6 @@ import { useId } from "react";
 import styles from "./LeaderboardScreen.module.css";
 
 const ASSET = `${import.meta.env.BASE_URL}assets/leaderboard/leaderboard-layout.webp`;
-const EMPTY_IMAGE = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 const SOURCE_COORDINATES = `scale(${1 / 1672} ${1 / 941})`;
 
 export default function LeaderboardArtwork() {
@@ -36,12 +35,8 @@ export default function LeaderboardArtwork() {
         </filter>
       </defs>
     </svg>
-    {layers.map(layer => <picture key={layer.name} style={{ display: "contents" }}>
-      {/* display: contents 안의 source가 모바일 flex 항목으로 계산되어 간격을 만들지 않게 한다. */}
-      <source style={{ display: "none" }} media="(max-width: 1100px)" srcSet={EMPTY_IMAGE} />
-      <img src={ASSET} alt="" aria-hidden="true" width="1672" height="941"
+    {layers.map(layer => <img key={layer.name} src={ASSET} alt="" aria-hidden="true" width="1672" height="941"
         className={`${styles.leaderboardArtwork} ${layer.className || ""}`}
-        style={{ clipPath: `url(#${id}-${layer.name})`, filter: layer.filter }} />
-    </picture>)}
+        style={{ clipPath: `url(#${id}-${layer.name})`, filter: layer.filter }} />)}
   </>;
 }

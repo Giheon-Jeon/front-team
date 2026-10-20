@@ -26,14 +26,14 @@
   position: fixed;
   inset: 0;
   overflow: hidden;
-  background: #e6d2a4;
+  background: #e6d2a4 url("/assets/leaderboard/leaderboard-scene-v1.webp") center / cover no-repeat;
 }
 
 .stage {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: min(100vw, 177.78vh);
+  width: min(100vw, 177.7777778vh);
   height: min(100vh, 56.25vw);
   transform: translate(-50%, -50%);
   container-type: inline-size;
@@ -42,7 +42,7 @@
   font-family: "Libre Baskerville", Georgia, serif;
 }
 
-.mobileTitle { display: none; }
+.screenZoom { display: none; }
 
 .designCanvas {
   position: absolute;
@@ -108,11 +108,7 @@
   display: block;
   width: 100%;
   height: 100%;
-}
-
-@media (min-width: 1101px) {
-  .page { background: #e6d2a4 url("/assets/leaderboard/leaderboard-scene-v1.webp") center / cover no-repeat; }
-  .backIcon img { filter: drop-shadow(0 1px 2px #2f190a) drop-shadow(0 0 1px #2f190a); }
+  filter: drop-shadow(0 1px 2px #2f190a) drop-shadow(0 0 1px #2f190a);
 }
 
 .backButton:hover .backIcon {
@@ -243,119 +239,54 @@
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 @media (max-width: 1100px) {
-  .page {
-    position: relative;
-    min-height: 100svh;
-    overflow: visible;
-    padding: 20px 12px 36px;
-    background: #674326 url("/assets/login/background-plaza.webp") center / cover fixed;
+  .expandedPage {
+    overflow: auto;
+    padding: 12px 12px max(76px, calc(64px + env(safe-area-inset-bottom)));
+    touch-action: pan-x pan-y pinch-zoom;
+    overscroll-behavior: contain;
   }
-  .stage {
-    position: relative;
-    inset: auto;
-    width: min(100%, 900px);
-    height: auto;
-    margin: 0 auto;
-    transform: none;
-    overflow: visible;
-    border: 8px solid transparent;
-    border-image: url("/assets/challenge-detail/panel-board.webp") 32 stretch;
-    background: #eddbb6;
-    background-clip: padding-box;
-  }
-  .designCanvas {
+
+  .expandedPage .stage {
     position: relative;
     inset: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    width: 100%;
+    width: max(100%, 1920px);
     height: auto;
-    padding: 20px 14px 24px;
+    aspect-ratio: 16 / 9;
     transform: none;
   }
-  .leaderboardArtwork { display: none; }
-  .mobileTitle {
-    display: block;
-    margin: 0;
-    padding: 10px 0 10px 46px;
-    font: 24px/1.4 "Libre Caslon Text", Georgia, serif;
-    text-align: center;
-    letter-spacing: 0.02em;
-  }
-  .backButton { top: 25px; left: 12px; width: 44px; height: 44px; }
-  .backIcon { width: 24px; height: 32px; }
-  .backIcon img { filter: brightness(0.4); }
-  .scoreBoard { position: relative; inset: auto; width: 100%; height: 340px; }
-  .leaderboardChart {
-    position: static;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px 16px;
-    width: 100%;
-    height: auto;
-  }
-  .legendRow { position: relative; inset: auto; width: 100%; height: auto; min-height: 28px; padding-left: 28px; }
-  .legendLeaf { left: 0; top: 2px; width: 22px; height: 22px; }
-  .legendName, .compactLegend .legendName { font-size: 14px; }
-  .legendState { position: static; grid-column: 1 / -1; font-size: 14px; }
-  .rankingPanel { position: static; width: 100%; }
-  .rankingToolbar { height: auto; grid-template-columns: 1fr auto; gap: 12px 8px; margin-bottom: 12px; }
-  .rankingTitle { font-size: 17px; }
-  .pagination { grid-column: 1 / -1; grid-row: 2; flex-wrap: wrap; gap: 0; font-size: 14px; }
-  .pagination button, .refreshControls button { min-width: 44px; height: 44px; padding: 0 8px; }
-  .pageTotal { font-size: 14px; }
-  .refreshControls { font-size: 14px; gap: 4px; flex-wrap: wrap; }
-  .refreshControls time { display: none; }
-  .rankingGrid { width: 100%; font-size: clamp(10px, 1.2vw, 13px); }
-  .rankingGrid col:first-child { width: 5%; }
-  .rankingGrid col:nth-child(2) { width: 20%; }
-  .rankingGrid col:nth-child(3) { width: 12%; }
-  .rankingGrid col:nth-child(n+5):nth-child(-n+12) { width: 5.25%; }
-  .rankingGrid th, .rankingGrid td { padding-inline: 2px; }
-  .rankingGrid thead th { height: 44px; font-size: clamp(9px, 1.2vw, 13px); }
-  .rankingGrid tbody tr { height: 52px; }
-  .rankingGrid .teamNameCell { padding-inline: 6px; }
-  .rankArtwork { width: min(100%, 44px); height: 34px; }
-  .rankingGrid .tableState { font-size: 16px; text-align: left; padding: 24px; }
-  .refreshNote { position: static; width: auto; margin: 0; font-size: 14px; line-height: 1.6; }
-}
 
-@media (max-width: 767px) {
-  .rankingGrid,
-  .rankingGrid tbody { display: block; width: 100%; }
-  .rankingGrid colgroup { display: none; }
-  /* 표 헤더는 접근성 트리에 남기고 각 셀에 시각적인 분야 라벨을 표시한다. */
-  .rankingGrid thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-  .rankingGrid tbody { display: grid; gap: 16px; }
-  .rankingGrid tbody tr {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    height: auto;
-    padding: 12px 8px;
-    border: 1px solid #ac8757;
-    border-radius: 4px;
-    background: rgb(255 244 217 / 25%);
+  .screenZoom {
+    position: fixed;
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+    z-index: 20;
+    display: inline-flex;
+    min-width: 112px;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border: 1px solid #8d6034;
+    border-radius: 6px;
+    color: #4f3018;
+    background: rgb(248 232 197 / 96%);
+    box-shadow: 0 2px 8px rgb(47 25 10 / 18%);
+    font: 600 14px/1.4 "Libre Baskerville", Georgia, serif;
+    cursor: pointer;
   }
-  .rankingGrid tbody th,
-  .rankingGrid tbody td { padding: 10px 4px; border: 0; font-size: 13px; }
-  .rankingGrid .rankCell { grid-column: 1; display: grid; align-items: center; font-size: 22px; }
-  .rankingGrid .teamNameCell { grid-column: 2 / -1; padding: 8px; font-size: 15px; }
-  .rankingGrid td[data-column] { border-top: 1px solid rgb(145 92 43 / 22%); }
-  .rankingGrid td[data-column="teamScore"],
-  .rankingGrid td[data-column="solveCount"],
-  .rankingGrid td[data-column="kothScore"],
-  .rankingGrid td[data-column="signatureScore"] { grid-column: span 2; }
-  .mobileCellLabel { display: block; margin-bottom: 6px; font-size: 11px; font-weight: 400; color: #794519; }
-  .rankingGrid td[data-column="teamScore"] .cellValue { font-size: 17px; }
-  .rankingGrid .tableState { grid-column: 1 / -1; height: auto; padding: 24px 8px; }
-}
 
-@media (max-width: 1100px) and (max-aspect-ratio: 9/10) {
-  .page { background-image: url("/assets/login/background-plaza-portrait.webp"); }
-}
+  .screenZoom svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+  }
 
-@media (max-width: 400px) {
-  .mobileTitle { font-size: 20px; }
-  .designCanvas { padding-inline: 10px; }
+  .screenZoom:focus-visible {
+    outline: 2px solid #4f3018;
+    outline-offset: 3px;
+  }
 }

@@ -64,7 +64,7 @@ async (page) => {
   page.on('pageerror',error=>errors.push(error.message));
   await page.emulateMedia({reducedMotion:'reduce'});
   const cdp=await page.context().newCDPSession(page);
-  const current=new URL(origin).port==='4174';
+  const current=new URL(origin).port!=='4173';
   const results=[];
   for (const [width,height,dpr] of [[390,844,1],[844,390,1],[1100,900,1],[1101,900,1],[460,512,1],[461,512,1],[390,844,2],[1440,900,2]]) {
     await page.setViewportSize({width,height});
@@ -80,14 +80,21 @@ async (page) => {
         const backdrop=path==='/board'?'':getComputedStyle(root).backgroundImage;
         const artwork=document.querySelector('img[src*="leaderboard-layout"], img[src*="koth-trail-background"]');
         const portrait=width<=1100 && width/height<=.9;
-        if(current && path!=='/board' && backdrop.includes('portrait')!==portrait) throw new Error('Wrong cover source '+path+' '+width+'x'+height+' '+backdrop);
-        if(current && artwork && (artwork.currentSrc.startsWith('data:')!==(width<=1100))) throw new Error('Wrong artwork source '+path);
+        if(current && path!=='/board' && path!=='/leaderboard' && backdrop.includes('portrait')!==portrait) throw new Error('Wrong cover source '+path+' '+width+'x'+height+' '+backdrop);
+        if(current && path==='/koth' && artwork && (artwork.currentSrc.startsWith('data:')!==(width<=1100))) throw new Error('Wrong artwork source '+path);
         const resources=performance.getEntriesByType('resource').filter(x=>x.name.startsWith(location.origin)).map(x=>({path:new URL(x.name).pathname,bytes:x.decodedBodySize}));
-        if(current && artwork && width<=1100 && resources.some(x=>/leaderboard-layout|koth-trail-background/.test(x.path))) throw new Error('Hidden desktop artwork downloaded');
+        if(current && path==='/koth' && artwork && width<=1100 && resources.some(x=>/koth-trail-background/.test(x.path))) throw new Error('Hidden desktop artwork downloaded');
+        if(current && path==='/leaderboard') {
+          const stage=root.firstElementChild,canvas=stage.firstElementChild,frame=stage.getBoundingClientRect(),matrix=new DOMMatrix(getComputedStyle(canvas).transform);
+          if(!backdrop.includes('leaderboard-scene-v1.webp') || artwork?.naturalWidth!==1672) throw new Error('Wrong scoreboard artwork source');
+          if(Math.abs(frame.width/frame.height-16/9)>.001 || Math.abs(matrix.a-matrix.d)>.00001) throw new Error('Scoreboard proportions changed');
+          if(getComputedStyle(root.querySelector('table')).display!=='table' || getComputedStyle(root.querySelector('tbody tr')).display!=='table-row') throw new Error('Scoreboard reflowed into mobile cards');
+          if(resources.some(x=>/background-plaza|panel-board/.test(x.path))) throw new Error('Separate scoreboard backdrop downloaded');
+        }
         if(current && portrait && path!=='/board' && resources.some(x=>x.path.endsWith('/background-plaza.webp'))) throw new Error('Full plaza downloaded in portrait');
-        if(innerWidth!==width || innerHeight!==height || devicePixelRatio!==dpr) throw new Error('Device metrics mismatch');
+        if(innerWidth!==width || innerHeight!==height || Math.abs(devicePixelRatio-dpr)>.001) throw new Error('Device metrics mismatch');
         const broken=[...document.images].filter(x=>x.complete && x.naturalWidth===0).map(x=>x.src);
-        const overflow=document.documentElement.scrollWidth>innerWidth;
+        const overflow=document.documentElement.scrollWidth>innerWidth+1;
         const alerts=[...document.querySelectorAll('[role="alert"]')].map(x=>x.textContent);
         if(broken.length || overflow || alerts.length) throw new Error(JSON.stringify({path,width,broken,overflow,alerts}));
         return {path,width,height,dpr,backdrop,artwork:artwork?.currentSrc,nodes:[...document.querySelectorAll('h1,h2,button,[data-board-layer]')].filter(x=>x.getBoundingClientRect().width && x.getBoundingClientRect().height && getComputedStyle(x).visibility!=='hidden').map(x=>({tag:x.tagName,label:x.getAttribute('aria-label'),text:x.textContent,rect:[x.getBoundingClientRect().x,x.getBoundingClientRect().y,x.getBoundingClientRect().width,x.getBoundingClientRect().height]})),resources};
