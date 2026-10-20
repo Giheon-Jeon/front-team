@@ -274,7 +274,7 @@
   .refreshControls { flex-wrap: wrap; gap: 4px; font-size: 13px; }
   .refreshControls time { font-size: 12px; }
   .refreshControls svg { width: 16px; height: 16px; }
-  .mobileTableHint { display: block; margin: 12px 0 8px; font: 14px/1.6 "Pretendard", sans-serif; color: #613d15; }
+  .mobileTableHint { display: block; margin: 12px 0 8px; font: 14px/1.6 "Pretendard", sans-serif; color: #402510; }
   .tableContainer { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: #a98550 transparent; }
   .rankingGrid { min-width: 960px; font-size: 14px; }
   .rankingGrid thead th { font-size: 15px; height: 44px; }
