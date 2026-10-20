@@ -1,5 +1,3 @@
-@import "../../../styles/pretendard/tooltip.generated.css";
-
 .tooltip {
   position: fixed;
   z-index: 1000;

@@ -1,13 +1,23 @@
 .desktopOnly, .boardViewport, .boardArea, .boardTools, .boardScene { display: contents; }
 .mobileNav, .boardControls, .boardHint, .sceneBackdrop, .mobileCellInfo { display: none; }
-.frame { background: #21150d; }
+.frame {
+  --board-label-font: "Song Myung", "Batang", serif;
+  --board-body-font: "Board Tooltip Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  background: #21150d;
+}
+/* 명판의 제목은 기존 명조체, 작은 안내와 수치는 같은 로컬 한글 글꼴로 표시한다. */
+.diceReadout, .diceChallengeRow { font-family: var(--board-label-font); font-weight: 400; font-synthesis: none; }
+.diceStatusMessage, .chancePanel, .eventPanel, .loading, .empty, .error { font-family: var(--board-body-font); }
+.chancePanel h2, .eventPanel h2 { font-family: var(--board-label-font); font-weight: 400; }
+.diceReadout strong, .diceChallengeRow strong { font-family: var(--board-body-font); font-weight: 600; }
 .track { position: absolute; left: calc(448 / 1920 * 100%); top: calc(289 / 1080 * 100%); width: calc(951 / 1920 * 100%); aspect-ratio: 1772 / 1330; }
-.diceReadout { display: grid; gap: 0.2cqw; padding-block: 0; font-size: clamp(11px, 0.72cqw, 14px); line-height: 1.5; }
+.diceReadout { display: grid; gap: 0.2cqw; top: 43%; padding-block: 0; font-size: clamp(12px, 0.72cqw, 14px); line-height: 1.4; }
 .diceCountRow { display: flex; align-items: center; justify-content: space-between; gap: 0.3cqw; white-space: nowrap; }
 .diceReadout strong { font-variant-numeric: tabular-nums; }
-.diceChallengeRow { color: #e7c68f; text-align: right; font-size: clamp(10px, 0.66cqw, 14px); line-height: 1.5; white-space: nowrap; }
+.diceChallengeRow { color: #e7c68f; text-align: right; font-size: clamp(11px, 0.66cqw, 14px); line-height: 1.4; white-space: nowrap; }
 .diceChallengeRow strong { font-variant-numeric: tabular-nums; }
-.diceStatusMessage { top: 59%; left: 12.5%; width: 77%; font-size: clamp(10px, 0.58cqw, 12px); line-height: 1.5; overflow-wrap: anywhere; }
+.diceStatusMessage { top: 55%; left: 12.5%; width: 77%; font-size: clamp(11px, 0.58cqw, 12px); line-height: 1.2; }
+.diceStatusFull { display: none; }
 .airportTitleRow { position: relative; display: flex; align-items: center; justify-content: center; min-height: 36px; }
 .airportConfirm .trainSoundButton {
   position: absolute; right: -4px; display: grid; place-items: center;
@@ -37,6 +47,19 @@
 /* 풍경은 FixedAspectStage의 배경 한 장으로 화면 전체를 채운다
    원판과 조작 패널은 기존 1920×1080 무대에서 같은 비율로 축소한다 */
 @media (min-width: 1101px) {
+  /* 원래 가로 명판의 비율과 장식은 유지하고 글자가 들어갈 최소 크기만 확보한다. */
+  .stage {
+    --dice-panel-width: max(19.69cqw, 240px);
+    --dice-panel-left: min(1.35%, calc(448 / 1920 * 100% - var(--dice-panel-width) * 355 / 378 - 12px));
+    --dice-art-left: calc(var(--dice-panel-left) + var(--dice-panel-width) * 23 / 378);
+    --dice-art-width: calc(var(--dice-panel-width) * 332 / 378);
+    --dice-toggle-top: max(17%, calc(var(--dice-panel-width) * 151 / 378 + 8px));
+    --dice-following-top: max(22.4%, calc(var(--dice-toggle-top) + 2.4cqw + 10px));
+  }
+  .stage .diceStatus { left: var(--dice-panel-left); width: var(--dice-panel-width); height: auto; aspect-ratio: 378 / 223; }
+  .stage .openToggle { left: var(--dice-art-left); top: var(--dice-toggle-top); width: var(--dice-art-width); }
+  .stage .chancePanel { left: var(--dice-art-left); top: var(--dice-following-top); width: var(--dice-art-width); }
+  .stage .openPanel { left: calc(var(--dice-art-left) - 0.78cqw); top: var(--dice-following-top); width: calc(var(--dice-panel-width) * 284 / 378); height: min(69.54%, calc(92% - var(--dice-following-top))); }
   .frame {
     --board-scene-width: min(100vw, calc(100vh * 16 / 9));
     --board-scene-height: calc(var(--board-scene-width) * 9 / 16);
@@ -87,7 +110,7 @@
 .openToggleCount {
   margin-left: auto;
   display: inline-grid; place-items: center; min-width: 1.35cqw; height: 1.35cqw; padding-inline: 0.3cqw; border-radius: 999px;
-  background: #8a6236; color: #f8ead0; font: 700 0.75cqw/1 "Inria Serif", serif; font-variant-numeric: tabular-nums;
+  background: #8a6236; color: #f8ead0; font: 600 0.75cqw/1 var(--board-body-font); font-variant-numeric: tabular-nums;
 }
 .lineOverlay { position: absolute; inset: 0; z-index: 12; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 /* 풀이 상태는 유지하고 독점은 칸 바깥의 연속선으로만 구분한다 */
@@ -306,12 +329,14 @@
   .diceStatus .diceReadout { position: static; width: auto; height: auto; padding: 0; gap: 4px; background: none; font-size: 14px; line-height: 1.5; grid-row: 2; }
   .diceCountRow { flex-wrap: wrap; gap: 6px 12px; }
   .diceChallengeRow { position: static; font-size: 14px; text-align: right; grid-row: 1; }
-  .diceStatus > p { position: static; width: auto; margin-top: 4px; font-size: 13px; white-space: normal; word-break: keep-all; text-align: left; line-height: 1.6; color: #d7bd96; grid-row: 3; }
+  .diceStatus > p { position: static; width: auto; margin-top: 4px; font-size: 14px; white-space: normal; word-break: keep-all; text-align: left; line-height: 1.6; color: #d7bd96; grid-row: 3; }
+  .diceStatusFull { display: inline; }
+  .diceStatusCompact { display: none; }
   .diceStatus[data-roll-ready="true"] > p { display: none; }
   .boardArea { display: flex; flex-direction: column; min-width: 0; }
   .boardTools { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 16px; }
   .mobileCellInfo { display: block; margin: 0; padding: 8px 16px; font: 16px/1.5 "Pretendard", sans-serif; color: #f8ead0; background: #21150dcc; word-break: keep-all; }
-  .boardControls { display: flex; flex: 0 0 auto; align-items: center; color: #f8ead0; }
+  .boardControls { display: flex; flex: 0 0 auto; align-items: center; color: #f8ead0; font-family: var(--board-label-font); }
   .boardHint { display: none; }
   .boardZoomButton { display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 7em; min-height: 44px; padding: 8px 4px; border: 1px solid #ae7c42; border-radius: 6px; background: linear-gradient(#3d2515, #2a180a); box-shadow: inset 0 0 0 1px #100802; color: inherit; font: inherit; font-size: 14px; white-space: nowrap; cursor: pointer; }
   .boardZoomButton svg { width: 20px; height: 20px; }
