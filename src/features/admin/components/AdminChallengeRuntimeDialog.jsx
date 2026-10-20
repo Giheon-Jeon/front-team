@@ -7,7 +7,7 @@ import AdminActiveFlagBindings from "./AdminActiveFlagBindings.jsx";
 import { isSuccess } from "../../../utils/response.js";
 import { toKst } from "../../../utils/time.js";
 import useAdminResource from "../hooks/useAdminResource.js";
-import { buildDerivedSettings, parseReleaseFile, releaseRequirements, releaseSettingsDraft, validateRuntimeSecret } from "../utils/adminRuntime.js";
+import { buildDerivedSettings, orderReleasesByPublication, parseReleaseFile, releaseRequirements, releaseSettingsDraft, validateRuntimeSecret } from "../utils/adminRuntime.js";
 import AdminDialog from "./AdminDialog.jsx";
 import AdminEnvironmentFileImporter from "./AdminEnvironmentFileImporter.jsx";
 import AdminRepositoryEnvironmentImporter from "./AdminRepositoryEnvironmentImporter.jsx";
@@ -105,7 +105,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
   }, [panel]);
   const runtime = useAdminResource((config) => loadRuntime(challenge.challenge_id, config), [challenge.challenge_id], "실행 설정을 불러오지 못했습니다");
   useEffect(() => () => { fileSequence.current += 1; }, []);
-  const releases = runtime.data?.releases ?? [];
+  const releases = orderReleasesByPublication(runtime.data?.releases ?? []);
   const selected = releases.find((release) => release.release_id === releaseId) ?? releases.find((release) => release.is_current) ?? releases[0];
   const validationError = validateRuntimeSecret(name.trim(), value);
   const loading = runtime.status === "loading";
