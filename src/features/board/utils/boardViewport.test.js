@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import postcss from "postcss";
-import { getBoardZoomScrollLeft, getMobileBoardBackdrop } from "./boardViewport.js";
+import { getBoardZoomScrollLeft, getMobileBoardBackdrop, getMobileBoardFitWidth } from "./boardViewport.js";
 
 function mediaRule(path, condition, selector) {
   const root = postcss.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
@@ -158,6 +158,39 @@ test("모바일 배경 한 장이 전체 화면을 채우고 원판 바닥 기�
         assert.ok(Math.abs(image.width / image.height - 16 / 9) < 1e-9);
         assert.ok(image.left <= 1e-7 && image.top <= 1e-7);
         assert.ok(image.left + image.width >= width - 1e-7 && image.top + image.height >= height - 1e-7);
+        assert.ok(Math.abs(image.left + image.width * 917 / 1920 - (sceneLeft + sceneWidth * 469 / 951)) < 1e-7);
+        assert.ok(Math.abs(image.top + image.height * 630 / 1080 - (sceneTop + sceneHeight * 510 / 960)) < 1e-7);
+      }
+    }
+  }
+});
+
+test("모바일 전환은 원판을 자동 확대하지 않고 폭이 줄어들 때 커지지 않는다", () => {
+  for (const height of [390, 568, 844, 900, 1024]) {
+    const desktopTrackWidth = Math.min(1101, height * 16 / 9) * 951 / 1920;
+    let previous = desktopTrackWidth;
+    for (let width = 1100; width >= 280; width--) {
+      const trackWidth = getMobileBoardFitWidth(width, height);
+      assert.ok(trackWidth <= previous + 1e-9);
+      assert.ok(trackWidth <= width);
+      previous = trackWidth;
+    }
+  }
+});
+
+test("1% 단위 확대와 가로 이동에서 배경과 원판의 상대 배율이 유지된다", () => {
+  for (const width of [320, 390, 768, 844, 1100]) for (const height of [390, 844, 1024]) {
+    const fitSceneWidth = getMobileBoardFitWidth(width, height);
+    const fitSceneHeight = fitSceneWidth * 960 / 951;
+    const fitSceneLeft = (width - fitSceneWidth) / 2;
+    const sceneTop = 224;
+    const fitFrameHeight = Math.max(height, sceneTop + fitSceneHeight + 24);
+    const base = getMobileBoardBackdrop({width, height:fitFrameHeight, sceneLeft:fitSceneLeft, sceneTop, sceneWidth:fitSceneWidth, sceneHeight:fitSceneHeight});
+    for (let percent = 100; percent <= 250; percent++) {
+      const zoom = percent / 100, sceneWidth = fitSceneWidth * zoom, sceneHeight = fitSceneHeight * zoom;
+      for (const sceneLeft of [0, Math.min(0, (width - sceneWidth) / 2), Math.min(0, width - sceneWidth)]) {
+        const image = getMobileBoardBackdrop({width, height:Math.max(height, sceneTop + sceneHeight + 24), sceneLeft, sceneTop, sceneWidth, sceneHeight, fitSceneWidth, fitSceneLeft, fitFrameHeight});
+        assert.ok(Math.abs(image.width / base.width - zoom) < 1e-9);
         assert.ok(Math.abs(image.left + image.width * 917 / 1920 - (sceneLeft + sceneWidth * 469 / 951)) < 1e-7);
         assert.ok(Math.abs(image.top + image.height * 630 / 1080 - (sceneTop + sceneHeight * 510 / 960)) < 1e-7);
       }
