@@ -49,7 +49,7 @@ export default function DiceStatusPanel({
       <div className={`${styles.diceReadout} absolute left-[12.5%] top-[45%] z-10 w-[77%] font-inria-serif text-[#f8ead0]`}>
         {/* 기능 명세(2026-09-28): 보유 횟수/3 표시. 3/3이면 서버가 next_dice_reset_at을 비워 충전 타이머가 멈춘다. */}
         <div className={styles.diceCountRow}>
-          <span>주사위 {rollsLeft}/{MAX_DICE_ROLLS}</span>
+          <span>주사위 <strong>{rollsLeft}/{MAX_DICE_ROLLS}</strong></span>
           {rechargeVisible && <span>충전까지 <strong>{formatRemaining(resetInSeconds)}</strong></span>}
         </div>
       </div>

@@ -20,6 +20,7 @@ import ChanceCardSummary from "./ChanceCardSummary.jsx";
 import { BoardDiceStatusPanel } from "./BoardCountdownPanels.jsx";
 import KothEventBanner from "./KothEventBanner.jsx";
 import OpenChallengesSidePanel, { OpenChallengesToggle } from "./OpenChallengesSidePanel.jsx";
+import "../../../styles/pretendard/tooltip.generated.css";
 import styles from "./BoardScreen.module.css";
 
 const NO_LINES = Object.freeze([]);
