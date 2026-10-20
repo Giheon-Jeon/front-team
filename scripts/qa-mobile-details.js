@@ -140,6 +140,19 @@ async page => {
           const shot = `${output}/${slug}-${width}-${index}`;
           await captureText(path,width,shot,positions[index]);
         }
+        if (path === '/mypage') {
+          const scrolled = await page.locator('table').evaluateAll(tables => {
+            for (const table of tables) table.parentElement.scrollLeft = table.parentElement.scrollWidth;
+            return tables.some(table => table.parentElement.scrollLeft > 0);
+          });
+          if (scrolled) {
+            for (let index=0;index<positions.length;index++) {
+              await page.evaluate(y => scrollTo(0,y), positions[index]);
+              await captureText(path,width,`${output}/${slug}-${width}-${index}-right`,positions[index]);
+            }
+          }
+          await page.locator('table').evaluateAll(tables => tables.forEach(table => { table.parentElement.scrollLeft = 0; }));
+        }
         await page.evaluate(() => scrollTo(0,0));
         const panelSelectors = {
           '/board':'[class*="_diceStatus_"]',

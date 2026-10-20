@@ -40,8 +40,9 @@ for item in data["results"]:
         continue
     for text in item["metrics"]:
         color = [float(v) for v in re.findall(r"[\d.]+", text["color"])]
-        if len(color)<3 or (len(color)==4 and color[3]<.99):
+        if len(color)<3:
             continue
+        text_alpha = color[3] if len(color)==4 else 1
         foreground = luminance(color)
         minimum=21
         for rect in text["rects"]:
@@ -50,7 +51,8 @@ for item in data["results"]:
             pixels = crop.get_flattened_data() if hasattr(crop, "get_flattened_data") else crop.getdata()
             for pixel in pixels:
                 background = luminance(pixel)
-                ratio=(max(foreground,background)+.05)/(min(foreground,background)+.05)
+                rendered_foreground = luminance([text_alpha*color[i]+(1-text_alpha)*pixel[i] for i in range(3)]) if text_alpha<1 else foreground
+                ratio=(max(rendered_foreground,background)+.05)/(min(rendered_foreground,background)+.05)
                 minimum=min(minimum,ratio)
         threshold=3 if text["fontSize"]>=24 or (text["fontWeight"]>=700 and text["fontSize"]>=18.667) else 4.5
         contrasts.append({"path":item["path"],"width":item["width"],"scroll":item["scroll"],**text,"contrast":round(minimum,3),"required":threshold,"pass":minimum>=threshold})

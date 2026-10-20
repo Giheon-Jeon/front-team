@@ -126,3 +126,4 @@
 .graph[data-compact="true"] .zoomControls { top: 0; }
 .graph[data-compact="true"] .zoomControls button { height: 44px; }
 .graph[data-compact="true"] .zoomHint { display: none; }
+.graph[data-compact="true"] .state { color: #593517; }
