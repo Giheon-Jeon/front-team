@@ -1,6 +1,18 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildDerivedSettings, parseReleaseFile, releaseRequirements, releaseSettingsDraft, validateRuntimeSecret } from "./adminRuntime.js";
+import { buildDerivedSettings, orderReleasesByPublication, parseReleaseFile, releaseRequirements, releaseSettingsDraft, validateRuntimeSecret } from "./adminRuntime.js";
+
+test("historical CI artifacts appear after newer publications even when registered later", () => {
+  const releases = [
+    { release_id: "old-backfill", version: 20, registry_revision: 552 },
+    { release_id: "current", version: 17, registry_revision: 578, is_current: true },
+    { release_id: "newer-settings", version: 21, registry_revision: 578 },
+    { release_id: "previous", version: 8, registry_revision: 573 },
+  ];
+  assert.deepEqual(orderReleasesByPublication(releases).map((release) => release.release_id),
+    ["newer-settings", "current", "previous", "old-backfill"]);
+  assert.equal(releases[0].release_id, "old-backfill");
+});
 
 test("release uploads preserve per-container environment and secret aliases", () => {
   const artifact = { schema_version: "2.1", challenge_slug: "web-basic", registry_revision: 2,
