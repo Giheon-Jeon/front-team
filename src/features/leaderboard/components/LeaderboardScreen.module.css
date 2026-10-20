@@ -265,6 +265,7 @@
   .legendName, .compactLegend .legendName { font-size: 14px; }
   .legendState { position: static; grid-column: 1 / -1; font-size: 14px; color: #472a14; }
   .rankingPanel { position: static; width: 100%; min-width: 0; }
+  .rankingGrid .tableState { color: #593517; }
   .rankingToolbar { height: auto; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 6px; }
   .rankingTitle { font-size: 16px; }
   .pagination { grid-column: 1 / -1; grid-row: 2; flex-wrap: wrap; gap: 2px; font-size: 14px; }
