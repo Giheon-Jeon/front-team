@@ -68,7 +68,7 @@ export default function OpenChallengesSidePanel({
       restored.current = true;
     }
   }, [loading, instanceInfo?.loading, challenges]);
-  useEffect(() => { closeButton.current?.focus({ preventScroll: true }); }, []);
+  useBrowserLayoutEffect(() => { closeButton.current?.focus({ preventScroll: true }); }, []);
   const panel = (
     <aside
       ref={panelRef}
