@@ -17,6 +17,11 @@ export function parseReleaseFile(text) {
   return artifact;
 }
 
+export function orderReleasesByPublication(releases) {
+  return [...releases].sort((left, right) =>
+    right.registry_revision - left.registry_revision || right.version - left.version);
+}
+
 export function releaseRequirements(artifact, secrets = []) {
   const containers = artifact.workload.containers.map((container) => ({
     name: container.name,
