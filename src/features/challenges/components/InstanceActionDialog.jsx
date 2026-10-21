@@ -33,7 +33,7 @@ export default function InstanceActionDialog({
     restart: {
       title: "인스턴스 재시작",
       description:
-        "현재 환경을 초기화하고 새 인스턴스를 만듭니다. 작업 내용이 사라지고 접속 주소가 바뀔 수 있습니다",
+        "현재 환경을 초기화하고 새 인스턴스를 만듭니다 작업 내용이 사라지고 접속 주소가 바뀔 수 있습니다 남은 시간은 늘어나지 않으니 만료가 가까우면 먼저 연장해 주세요",
       button: "재시작",
     },
     stop: {

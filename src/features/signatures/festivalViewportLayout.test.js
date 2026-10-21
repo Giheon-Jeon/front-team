@@ -4,20 +4,36 @@ import { readFileSync } from "node:fs";
 
 const css = readFileSync(new URL("./components/SignatureFestival.module.css", import.meta.url), "utf8");
 
-test("축제 PC 배경은 전체 폭을 채우고 부스만 독립적인 3열 2행으로 배치한다", () => {
-  const pc=css.slice(css.indexOf("/* PC는"), css.indexOf("@media (max-width: 900px)"));
-  assert.match(pc, /width: 100%;/);
-  assert.match(pc, /max-width: none;/);
-  assert.match(pc, /height: 100dvh;/);
-  assert.match(pc, /background-plaza\.png.*cover/);
-  assert.match(pc, /grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
-  assert.match(pc, /grid-template-rows: repeat\(2, minmax\(0, 1fr\)\)/);
-  assert.match(pc, /aspect-ratio: 1\.12987/);
-  assert.doesNotMatch(pc, /overflow|transform|150dvh|contain/);
+test("축제 원화와 클릭 오버레이는 모든 너비에서 같은 3:2 좌표계를 사용한다", () => {
+  assert.match(css, /\.festivalLayout\s*\{[^}]*width: 100%;/);
+  assert.match(css, /\.sceneViewport\s*\{[^}]*container-type: size;/);
+  assert.match(css, /\.scene\s*\{[^}]*width: max\(100cqw, 150cqh\);/);
+  assert.match(css, /aspect-ratio: 3 \/ 2/);
+  assert.doesNotMatch(css, /385%|290%|aspect-ratio: 0\.78|background-plaza/);
+  const main = css.slice(0, css.indexOf(".clubPage"));
+  assert.match(main, /\.boothPosition\s*\{[^}]*top: 20%;[^}]*left: 5\.5%;[^}]*width: 25\.5%;[^}]*height: 33%;/);
+  assert.equal((main.match(/club-festival-v1\.webp/g) || []).length, 1, "메인 화면의 중복 원화·확장 배경 없음");
+  assert.doesNotMatch(main, /blur\(/);
+  assert.doesNotMatch(css.match(/\.scene\s*\{[^}]*\}/)?.[0] || "", /scale\(/);
+  assert.match(css, /--art-height: clamp\(52vw, calc\(100dvh - 44px\), 74vw\)/);
 });
 
-test("축제 모바일은 기존 두 열과 페이지 스크롤을 유지한다", () => {
-  const mobile = css.slice(css.indexOf("@media (max-width: 900px)"));
-  assert.match(mobile, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
-  assert.match(mobile, /aspect-ratio: auto/);
+test("모바일은 원화를 확대·분할하지 않고 읽을 수 있는 부스 안내 목록을 제공한다", () => {
+  const mobile = css.slice(css.indexOf("@media (max-width: 600px)"), css.indexOf("/* 개별 동아리"));
+  assert.match(mobile, /\.sceneViewport\s*\{[^}]*position: relative;/);
+  assert.doesNotMatch(mobile, /background-size|background-position|\.boothPosition|scale\(/);
+  assert.match(mobile, /\.mobileBoothList\s*\{[^}]*display: grid;/);
+  assert.match(mobile, /\.mobileBoothLink\s*\{[^}]*min-height: 76px;/);
+});
+
+test("1440부터 768까지 줄였다 늘려도 원화 크기는 연속적이고 역방향 확대가 없다", () => {
+  const widths = [1440, 1366, 1280, 1100, 1024, 901, 900, 899, 800, 768];
+  const sceneWidth = (w, h) => Math.max(w, 1.5 * Math.min(h - 44, .74 * w));
+  for (const height of [700, 768, 800, 900]) {
+    for (let i=1;i<widths.length;i++) {
+      assert.ok(sceneWidth(widths[i], height) <= sceneWidth(widths[i-1], height));
+      const imageWidth = sceneWidth(widths[i], height);
+      assert.ok(imageWidth <= widths[i] / .9 + .01, "필수 부스 폭을 잘라내지 않는다");
+    }
+  }
 });

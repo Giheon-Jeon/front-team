@@ -58,7 +58,7 @@
 .board {
   padding: clamp(20px, 2.7vw, 36px);
   border: 10px solid transparent;
-  border-image: url("/assets/challenge-detail/panel-board.png") 32 stretch;
+  border-image: url("/assets/challenge-detail/panel-board.webp") 32 stretch;
   background: #eee2c5;
   background-clip: padding-box;
   box-shadow: 0 12px 40px #160d0c50;

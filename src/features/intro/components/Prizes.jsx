@@ -10,6 +10,33 @@ export function PrizeTotal({ as: Tag = "p" }) {
   );
 }
 
+export function SpecialAwards() {
+  const prizes = getPrizes(eventConfig.prizes);
+  if (!prizes?.specialAwards.length) return null;
+  return (
+    <div className="special-awards">
+      {prizes.specialAwards.map((award) => (
+        <article
+          className="special-award"
+          key={award.label}
+          aria-label={award.label}
+        >
+          <div className="special-award-copy">
+            <h3>{award.label}</h3>
+            {award.description && <p>{award.description}</p>}
+          </div>
+          <p className="special-award-amount">
+            <strong>{formatWon(award.amount)}</strong>
+          </p>
+          {award.selectionNote && (
+            <p className="special-award-note">{award.selectionNote}</p>
+          )}
+        </article>
+      ))}
+    </div>
+  );
+}
+
 export function PrizeList({ table = false }) {
   const prizes = getPrizes(eventConfig.prizes);
   if (!prizes) return <p>상금과 순위별 시상 내역은 추후 공개합니다</p>;

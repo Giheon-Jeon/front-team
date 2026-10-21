@@ -10,8 +10,8 @@ test("룰북은 메인 배경 한 장 위에 모서리 마커 없는 누끼 보�
   const css = read("./components/RulesScreen.module.css");
   // 풍경+보드가 함께 그려진 그림을 무대에 다시 깔지 않는다(배경 두 겹 방지)
   assert.doesNotMatch(screen, /rules-background\.png/);
-  assert.match(screen, /\/assets\/challenge-detail\/panel-board\.png/);
-  assert.match(css, /\.page\s*\{[^}]*background-plaza\.png/);
+  assert.match(screen, /\/assets\/challenge-detail\/panel-board\.webp/);
+  assert.match(css, /\.page\s*\{[^}]*background-plaza\.webp/);
   // 가로줄이 그려진 원래 패널 대신 줄을 지운 패널
   assert.doesNotMatch(panel, /rules-panel\.png/);
   assert.match(panel, /rules-panel-clean\.png/);

@@ -33,7 +33,9 @@ export default function LeaderboardScoreGraph({ teams, status }) {
     observer.observe(graph.current);
     return () => observer.disconnect();
   }, []);
-  const compact = size.width < 720;
+  // The responsive parchment is at most 900px wide. Keep labels and controls
+  // inside it through the tablet layout, including the 1100px breakpoint.
+  const compact = size.width <= 900;
   const PLOT = compact
     ? { left: 54, top: 62, right: 24, bottom: 48 }
     : { left: 42, top: 30, right: 4, bottom: 48 };

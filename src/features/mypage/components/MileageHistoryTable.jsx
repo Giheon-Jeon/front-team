@@ -42,7 +42,7 @@ export default function MileageHistoryTable({ state }) {
           <tbody>
             {message ? (
               <tr>
-                <td colSpan={4} className={styles.historyEmpty}>{message}</td>
+                <td colSpan={4} className={styles.historyEmpty}><span>{message}</span></td>
               </tr>
             ) : (
               rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((row) => (

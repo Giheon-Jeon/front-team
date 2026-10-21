@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import postcss from "postcss";
-import { getBoardZoomScrollLeft } from "./boardViewport.js";
+import { getBoardZoomScrollLeft, getMobileBoardBackdrop, getMobileBoardFitWidth } from "./boardViewport.js";
 
 function mediaRule(path, condition, selector) {
   const root = postcss.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
@@ -20,11 +20,11 @@ test("모바일 두 후보는 데스크톱의 개별 left 좌표를 남기지 �
   assert.equal(rule.left, "auto");
 });
 
-test("데스크톱 바닥과 무대는 같은 크기와 중심을 사용하고 다른 화면에는 영향을 주지 않는다", () => {
+test("데스크톱 풍경은 한 번만 표시하고 보드와 패널은 원래 무대 좌표를 유지한다", () => {
   const path = "../components/BoardScreen.module.css";
   const condition = "(min-width: 1101px)";
   const frame = mediaRule(path, condition, ".frame");
-  const scene = mediaRule(path, condition, ".frame > img, .frame > .stage");
+  const scene = mediaRule(path, condition, ".frame > .stage");
   const background = mediaRule(path, condition, ".frame > img");
   assert.equal(frame["--board-scene-width"], "min(100vw, calc(100vh * 16 / 9))");
   assert.equal(frame["--board-scene-height"], "calc(var(--board-scene-width) * 9 / 16)");
@@ -33,17 +33,15 @@ test("데스크톱 바닥과 무대는 같은 크기와 중심을 사용하고 �
     width: "var(--board-scene-width)", height: "var(--board-scene-height)",
     transform: "translate(-50%, -50%)",
   });
-  assert.equal(background["object-fit"], "contain");
-  // 16:9 밖 여백은 같은 배경을 cover로 깔아 채운다(갈색 빈 여백 금지)
+  assert.equal(background["max-width"], "none");
+  assert.equal(background["mask-image"], undefined);
   const fill = mediaRule(path, condition, ".frame::before");
-  assert.equal(fill.inset, "0");
-  assert.match(fill.background, /bg-1920x1080\.webp.*cover/);
-  assert.equal(background["mask-composite"], "intersect");
+  assert.deepEqual(fill, {});
   const common = readFileSync(new URL("../../../components/common/FixedAspectStage.jsx", import.meta.url), "utf8");
   assert.match(common, /object-cover/);
 });
 
-test("16:9, 16:10, 세로로 긴 창과 울트라와이드에서 배경과 카드의 축척이 같다", () => {
+test("16:9, 16:10, 세로로 긴 창과 울트라와이드에서 보드와 패널의 축척이 같다", () => {
   // 바로 위 테스트에서 이 계산과 실제 CSS 선언의 일치를 확인한다
   for (const [width, height] of [[1920, 1080], [1280, 720], [1440, 900], [1280, 1008], [2560, 1080], [1101, 900], [1600, 600]]) {
     const sceneWidth = Math.min(width, height * 16 / 9);
@@ -54,10 +52,10 @@ test("16:9, 16:10, 세로로 긴 창과 울트라와이드에서 배경과 카�
     assert.ok(left >= -0.001 && top >= -0.001);
     assert.ok(Math.abs(sceneHeight / 1080 - scale) < 1e-10);
     for (const [x, y] of [[448, 289], [596, 482], [805, 460], [1038, 481]]) {
-      const backgroundPoint = [left + x * scale, top + y * scale];
+      const boardPoint = [left + x * scale, top + y * scale];
       const stagePoint = [left + sceneWidth * x / 1920, top + sceneHeight * y / 1080];
-      assert.ok(Math.abs(backgroundPoint[0] - stagePoint[0]) < 1e-9);
-      assert.ok(Math.abs(backgroundPoint[1] - stagePoint[1]) < 1e-9);
+      assert.ok(Math.abs(boardPoint[0] - stagePoint[0]) < 1e-9);
+      assert.ok(Math.abs(boardPoint[1] - stagePoint[1]) < 1e-9);
     }
   }
 });
@@ -140,12 +138,64 @@ test("모바일의 바닥 배경을 고정하지 않고 원판과 같은 장면�
   const css = readFileSync(new URL("../components/BoardScreen.module.css", import.meta.url), "utf8");
   const screen = readFileSync(new URL("../components/BoardScreen.jsx", import.meta.url), "utf8");
   const scene = readFileSync(new URL("../components/BoardScene.jsx", import.meta.url), "utf8");
-  assert.match(css, /\.frame > img\s*\{\s*display: none/);
+  assert.match(css, /\.frame > img\s*\{\s*display: block; position: absolute;[^}]*var\(--mobile-background-left/);
   assert.doesNotMatch(css, /\.frame > img\s*\{\s*position: fixed/);
   assert.match(css, /\.sceneBackdrop\s*\{[^}]*position: absolute/);
   assert.match(css, /\.boardScene\s*\{[^}]*position: relative/);
   assert.match(screen, /<BoardScene[^>]*>\s*<BoardTrack[\s\S]*?\/>\s*<\/BoardScene>/);
   assert.match(scene, /data-board-layer="scene"[\s\S]*data-board-layer="background"[\s\S]*\{children\}/);
+  assert.match(css, /\.sceneBackdrop\s*\{ display: none; \}/);
+});
+
+test("모바일 배경 한 장이 전체 화면을 채우고 원판 바닥 기준점을 유지한다", () => {
+  for (const width of [320, 390, 768, 844, 1100]) for (const viewportHeight of [390, 568, 844, 1024]) {
+    for (const sceneWidth of [width, Math.max(width * 1.5, 620)]) {
+      const sceneHeight = sceneWidth * 960 / 951;
+      const sceneTop = 240;
+      const height = Math.max(viewportHeight, sceneTop + sceneHeight + 24);
+      for (const sceneLeft of [0, (width - sceneWidth) / 2, width - sceneWidth]) {
+        const image = getMobileBoardBackdrop({ width, height, sceneLeft, sceneTop, sceneWidth, sceneHeight });
+        assert.ok(Math.abs(image.width / image.height - 16 / 9) < 1e-9);
+        assert.ok(image.left <= 1e-7 && image.top <= 1e-7);
+        assert.ok(image.left + image.width >= width - 1e-7 && image.top + image.height >= height - 1e-7);
+        assert.ok(Math.abs(image.left + image.width * 917 / 1920 - (sceneLeft + sceneWidth * 469 / 951)) < 1e-7);
+        assert.ok(Math.abs(image.top + image.height * 630 / 1080 - (sceneTop + sceneHeight * 510 / 960)) < 1e-7);
+      }
+    }
+  }
+});
+
+test("모바일 전환은 원판을 자동 확대하지 않고 폭이 줄어들 때 커지지 않는다", () => {
+  for (const height of [390, 568, 844, 900, 1024]) {
+    const desktopTrackWidth = Math.min(1101, height * 16 / 9) * 951 / 1920;
+    let previous = desktopTrackWidth;
+    for (let width = 1100; width >= 280; width--) {
+      const trackWidth = getMobileBoardFitWidth(width, height);
+      assert.ok(trackWidth <= previous + 1e-9);
+      assert.ok(trackWidth <= width);
+      previous = trackWidth;
+    }
+  }
+});
+
+test("1% 단위 확대와 가로 이동에서 배경과 원판의 상대 배율이 유지된다", () => {
+  for (const width of [320, 390, 768, 844, 1100]) for (const height of [390, 844, 1024]) {
+    const fitSceneWidth = getMobileBoardFitWidth(width, height);
+    const fitSceneHeight = fitSceneWidth * 960 / 951;
+    const fitSceneLeft = (width - fitSceneWidth) / 2;
+    const sceneTop = 224;
+    const fitFrameHeight = Math.max(height, sceneTop + fitSceneHeight + 24);
+    const base = getMobileBoardBackdrop({width, height:fitFrameHeight, sceneLeft:fitSceneLeft, sceneTop, sceneWidth:fitSceneWidth, sceneHeight:fitSceneHeight});
+    for (let percent = 100; percent <= 250; percent++) {
+      const zoom = percent / 100, sceneWidth = fitSceneWidth * zoom, sceneHeight = fitSceneHeight * zoom;
+      for (const sceneLeft of [0, Math.min(0, (width - sceneWidth) / 2), Math.min(0, width - sceneWidth)]) {
+        const image = getMobileBoardBackdrop({width, height:Math.max(height, sceneTop + sceneHeight + 24), sceneLeft, sceneTop, sceneWidth, sceneHeight, fitSceneWidth, fitSceneLeft, fitFrameHeight});
+        assert.ok(Math.abs(image.width / base.width - zoom) < 1e-9);
+        assert.ok(Math.abs(image.left + image.width * 917 / 1920 - (sceneLeft + sceneWidth * 469 / 951)) < 1e-7);
+        assert.ok(Math.abs(image.top + image.height * 630 / 1080 - (sceneTop + sceneHeight * 510 / 960)) < 1e-7);
+      }
+    }
+  }
 });
 
 test("모바일 보드에는 좌우 액자 여백을 두지 않고 열린 문제와 확대를 한 줄에 배치한다", () => {
@@ -170,7 +220,9 @@ test("모바일 풍경을 짧게 잘라도 바닥과 원판의 원본 좌표는 
   assert.equal(cropHeight, 960);
   assert.equal(percent(backdropRule, "height") * cropHeight, 1080);
   assert.equal(-percent(backdropRule, "top") * cropHeight, 120);
-  assert.ok(Math.abs((percent(trackRule, "top") - percent(backdropRule, "top")) * cropHeight - 289) < 0.001);
+  const [, inset, originalHeight] = trackRule.match(/top: calc\((\d+) \/ (\d+) \* 100%\)/).map(Number);
+  assert.equal(originalHeight, cropHeight);
+  assert.equal(inset - percent(backdropRule, "top") * cropHeight, 289);
   assert.ok(Math.abs(-percent(backdropRule, "left") * cropWidth - 448) < 0.001);
 });
 

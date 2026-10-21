@@ -33,10 +33,18 @@ export const eventConfig = Object.freeze({
   participationFee: "무료",
   prizes: {
     confirmed: true,
-    totalKrw: 1500000,
+    totalKrw: 2000000,
     tracks: [
       { label: "내부 트랙", amounts: [300000, 200000, 100000] },
       { label: "외부 트랙", amounts: [500000, 300000, 100000] },
+    ],
+    specialAwards: [
+      {
+        label: "안랩 대표상",
+        amountKrw: 500000,
+        description: "안랩 대표 명의 상장 수여",
+        selectionNote: "수상 기준은 추후 안내합니다",
+      },
     ],
   },
 });

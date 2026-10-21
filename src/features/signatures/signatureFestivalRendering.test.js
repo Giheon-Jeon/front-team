@@ -10,7 +10,7 @@ let server;
 let ClubBrand;
 let BoothAchievement;
 let FestivalScreen;
-let ChallengeMenu;
+let BoothMenu;
 before(async () => {
   server = await createServer({
     server: { middlewareMode: true, hmr: false, ws: false, watch: null },
@@ -27,28 +27,27 @@ before(async () => {
   ({ SignatureFestivalScreen: FestivalScreen } = await server.ssrLoadModule(
     "/src/features/signatures/pages/SignaturesPage.jsx",
   ));
-  ({ default: ChallengeMenu } = await server.ssrLoadModule(
-    "/src/features/signatures/components/ChallengeMenuModal.jsx",
+  ({ default: BoothMenu } = await server.ssrLoadModule(
+    "/src/features/signatures/components/BoothMenuModal.jsx",
   ));
 });
 
-test("메뉴판은 preview에서 실제 문제 링크 없이 상태와 샘플 안내를 표시한다", () => {
-  const html = renderToStaticMarkup(createElement(StaticRouter, {}, createElement(ChallengeMenu, {
-    club: { name: "MJSEC", university: "명지대학교" }, preview: true, onClose() {},
-    items: [{ id: "sample", title: "Sample", score: 300, state: "solved" }],
+test("공통 메뉴판은 동적 소개 데이터만 표시하고 풀이 링크와 선택 폼을 넣지 않는다", () => {
+  const html = renderToStaticMarkup(createElement(StaticRouter, {}, createElement(BoothMenu, {
+    club: { name: "MJSEC", university: "명지대학교" }, onClose() {}, status: "success",
+    challenge: { title: "동적 문제 제목", score: 300, description: "동적 설명" },
   })));
-  assert.match(html, /샘플 데이터/);
-  assert.match(html, /풀이 완료/);
-  assert.match(html, /disabled=""/);
-  assert.doesNotMatch(html, /href=/);
+  assert.match(html, /동적 문제 제목/);
+  assert.match(html, /300/);
+  assert.doesNotMatch(html, /href=|<select|<input|<form/);
 });
 
 test("메뉴판의 loading, error, empty도 같은 dialog 안에 표시한다", () => {
-  for (const [status, text] of [["loading", "준비하고"], ["error", "불러오지 못했습니다"], ["success", "아직 공개된"]]) {
-    const html = renderToStaticMarkup(createElement(ChallengeMenu, {
-      club: { name: "MJSEC" }, status, items: [], onClose() {},
+  for (const [status, text] of [["loading", "불러오는 중"], ["error", "조회 실패"], ["empty", "공개된 문제가 없습니다"]]) {
+    const html = renderToStaticMarkup(createElement(BoothMenu, {
+      club: { name: "MJSEC" }, status, error: "조회 실패", onClose() {},
     }));
-    assert.match(html, /<dialog/);
+    assert.match(html, /role="dialog"/);
     assert.match(html, new RegExp(text));
   }
 });
@@ -93,6 +92,20 @@ test("알려지지 않은 동아리는 깨진 이미지 대신 이름으로 표�
   );
   assert.doesNotMatch(html, /<img\b/);
   assert.match(html, /brandName[^>]*>추가 동아리/);
+});
+
+test("모바일 부스 안내도 같은 실제 데이터와 입장 링크를 사용하며 일러스트를 추가하지 않는다", () => {
+  const html = render(FESTIVAL_CLUBS.map((club) => ({
+    signature_id: `problem-${club.key}`, club_id: club.key, club_name: club.name, is_solved: false,
+  })));
+  assert.equal((html.match(/data-booth="/g) || []).length, 6);
+  assert.equal((html.match(/data-directory-booth="/g) || []).length, 6);
+  assert.equal((html.match(/<h1>/g) || []).length, 1);
+  assert.match(html, /aria-label="동아리 부스 안내 및 입장"/);
+  for (const club of FESTIVAL_CLUBS) {
+    assert.equal((html.match(new RegExp(`href="/signatures/clubs/${club.key}"`, "g")) || []).length, 2);
+    assert.ok(html.includes(club.university));
+  }
 });
 
 test("일부만 해결한 부스는 해결 수만 표시하고 스탬프를 찍지 않는다", () => {

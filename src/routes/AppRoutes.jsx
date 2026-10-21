@@ -9,6 +9,10 @@ import usePageResources from "./usePageResources.js";
 
 // 현재 화면에 필요한 코드만 읽는다 관리자 화면과 QR 기능은 참가자 진입에서 제외한다
 const LoginPage = lazy(() => import("../features/auth/pages/LoginPage.jsx"));
+const BoothMenuPreviewPage = import.meta.env.DEV
+  ? lazy(() => import("../features/signatures/preview/BoothMenuPreviewPage.jsx")) : null;
+const GoldenKeyPreviewPage = import.meta.env.DEV
+  ? lazy(() => import("../features/board/preview/GoldenKeyPreviewPage.jsx")) : null;
 const LineRailPreviewPage = import.meta.env.DEV
   ? lazy(() => import("../features/board/preview/LineRailPreviewPage.jsx")) : null;
 const BoardPage = lazy(() => {
@@ -107,6 +111,8 @@ export default function AppRoutes() {
           <Route path={ROUTES.introGuide} element={<IntroGuidePage />} />
         </Route>
         <Route path="/login" element={<LoginPage />} />
+        {import.meta.env.DEV && <Route path="/dev/booth-menu-preview" element={<BoothMenuPreviewPage />} />}
+        {import.meta.env.DEV && <Route path="/dev/golden-key-preview" element={<GoldenKeyPreviewPage />} />}
         <Route element={<AuthenticatedRoute />}>
         <Route path={ROUTES.board} element={<BoardPage />} />
         {import.meta.env.DEV && <Route path={ROUTES.lineRailPreview} element={<LineRailPreviewPage />} />}

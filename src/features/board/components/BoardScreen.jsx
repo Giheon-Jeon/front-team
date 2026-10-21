@@ -4,6 +4,7 @@ import { BLOCKED_REASON_MESSAGES } from "../data/boardContent.js";
 import { getBoardZoomScrollLeft } from "../utils/boardViewport.js";
 import useTrainTravel from "../hooks/useTrainTravel.js";
 import useTrainWhistle from "../hooks/useTrainWhistle.js";
+import useMobileBoardBackdrop from "../hooks/useMobileBoardBackdrop.js";
 import { preloadBoardTrain } from "./BoardTrain.jsx";
 import { prepareBoardLines } from "../utils/boardLines.js";
 import { normalizeBoardListView } from "../utils/boardChallengeList.js";
@@ -19,6 +20,7 @@ import ChanceCardSummary from "./ChanceCardSummary.jsx";
 import { BoardDiceStatusPanel } from "./BoardCountdownPanels.jsx";
 import KothEventBanner from "./KothEventBanner.jsx";
 import OpenChallengesSidePanel, { OpenChallengesToggle } from "./OpenChallengesSidePanel.jsx";
+import "../../../styles/pretendard/tooltip.generated.css";
 import styles from "./BoardScreen.module.css";
 
 const NO_LINES = Object.freeze([]);
@@ -94,6 +96,8 @@ export default function BoardScreen({
   const activeLineId = lines.find((line) => line.lineId === selectedLineId)?.lineId ?? lines[0]?.lineId ?? null;
   const boardRegionId = useId();
   const boardViewport = useRef(null);
+  const frameRef = useRef(null);
+  useMobileBoardBackdrop(frameRef, boardViewport);
   const trainTravel = useTrainTravel();
   const trainWhistle = useTrainWhistle();
   const followTrain = (pose) => {
@@ -216,7 +220,7 @@ export default function BoardScreen({
   useEffect(() => { setDismissedSelectionKey(null); }, [selectionKey]);
 
   return (
-    <FixedAspectStage backdropSrc="/assets/board/bg-1920x1080.webp" frameClassName={styles.frame} className={styles.stage}>
+    <FixedAspectStage frameRef={frameRef} backdropSrc="/assets/board/bg-1920x1080-display.webp" frameClassName={styles.frame} className={styles.stage}>
       <BoardDiceStatusPanel
         rollsLeft={diceStatus?.diceRollsLeft ?? myBoard?.diceRollsLeft ?? 0}
         canRoll={canRoll}
@@ -310,8 +314,9 @@ export default function BoardScreen({
         </div>
       </div>
 
-      {!isOpenListVisible && <ChanceCardSummary
+      <ChanceCardSummary
         cards={ownedChanceCards}
+        isObscured={isOpenListVisible}
         cells={cells}
         consumedCellIndexes={myBoard?.consumedCellIndexes ?? []}
         isMutating={isMutating}
@@ -320,7 +325,7 @@ export default function BoardScreen({
           Boolean(pendingRoll) || diceStatus?.blockedReason === "PENDING_CONFIRM"
         }
         onUseCard={onUseChanceCard}
-      />}
+      />
 
       {isOpenListVisible && (
         <OpenChallengesSidePanel

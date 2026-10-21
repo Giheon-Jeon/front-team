@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { getBoardCellTooltipPosition, getBoardCellTooltipTail } from "../utils/boardCellTooltip.js";
+import "../../../styles/pretendard/tooltip.generated.css";
 import styles from "./BoardCellTooltip.module.css";
 
 export default function BoardCellTooltip({ hovered, id, onDismiss }) {

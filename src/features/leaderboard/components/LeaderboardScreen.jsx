@@ -1,4 +1,5 @@
 import LeaderboardChart from "./LeaderboardChart.jsx";
+import LeaderboardArtwork, { LeaderboardTitle, LeaderboardMobilePaper, LeaderboardFooter } from "./LeaderboardArtwork.jsx";
 import LeaderboardScoreGraph from "./LeaderboardScoreGraph.jsx";
 import RankingTable from "./RankingTable.jsx";
 import RankingToolbar from "./RankingToolbar.jsx";
@@ -17,47 +18,47 @@ export default function LeaderboardScreen({
   page = 1, pageCount = 1, onPageChange, refreshing, updatedAt, refreshError, onRefresh,
 }) {
   const dataStatus = `leaderboard:${leaderboardStatus}; ranking:${rankingStatus}`;
-
   return (
-    <main className={styles.page} data-leaderboard-source={dataStatus}>
-      {/* 제목과 로고가 포함된 원화는 한 번만 그려 비율이 다른 화면에서도 중복되지 않게 한다 */}
-      <div className={styles.stage}>
-        <div className={styles.designCanvas}>
-          <img
-            src={`${ASSET_BASE}leaderboard-layout.png`}
-            alt=""
-            aria-hidden="true"
-            className={styles.leaderboardArtwork}
-          />
+    <>
+      <main id="leaderboard-viewport" className={styles.page} data-leaderboard-source={dataStatus}>
+        {/* 풍경은 페이지 전체에 이어지고, 모바일에서는 종이 안의 내용을 읽기 크기로 재배치한다. */}
+        <div className={styles.stage}>
+          <div className={styles.designCanvas}>
+            <LeaderboardArtwork />
 
-          <button type="button" className={styles.backButton} onClick={onBack} aria-label="이전 페이지">
-            <span className={styles.backIcon}>
-              <img src={`${ASSET_BASE}icon-back.svg`} alt="" aria-hidden="true" />
-            </span>
-          </button>
+            <button type="button" className={styles.backButton} onClick={onBack} aria-label="이전 페이지">
+              <span className={styles.backIcon}>
+                <img src={`${ASSET_BASE}icon-back.svg`} alt="" aria-hidden="true" />
+              </span>
+            </button>
 
-          <h1 className={styles.mobileTitle}>LEADERBOARD</h1>
-
-          <ScoreBoard
-            staticAssetSrc={`${ASSET_BASE}score.png`}
-            dynamicGraph={
-              <LeaderboardScoreGraph teams={teams} status={leaderboardStatus} />
-            }
-          />
-          <LeaderboardChart teams={teams} status={leaderboardStatus} />
-          <section className={styles.rankingPanel} aria-label="팀 순위">
-            <RankingToolbar page={page} pageCount={pageCount} onPageChange={onPageChange}
-              refreshing={refreshing} updatedAt={updatedAt} onRefresh={onRefresh} />
-            <RankingTable rankings={rankings} status={rankingStatus} />
-          </section>
-          {refreshError && <p className={styles.refreshNote} role="alert">
-            일부 정보를 갱신하지 못했습니다 새로고침으로 다시 시도해주세요
-          </p>}
-          <p className={styles.srOnly} aria-live="polite">
-            {dataStatus}
-          </p>
+            <h1 className={`${styles.srOnly} ${styles.responsiveTitle}`}><span className={styles.srOnly}>SCOREBOARD</span><LeaderboardTitle /></h1>
+            <div className={styles.responsivePaper}>
+              <LeaderboardMobilePaper />
+              <ScoreBoard
+                staticAssetSrc={`${ASSET_BASE}score.png`}
+                dynamicGraph={
+                  <LeaderboardScoreGraph teams={teams} status={leaderboardStatus} />
+                }
+              />
+              <LeaderboardChart teams={teams} status={leaderboardStatus} />
+              <section className={styles.rankingPanel} aria-label="팀 순위">
+                <RankingToolbar page={page} pageCount={pageCount} onPageChange={onPageChange}
+                  refreshing={refreshing} updatedAt={updatedAt} onRefresh={onRefresh} />
+                <p className={styles.mobileTableHint}>좌우로 밀어 모든 분야의 점수를 확인하세요</p>
+                <RankingTable rankings={rankings} status={rankingStatus} />
+              </section>
+              {refreshError && <p className={styles.refreshNote} role="alert">
+                일부 정보를 갱신하지 못했습니다 새로고침으로 다시 시도해주세요
+              </p>}
+            </div>
+            <LeaderboardFooter />
+            <p className={styles.srOnly} aria-live="polite">
+              {dataStatus}
+            </p>
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </>
   );
 }

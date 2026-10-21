@@ -31,7 +31,8 @@
   pointer-events: none;
 }
 
-.mobileTitle, .mobileChallengeTitle { display: none; }
+.mobileTitle, .mobileChallengeTitle, .mobileMapHeading, .mobileRoundArtwork, .mobileMapFooter, .mobileMapFrame { display: none; }
+.challengeRound { display: contents; }
 .challengeGrid { display: contents; }
 .challengeButton {
   left: var(--card-left);
@@ -376,7 +377,7 @@
     min-height: 100svh;
     overflow: visible;
     padding: 20px 12px;
-    background: #674326 url("/assets/login/background-plaza.png") center / cover fixed;
+    background: #674326 url("/assets/login/background-plaza.webp") center / cover fixed;
   }
   .stage {
     position: relative;
@@ -388,14 +389,14 @@
     padding: 24px 20px 32px;
     transform: none;
     border: 8px solid transparent;
-    border-image: url("/assets/challenge-detail/panel-board.png") 32 stretch;
+    border-image: url("/assets/challenge-detail/panel-board.webp") 32 stretch;
     background: #eddbb6;
     background-clip: padding-box;
     font-size: 16px;
   }
   .background { display: none; }
   .mobileTitle { display: block; margin: 6px 0 24px; padding-left: 36px; font: 28px/1.3 "IM Fell English", Georgia, serif; text-align: center; }
-  .mainNavigationButton { left: 8px; top: 20px; width: 44px; height: 44px; padding: 12px; }
+  .mainNavigationButton { left: 8px; top: 20px; width: 44px; height: 44px; padding: 4px; }
   .teamSummary {
     position: relative;
     inset: auto;
@@ -457,3 +458,51 @@
   .tokenPanel input { font-size: 16px; min-height: 48px; }
   .tokenPanel button { min-height: 44px; }
 }
+@media (max-width: 1100px) and (max-aspect-ratio: 9/10) {
+  .page { background-image: url("/assets/login/background-plaza-portrait.webp"); }
+}
+
+/* Mobile follows the original printed trail map, with two cards per round. */
+@media (max-width: 1100px) {
+  .page { padding: 0; overflow-x: clip; background: #f2dfbb; }
+  .stage { isolation: isolate; width: min(100%, 1000px); padding: 38px 32px; border: 0; background: none; }
+  .mobileMapFrame { display: grid; position: absolute; z-index: -1; inset: 0; grid-template-columns: 30px minmax(0, 1fr) 30px; grid-template-rows: 30px minmax(0, 1fr) 30px; pointer-events: none; }
+  .mobileMapFrame > svg { width: 100%; height: 100%; }
+  .mobileMapHeading { display: grid; grid-template-columns: 43% 57%; align-items: center; position: relative; min-height: 186px; margin: -8px -8px 12px; }
+  .mobileTitle { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); }
+  .mobileTitleArtwork { position: relative; z-index: 1; width: 100%; height: auto; }
+  .mobileTrailArtwork { width: 134%; max-width: none; height: auto; margin-left: -14%; mix-blend-mode: multiply; mask-image: radial-gradient(ellipse 65% 62% at 50% 48%, #000 47%, transparent 85%); }
+  .mobileMapSeal { position: absolute; right: -4px; top: -2px; width: 50px; height: 50px; opacity: .75; }
+  .mainNavigationButton { top: 12px; left: 12px; z-index: 2; }
+  .teamSummary { gap: 4px 12px; padding: 12px 0; margin: 0 0 14px; border-block: 1px solid #a67c4555; color: #563419; font-size: 15px; }
+  .teamSummary strong { overflow-wrap: anywhere; white-space: normal; }
+  .challengeGrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .challengeRound { --round-gap: 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px var(--round-gap); align-items: start; }
+  .mobileRoundArtwork { display: block; grid-column: 1 / -1; width: calc(100% + var(--round-gap)); max-width: none; margin-left: calc(var(--round-gap) / -2); height: auto; }
+  .challengeButton { gap: 8px; }
+  .challengeArtwork { display: block; position: relative; width: 100%; max-width: 190px; }
+  .challengeArtwork > .layerImage { width: 100%; height: auto; max-width: none; }
+  .challengeArtwork .completionStamp { inset: 0 -8%; }
+  .challengeArtwork .completionStamp .layerImage { object-fit: contain; }
+  .challengeCaption { font-size: 16px; font-weight: 700; white-space: normal; overflow-wrap: anywhere; }
+  .mobileChallengeTitle { color: #69472a; }
+  .mobileMapFooter { display: block; width: 100%; max-width: 440px; height: auto; margin: 40px auto 0; }
+  .challengeDetail, .tokenPanel { border: 5px double #9b7544; border-radius: 2px; background: #f3dfba; }
+}
+@media (max-width: 359px) {
+  .stage { padding-inline: 26px; }
+  .mobileMapHeading { min-height: 160px; }
+  .challengeRound { --round-gap: 12px; }
+}
+@media (min-width: 640px) and (max-width: 899px) {
+  .mobileMapHeading { max-width: 560px; margin-inline: auto; min-height: 240px; }
+  .challengeRound { max-width: 520px; width: 100%; margin-inline: auto; }
+  .challengeArtwork { max-width: 210px; }
+}
+@media (min-width: 900px) and (max-width: 1100px) {
+  .mobileMapHeading { max-width: 660px; margin-inline: auto; min-height: 260px; }
+  .challengeGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+  .challengeRound { --round-gap: 10px; }
+}
+.challengeArtwork { display: contents; }
+@media (max-width: 1100px) { .challengeArtwork { display: block; } }

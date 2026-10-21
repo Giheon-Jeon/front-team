@@ -12,7 +12,7 @@ export default function LineRailPreviewPage() {
     <header><h1>보석 레일 · 디자인 미리보기</h1>
       <p>개발 전용 시뮬레이션입니다. 실제 팀·독점 지급 기록·보너스 점수와 무관합니다.</p></header>
     <div className={styles.stage} data-preview-stage="true">
-      <img className={styles.background} src="/assets/board/bg-1920x1080.webp" alt="" />
+      <img className={styles.background} src="/assets/board/bg-1920x1080-display.webp" alt="" />
       <div className={styles.track} data-preview-track="true">
         <BoardSurface cells={PREVIEW_BOARD_CELLS} visitedCellIndexes={cleared} />
         <BoardLineOverlay lines={lines} boardCells={PREVIEW_BOARD_CELLS} solvedCellIndexes={cleared} isInteractive={false} />

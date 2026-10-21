@@ -7,7 +7,10 @@
   inset: 0;
   min-height: 100vh;
   overflow: hidden;
-  background: #674326 url("/assets/login/background-plaza.png") center / cover;
+  background: #674326 url("/assets/login/background-plaza.webp") center / cover;
+}
+@media (max-width: 1100px) and (max-aspect-ratio: 9/10) {
+  .page { background-image: url("/assets/login/background-plaza-portrait.webp"); }
 }
 
 .stage {
@@ -130,7 +133,7 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   .page { position: relative; min-height: 100svh; overflow: visible; padding: 20px 12px; }
   .stage {
     position: relative;
@@ -141,7 +144,7 @@
     padding: 24px 20px;
     transform: none;
     border: 8px solid transparent;
-    border-image: url("/assets/challenge-detail/panel-board.png") 32 stretch;
+    border-image: url("/assets/challenge-detail/panel-board.webp") 32 stretch;
     background: #eedfbd;
     background-clip: padding-box;
   }
@@ -152,7 +155,7 @@
   .rulesList { position: static; overflow: visible; gap: 24px; padding: 0; -webkit-mask-image: none; mask-image: none; }
   .ruleTitle { font-size: 18px; }
   .ruleDescription { margin-top: 8px; font-size: 16px; }
-  .mainNavigationButton { top: 10px; right: 10px; left: auto; width: 44px; height: 44px; padding: 10px; }
+  .mainNavigationButton { top: 10px; right: 10px; left: auto; width: 44px; height: 44px; padding: 4px; }
 }
 
 .mainNavigationButton:hover .layerImage {
@@ -186,3 +189,12 @@
     transition: filter 120ms ease;
   }
 }
+
+@media (max-width: 1100px) {
+  .page { isolation: isolate; background: none; }
+  .page::before { content: ""; position: fixed; inset: 0; z-index: -1; background: #674326 url("/assets/login/background-plaza.webp") center / cover; pointer-events: none; }
+  .stage { isolation: isolate; border-image: url("/assets/challenge-detail/panel-board.webp") 32 / 8px stretch; background: none; }
+  .rulesList { gap: 20px; }
+  .rulesList > * + * { padding-top: 20px; border-top: 1px solid #9d784e70; }
+}
+@media (max-width: 1100px) and (max-aspect-ratio: 9/10) { .page::before { background-image: url("/assets/login/background-plaza-portrait.webp"); } }

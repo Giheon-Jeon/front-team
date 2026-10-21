@@ -5,7 +5,9 @@ import {
   UNKNOWN_INSTANCE_STATUS_LABEL,
 } from "../../../constants/enums.js";
 import { formatRemaining, toKst } from "../../../utils/time.js";
+import { getInstanceFailureNotice } from "../utils/instanceFailureNotice.js";
 import styles from "./ChallengeDetailScene.module.css";
+import PanelTexture from "../../../components/common/PanelTexture.jsx";
 
 function Endpoint({ endpoint, compact }) {
   const [copied, setCopied] = useState(false);
@@ -82,8 +84,12 @@ function Endpoint({ endpoint, compact }) {
 export default function InstancePanel({ instance, otherInstance, error }) {
   const status = instance?.status ?? null;
   const running = !error && status === INSTANCE_STATUS.RUNNING;
+  const failure = error ? null : getInstanceFailureNotice(instance);
+  const ended = status === INSTANCE_STATUS.STOPPED || status === INSTANCE_STATUS.CLEANED;
   const statusLabel = error
     ? "조회 실패"
+    : failure
+      ? "실행 실패"
     : status === "RUNNING"
       ? "실행 중"
       : status
@@ -113,11 +119,19 @@ export default function InstancePanel({ instance, otherInstance, error }) {
 
   const emptyTitle = error
     ? "접속 정보를 확인할 수 없습니다"
+    : failure
+      ? failure.title
+    : ended
+      ? "인스턴스가 종료됐습니다"
     : status
       ? statusLabel
       : "문제 환경을 생성해주세요";
   const hint = error
     ? "다시 조회한 뒤 인스턴스를 조작할 수 있습니다"
+    : failure
+      ? failure.message
+    : ended
+      ? "다시 사용하려면 새 인스턴스를 생성해 주세요"
     : running
       ? "웹 주소는 새 탭에서 열립니다"
       : !instance && otherInstance
@@ -133,6 +147,7 @@ export default function InstancePanel({ instance, otherInstance, error }) {
       aria-labelledby="instance-heading"
       tabIndex={-1}
     >
+      <PanelTexture />
       <h2 id="instance-heading" className={styles.bakedLabel}>
         인스턴스
       </h2>
@@ -173,7 +188,7 @@ export default function InstancePanel({ instance, otherInstance, error }) {
         ) : (
           <div className={styles.endpointRow}>
             <div className={`${styles.endpointBox} ${styles.endpointBoxEmpty}`}>
-              <span className={styles.connectEmpty}>{emptyTitle}</span>
+              <span className={styles.connectEmpty} role={failure ? "status" : undefined}>{emptyTitle}</span>
             </div>
           </div>
         )}

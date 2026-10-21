@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getChallengeDetail } from "../../../api/challenges.js";
 import { getMyInstances } from "../../../api/instances.js";
+import { startVisiblePolling } from "../../../utils/visiblePolling.js";
 import {
   INITIAL_DETAIL_STATE,
   readDetailResult,
@@ -20,7 +21,7 @@ export default function useChallengeDetailData(challengeId) {
     setState((current) => ({ ...current, refreshing: true }));
     const [detailResult, instanceResult] = await Promise.allSettled([
       getChallengeDetail(challengeId, config),
-      getMyInstances(config),
+      getMyInstances({ ...config, params: { challenge_id: challengeId } }),
     ]);
     if (sequence !== requestSequence.current) return false;
     const detail = readDetailResult(
@@ -75,21 +76,9 @@ export default function useChallengeDetailData(challengeId) {
   }, [invalidateRequest]);
 
   useEffect(() => {
-    let disposed = false;
-    let timer;
-    const poll = async (force = false) => {
-      if (force || !document.hidden) await load();
-      if (!disposed) timer = window.setTimeout(poll, 5000);
-    };
-    const onVisible = () => {
-      if (!document.hidden) load();
-    };
-    poll(true);
-    document.addEventListener("visibilitychange", onVisible);
+    const stopPolling = startVisiblePolling(load, { intervalMs: 5000 });
     return () => {
-      disposed = true;
-      window.clearTimeout(timer);
-      document.removeEventListener("visibilitychange", onVisible);
+      stopPolling();
       invalidateRequest();
     };
   }, [load, invalidateRequest]);

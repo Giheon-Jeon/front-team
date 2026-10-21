@@ -1,0 +1,1 @@
+.notice { position: fixed; left: 50%; bottom: max(8px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 10; width: min(90vw, 600px); margin: 0; padding: 8px 12px; border: 1px solid #af8346; border-radius: 5px; background: rgb(44 28 15 / 94%); color: #f6dfb1; text-align: center; font: 13px/1.5 sans-serif; pointer-events: none; }

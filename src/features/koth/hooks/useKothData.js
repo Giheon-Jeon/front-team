@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getKothClub, getKothClubs, getKothTeamToken, getMyKothProgress, getKothLeaderboard } from "../../../api/koth.js";
 import { ACCESS_TOKEN_STORAGE_KEY } from "../../../api/client.js";
 import { isSuccess } from "../../../utils/response.js";
+import { startVisiblePolling } from "../../../utils/visiblePolling.js";
 import { validateKothClubs, validateKothClubDetail } from "../utils/kothChallengeState.js";
 
 function getErrorMessage(error, fallbackMessage) {
@@ -16,7 +17,6 @@ export function useKothData() {
     const controller = new AbortController();
     const config = { signal: controller.signal, timeout: 10000 };
     let active = true;
-    let timer;
     async function load() {
       const [clubsResult, progressResult] = await Promise.allSettled([
         getKothClubs(config),
@@ -35,10 +35,9 @@ export function useKothData() {
         error: !clubsOk ? "KOTH 목록을 갱신하지 못했습니다"
           : authenticated && !progressOk ? "내 팀 점수를 갱신하지 못했습니다" : "",
       }));
-      timer = window.setTimeout(load, 30000);
     }
-    load();
-    return () => { active = false; controller.abort(); window.clearTimeout(timer); };
+    const stopPolling = startVisiblePolling(load);
+    return () => { stopPolling(); active = false; controller.abort(); };
   }, [revision, authenticated]);
   return { ...state, authenticated, retry: () => setRevision((value) => value + 1) };
 }
@@ -50,7 +49,6 @@ export function useKothLeaderboard(challengeId, authenticated) {
     setState({ status: authenticated ? "loading" : "unauthenticated", data: null, error: "" });
     if (!challengeId || !authenticated) return;
     let active = true;
-    let timer;
     const controller = new AbortController();
     async function load() {
       try {
@@ -63,10 +61,9 @@ export function useKothLeaderboard(challengeId, authenticated) {
       } catch (error) {
         if (active) setState({ status: "error", data: null, error: getErrorMessage(error, "문제 순위표를 불러오지 못했습니다") });
       }
-      if (active) timer = window.setTimeout(load, 30000);
     }
-    load();
-    return () => { active = false; controller.abort(); window.clearTimeout(timer); };
+    const stopPolling = startVisiblePolling(load);
+    return () => { stopPolling(); active = false; controller.abort(); };
   }, [challengeId, authenticated, revision]);
   return { ...state, retry: () => setRevision((value) => value + 1) };
 }
@@ -78,7 +75,6 @@ export function useKothClubDetail(clubId, challengeId) {
   useEffect(() => {
     if (!key) return;
     const controller = new AbortController();
-    let timer;
     async function load() {
       setState({ key, status: "loading", data: null, error: "" });
       try {
@@ -90,10 +86,9 @@ export function useKothClubDetail(clubId, challengeId) {
       } catch {
         if (!controller.signal.aborted) setState({ key, status: "error", data: null, error: "선택한 문제의 최신 상태를 확인하지 못했습니다" });
       }
-      if (!controller.signal.aborted) timer = window.setTimeout(load, 30000);
     }
-    load();
-    return () => { controller.abort(); window.clearTimeout(timer); };
+    const stopPolling = startVisiblePolling(load);
+    return () => { stopPolling(); controller.abort(); };
   }, [clubId, challengeId, key, revision]);
   const current = state.key === key ? state : { status: key ? "loading" : "idle", data: null, error: "" };
   return { ...current, retry: () => setRevision((value) => value + 1) };

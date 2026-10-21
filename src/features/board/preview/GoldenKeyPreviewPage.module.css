@@ -1,0 +1,4 @@
+.page { min-height: 100dvh; background: #25190f; }
+.controls { position: fixed; left: 8px; top: 22%; z-index: 90; max-width: min(190px, 44vw); display: grid; gap: 6px; padding: 10px; border: 1px solid #b78c48; border-radius: 8px; background: rgb(45 29 16 / 94%); color: #ffe8b8; font: 12px/1.4 sans-serif; }
+.controls button { border: 1px solid #b78c48; border-radius: 5px; background: #49301e; color: inherit; min-height: 44px; padding: 5px 8px; cursor: pointer; }
+@media (max-width: 600px) { .controls { top: auto; bottom: max(8px, env(safe-area-inset-bottom)); max-width: calc(100vw - 16px); grid-template-columns: repeat(2, minmax(0, 1fr)); } .controls strong { grid-column: 1 / -1; } }
