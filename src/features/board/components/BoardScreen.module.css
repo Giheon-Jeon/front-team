@@ -65,6 +65,9 @@
   .stage .chancePanel :is(select, button) { min-height: 28px; }
   .stage .openPanel { left: calc(var(--dice-art-left) - 0.78cqw); top: var(--dice-following-top); width: calc(var(--dice-panel-width) * 284 / 378); height: min(69.54%, calc(92% - var(--dice-following-top))); }
   .frame {
+    /* WebKit 리사이즈 중 스크롤바가 사라져도 무대와 배경의 기준 크기를 유지한다. */
+    width: 100vw;
+    height: 100vh;
     --board-scene-width: min(100vw, calc(100vh * 16 / 9));
     --board-scene-height: calc(var(--board-scene-width) * 9 / 16);
     /* 원본 바닥 중심 (917, 630)을 보드와 같은 무대 좌표에 고정한다.
