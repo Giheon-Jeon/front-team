@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { toKst } from "../../../utils/time.js";
 import { buildScoreSeries, niceAxisMax, createChartScales, scoreAtTime, toPolylinePoints } from "../utils/leaderboardChartData.js";
 import { clampRange, zoomRange, rangeFromDrag, tooltipLeft } from "../utils/leaderboardViewport.js";
+import { getScoreGraphLayout } from "../utils/scoreGraphLayout.js";
 import styles from "./LeaderboardScoreGraph.module.css";
 
 const VIEW_WIDTH = 1280;
@@ -24,6 +25,7 @@ export default function LeaderboardScoreGraph({ teams, status }) {
   const chartId = useId();
   const graph = useRef(null);
   const [size, setSize] = useState({ width: VIEW_WIDTH, height: VIEW_HEIGHT });
+  const [labels, setLabels] = useState({});
   useEffect(() => {
     if (!graph.current || typeof ResizeObserver === "undefined") return undefined;
     const observer = new ResizeObserver(([entry]) => {
@@ -36,17 +38,13 @@ export default function LeaderboardScoreGraph({ teams, status }) {
   // The responsive parchment is at most 900px wide. Keep labels and controls
   // inside it through the tablet layout, including the 1100px breakpoint.
   const compact = size.width <= 900;
-  const PLOT = compact
-    ? { left: 54, top: 62, right: 24, bottom: 48 }
-    : { left: 42, top: 30, right: 4, bottom: 48 };
+  const { plot: PLOT, plotWidth, plotHeight, timeTicks, scoreTicks, scoreOffset } = getScoreGraphLayout({ ...size, compact, labels });
   const [hoverX, setHoverX] = useState(null);
   const [zoom, setZoom] = useState(null);
   const [drag, setDrag] = useState(null);
   const chartData = useMemo(() => buildScoreSeries(teams ?? []), [teams]);
   const fullRange = [chartData.minTime, chartData.maxTime];
   const range = clampRange(zoom, fullRange);
-  const plotWidth = size.width - PLOT.left - PLOT.right;
-  const plotHeight = size.height - PLOT.top - PLOT.bottom;
   const hasSeries = chartData.series.length > 0 && range !== null;
   const scales = createChartScales({ minTime: range?.[0], maxTime: range?.[1], maxScore: chartData.maxScore, width: plotWidth, height: plotHeight });
   const zoomed = hasSeries && range[1] - range[0] < fullRange[1] - fullRange[0] - 1;
@@ -57,6 +55,24 @@ export default function LeaderboardScoreGraph({ teams, status }) {
   const hoverTime = hoverX !== null && hasSeries ? nearestTime(visibleTimes, hoverX, scales.x) : null;
   const clipId = chartId + "-plot";
   const glowId = chartId + "-glow";
+
+  useEffect(() => {
+    if (!compact || !hasSeries || !graph.current || typeof ResizeObserver === "undefined") return undefined;
+    const elements = [...graph.current.querySelectorAll("[data-axis-label], [data-zoom-controls]")];
+    const measure = () => {
+      const max = (kind, key) => Math.max(0, ...elements.filter(el => el.dataset.axisLabel === kind).map(el => el[key]));
+      const next = {
+        scoreWidth: max("score", "offsetWidth"), scoreHeight: max("score", "offsetHeight"),
+        timeWidth: max("time", "offsetWidth"), timeHeight: max("time", "offsetHeight"),
+        controlsHeight: elements.find(el => el.hasAttribute("data-zoom-controls"))?.offsetHeight || 0,
+      };
+      setLabels(current => Object.keys(next).every(key => current[key] === next[key]) ? current : next);
+    };
+    const observer = new ResizeObserver(measure);
+    elements.forEach(el => observer.observe(el));
+    measure();
+    return () => observer.disconnect();
+  }, [compact, hasSeries, timeTicks, scoreTicks]);
 
   const resetZoom = () => { setZoom(null); setHoverX(null); setDrag(null); };
   const changeZoom = (factor) => { setZoom(zoomRange(range, fullRange, factor)); setHoverX(null); };
@@ -103,19 +119,28 @@ export default function LeaderboardScoreGraph({ teams, status }) {
 
   return <div ref={graph} className={styles.graph} data-compact={compact} onPointerLeave={() => { if (!drag) setHoverX(null); }}
     data-range-start={range?.[0]} data-range-end={range?.[1]} data-full-start={fullRange[0]} data-full-end={fullRange[1]}>
-    {hasSeries && <div className={styles.zoomControls} aria-label="그래프 확대 도구">
+    {hasSeries && <div className={styles.zoomControls} data-zoom-controls aria-label="그래프 확대 도구">
       <span className={styles.zoomHint}>드래그로 확대</span>
       <button type="button" onClick={() => changeZoom(0.5)} aria-label="시간 구간 확대" title="시간 구간 확대 (+)">+</button>
       <button type="button" onClick={() => changeZoom(2)} disabled={!zoomed} aria-label="시간 구간 축소" title="시간 구간 축소 (-)">−</button>
       <button type="button" onClick={resetZoom} disabled={!zoomed} className={styles.resetZoom} title="전체 시간으로 돌아가기 (Esc 또는 더블클릭)">전체 보기</button>
     </div>}
-    {hasSeries && Array.from({ length: 6 }, (_, index) => {
-      const value = niceAxisMax(chartData.maxScore) * index / 5;
-      return <span key={index} className={styles.axisScore} style={{ top: PLOT.top + scales.y(value) - 10 }}>{formatScore(value)}</span>;
+    {hasSeries && Array.from({ length: scoreTicks }, (_, index) => {
+      const fraction = index / (scoreTicks - 1);
+      const value = niceAxisMax(chartData.maxScore) * fraction;
+      return <span key={index} data-axis-label="score" className={styles.axisScore} style={compact ? {
+        top: `calc(${(1 - fraction) * 100}% + ${PLOT.top * fraction - PLOT.bottom * (1 - fraction) - scoreOffset}px)`,
+        right: `calc(100% - ${PLOT.left - 8}px)`,
+      } : { top: PLOT.top + scales.y(value) - scoreOffset }}>{formatScore(value)}</span>;
     })}
-    {hasSeries && Array.from({ length: compact ? 3 : 5 }, (_, index) => {
-      const time = range[0] + (range[1] - range[0]) * index / (compact ? 2 : 4);
-      return <span key={index} className={styles.axisTime} style={{ left: PLOT.left + scales.x(time), top: size.height - PLOT.bottom + 17 }}>{formatTime(time, showSeconds)}</span>;
+    {hasSeries && Array.from({ length: timeTicks }, (_, index) => {
+      const fraction = index / (timeTicks - 1);
+      const time = range[0] + (range[1] - range[0]) * fraction;
+      // 회전 직후 ResizeObserver의 다음 갱신 전에도 눈금은 현재 화면 폭을 따른다.
+      return <span key={index} data-axis-label="time" className={styles.axisTime} style={compact ? {
+        left: `calc(${fraction * 100}% + ${PLOT.left * (1 - fraction) - PLOT.right * fraction}px)`,
+        top: `calc(100% - ${PLOT.bottom - 17}px)`,
+      } : { left: PLOT.left + scales.x(time), top: size.height - PLOT.bottom + 17 }}>{formatTime(time, showSeconds)}</span>;
     })}
     {hasSeries && <svg className={styles.svg} viewBox={"0 0 " + size.width + " " + size.height} preserveAspectRatio="none"
       role="img" tabIndex={0} onFocus={() => setHoverX(0)} onBlur={() => setHoverX(null)} onKeyDown={onKeyDown}

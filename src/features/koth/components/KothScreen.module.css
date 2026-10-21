@@ -465,15 +465,17 @@
 /* Mobile follows the original printed trail map, with two cards per round. */
 @media (max-width: 1100px) {
   .page { padding: 0; overflow-x: clip; background: #f2dfbb; }
-  .stage { isolation: isolate; width: min(100%, 1000px); padding: 38px 32px; border: 0; background: none; }
+  .stage { isolation: isolate; width: min(100%, 1000px); min-height: 100svh; padding: 38px 32px; border: 0; background: none; }
   .mobileMapFrame { display: grid; position: absolute; z-index: -1; inset: 0; grid-template-columns: 30px minmax(0, 1fr) 30px; grid-template-rows: 30px minmax(0, 1fr) 30px; pointer-events: none; }
-  .mobileMapFrame > svg { width: 100%; height: 100%; }
+  /* 모서리가 지도 전체 높이로 늘어나지 않도록 각 격자 행에 맞춘다. */
+  .mobileMapFrame > svg { display: block; width: 100%; height: auto; min-width: 0; min-height: 0; align-self: stretch; }
   .mobileMapHeading { display: grid; grid-template-columns: 43% 57%; align-items: center; position: relative; min-height: 186px; margin: -8px -8px 12px; }
   .mobileTitle { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); }
   .mobileTitleArtwork { position: relative; z-index: 1; width: 100%; height: auto; }
   .mobileTrailArtwork { width: 134%; max-width: none; height: auto; margin-left: -14%; mix-blend-mode: multiply; mask-image: radial-gradient(ellipse 65% 62% at 50% 48%, #000 47%, transparent 85%); }
   .mobileMapSeal { position: absolute; right: -4px; top: -2px; width: 50px; height: 50px; opacity: .75; }
   .mainNavigationButton { top: 12px; left: 12px; z-index: 2; }
+  .mainNavigationButton .layerImage { object-fit: contain; }
   .teamSummary { gap: 4px 12px; padding: 12px 0; margin: 0 0 14px; border-block: 1px solid #a67c4555; color: #563419; font-size: 15px; }
   .teamSummary strong { overflow-wrap: anywhere; white-space: normal; }
   .challengeGrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; }

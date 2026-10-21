@@ -66,7 +66,7 @@
   align-items: center;
   gap: 6px;
   min-width: 0;
-  height: 22px;
+  min-height: 22px;
   margin: 2px 0;
   font-size: 14px;
 }
@@ -123,7 +123,7 @@
 
 .graph[data-compact="true"] .axisScore { right: calc(100% - 46px); font-size: 14px; }
 .graph[data-compact="true"] .axisTime { font-size: 14px; }
-.graph[data-compact="true"] .zoomControls { top: 0; }
+.graph[data-compact="true"] .zoomControls { top: 0; max-width: 100%; flex-wrap: wrap; justify-content: flex-end; }
 .graph[data-compact="true"] .zoomControls button { height: 44px; }
 .graph[data-compact="true"] .zoomHint { display: none; }
 .graph[data-compact="true"] .state { color: #593517; }
