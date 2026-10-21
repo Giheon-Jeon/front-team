@@ -314,8 +314,9 @@ export default function BoardScreen({
         </div>
       </div>
 
-      {!isOpenListVisible && <ChanceCardSummary
+      <ChanceCardSummary
         cards={ownedChanceCards}
+        isObscured={isOpenListVisible}
         cells={cells}
         consumedCellIndexes={myBoard?.consumedCellIndexes ?? []}
         isMutating={isMutating}
@@ -324,7 +325,7 @@ export default function BoardScreen({
           Boolean(pendingRoll) || diceStatus?.blockedReason === "PENDING_CONFIRM"
         }
         onUseCard={onUseChanceCard}
-      />}
+      />
 
       {isOpenListVisible && (
         <OpenChallengesSidePanel

@@ -21,10 +21,11 @@ export function OpenChallengesToggle({ isOpen, count, onToggle, buttonRef }) {
       onClick={onToggle}
       aria-expanded={isOpen}
       aria-controls="board-open-challenges-panel"
-      // 금테 명판 버튼. 주사위판 바로 아래에 붙이고 양끝을 주사위판 테두리(무대 2.45%~19.74%)에 맞춘다.
-      // 세로 순서: 주사위판 → 안내 문구 → 이 버튼 → 보유 찬스카드.
+      // 주사위판과 같은 금테 프레임 명판. 양끝을 주사위판·찬스카드 테두리에 맞춘다.
+      // 기존 배치대로 주사위판 → 이 버튼 → 카드 또는 열린 문제 목록 순서를 유지한다.
+      // 카드 수와 목록의 열림 상태가 버튼 좌표에 영향을 주지 않는다.
       // 열린 동안에도 자리를 옮기지 않아 닫을 때 초점이 이 버튼으로 바로 돌아온다.
-      className={`${styles.plaqueButton} ${styles.openToggle} absolute left-[2.45%] top-[17%] z-30 w-[17.29%]`}
+      className={`${styles.plateFrame} ${styles.plaqueButton} ${styles.openToggle} absolute left-[2.45%] top-[17%] z-30 w-[17.29%]`}
     >
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M6 4h9l3 3v13H6z" /><path d="M9 10h6M9 13.5h6M9 17h4" />
@@ -67,7 +68,7 @@ export default function OpenChallengesSidePanel({
       restored.current = true;
     }
   }, [loading, instanceInfo?.loading, challenges]);
-  useEffect(() => { closeButton.current?.focus({ preventScroll: true }); }, []);
+  useBrowserLayoutEffect(() => { closeButton.current?.focus({ preventScroll: true }); }, []);
   const panel = (
     <aside
       ref={panelRef}
@@ -76,7 +77,7 @@ export default function OpenChallengesSidePanel({
       id="board-open-challenges-panel"
       aria-label="열린 문제"
       onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); onClose(); } }}
-      className={`${styles.openPanel} absolute left-[1.67%] top-[22.4%] z-40 h-[69.54%] w-[14.79%]`}
+      className={`${styles.openPanel} absolute left-[2.45%] top-[22.4%] z-40 h-[69.54%] w-[17.29%]`}
     >
       <img
         src="/assets/board/open-challenges-panel.webp"
@@ -91,12 +92,13 @@ export default function OpenChallengesSidePanel({
       <div className={styles.openPanelHeader}>
       <h2 className={styles.mobileOpenTitle}>열린 문제</h2>
 
+      {/* 44px 클릭 영역은 유지하고 20px 아이콘을 안쪽 테두리에서 2px 띄운다. 낮은 화면에서도 제목을 가리지 않는다. */}
       <button
         type="button"
         ref={closeButton}
         onClick={onClose}
         aria-label="열린 문제 패널 닫기"
-        className={`${styles.openClose} absolute left-[76.06%] top-[5.41%] h-[2.58%] w-[8.1%] border-0 bg-transparent p-0 hover:brightness-125`}
+        className={`${styles.openClose} absolute right-[calc(8.12%-10px)] top-[calc(4.87%-10px)] border-0 bg-transparent p-0 hover:brightness-125`}
       >
         <img src="/assets/board/icon-close-round.png" alt="" aria-hidden="true" className="h-full w-full object-contain" />
       </button>

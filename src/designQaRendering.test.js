@@ -26,6 +26,7 @@ before(async () => {
     Koth: "koth/components/KothScreen",
     BoardNav: "board/components/BoardNav",
     DiceStatusPanel: "board/components/DiceStatusPanel",
+    ChanceCardSummary: "board/components/ChanceCardSummary",
     BoardVisitedOverlay: "board/components/BoardVisitedOverlay",
     BoardSurface: "board/components/BoardSurface",
     BoardCellTarget: "board/components/BoardCellTarget",
@@ -179,13 +180,21 @@ test("일반 칸 클릭 정보 패널은 제거하고 게임용 문제 선택은
   }
 });
 
-test("좌측 보드 UI는 타이머를 분리하고 열린 문제 패널 동안 찬스카드를 숨긴다", () => {
+test("좌측 보드 UI는 타이머를 분리하고 열린 문제 패널을 열어도 카드 위치를 보존한다", () => {
   const html = render("DiceStatusPanel", { rollsLeft: 0, canRoll: false, blockedMessage: "남은 주사위가 없습니다.", resetInSeconds: 260, challengeRemainingSeconds: 303 });
   assert.match(html, /right-\[10%\].*top-\[25%\]/);
   assert.match(html, /top-\[70%\]/);
   assert.doesNotMatch(html, /truncate/);
   const screen = readFileSync(new URL("./features/board/components/BoardScreen.jsx", import.meta.url), "utf8");
-  assert.match(screen, /!isOpenListVisible && <ChanceCardSummary/);
+  assert.doesNotMatch(screen, /!isOpenListVisible && <ChanceCardSummary/);
+  const cards = {
+    cards: [{ cardId: "card_move_offset", name: "추가 이동", usableNow: true }],
+    cells: [], consumedCellIndexes: [], isMutating: false,
+  };
+  const obscured = render("ChanceCardSummary", { ...cards, isObscured: true });
+  assert.match(obscured, /aria-hidden="true" inert=""/);
+  assert.match(obscured, /추가 이동 칸 수/);
+  assert.doesNotMatch(render("ChanceCardSummary", cards), /aria-hidden="true"|inert=""/);
   const panel = readFileSync(new URL("./features/board/components/OpenChallengesSidePanel.jsx", import.meta.url), "utf8");
   assert.match(panel, /top-\[17%\]/);
   assert.match(panel, /top-\[22\.4%\]/);

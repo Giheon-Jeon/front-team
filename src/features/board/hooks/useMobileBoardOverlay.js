@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
+
+const useBrowserLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 export default function useMobileBoardOverlay(panelRef) {
   const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && window.matchMedia("(max-width: 1100px)").matches);
@@ -9,7 +11,7 @@ export default function useMobileBoardOverlay(panelRef) {
     update();
     return () => media.removeEventListener("change", update);
   }, []);
-  useEffect(() => {
+  useBrowserLayoutEffect(() => {
     if (!isMobile) return;
     const body = document.body;
     const app = document.getElementById("root");
