@@ -38,6 +38,7 @@ export default function ChallengeDetailScreen({
   onRetry,
 }) {
   const showBonus = submission.remainingSeconds != null && !submission.blocked;
+  const showInstance = challenge?.requiresInstance || instance != null;
   const showDock =
     challenge &&
     !loading &&
@@ -86,7 +87,7 @@ export default function ChallengeDetailScreen({
               <ChallengeHeaderPanel challenge={challenge} />
               <nav className={styles.sectionNav} aria-label="문제 상세 바로가기">
                 <a href="#challenge-description">문제 설명</a>
-                <a href="#challenge-instance">인스턴스</a>
+                {showInstance && <a href="#challenge-instance">인스턴스</a>}
                 <a href="#challenge-flag">플래그 제출</a>
               </nav>
               <div className={styles.contentGrid}>
@@ -95,19 +96,23 @@ export default function ChallengeDetailScreen({
                   attachments={challenge.attachments}
                 />
                 <div className={styles.actionColumn}>
-                  <InstancePanel
-                    instance={instance}
-                    otherInstance={otherInstance}
-                    error={instanceError}
-                  />
-                  <InstanceControls
-                    instance={instance}
-                    otherInstance={otherInstance}
-                    controls={controls}
-                    unavailable={instanceUnavailable}
-                    pendingAction={pendingAction}
-                    onAction={onInstanceAction}
-                  />
+                  {showInstance && (
+                    <>
+                      <InstancePanel
+                        instance={instance}
+                        otherInstance={otherInstance}
+                        error={instanceError}
+                      />
+                      <InstanceControls
+                        instance={instance}
+                        otherInstance={otherInstance}
+                        controls={controls}
+                        unavailable={instanceUnavailable}
+                        pendingAction={pendingAction}
+                        onAction={onInstanceAction}
+                      />
+                    </>
+                  )}
                   <FlagSubmitPanel
                     value={flagValue}
                     onChange={onFlagChange}
