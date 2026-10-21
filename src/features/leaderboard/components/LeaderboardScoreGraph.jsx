@@ -126,12 +126,21 @@ export default function LeaderboardScoreGraph({ teams, status }) {
       <button type="button" onClick={resetZoom} disabled={!zoomed} className={styles.resetZoom} title="전체 시간으로 돌아가기 (Esc 또는 더블클릭)">전체 보기</button>
     </div>}
     {hasSeries && Array.from({ length: scoreTicks }, (_, index) => {
-      const value = niceAxisMax(chartData.maxScore) * index / (scoreTicks - 1);
-      return <span key={index} data-axis-label="score" className={styles.axisScore} style={{ top: PLOT.top + scales.y(value) - scoreOffset, ...(compact ? { right: size.width - PLOT.left + 8 } : {}) }}>{formatScore(value)}</span>;
+      const fraction = index / (scoreTicks - 1);
+      const value = niceAxisMax(chartData.maxScore) * fraction;
+      return <span key={index} data-axis-label="score" className={styles.axisScore} style={compact ? {
+        top: `calc(${(1 - fraction) * 100}% + ${PLOT.top * fraction - PLOT.bottom * (1 - fraction) - scoreOffset}px)`,
+        right: `calc(100% - ${PLOT.left - 8}px)`,
+      } : { top: PLOT.top + scales.y(value) - scoreOffset }}>{formatScore(value)}</span>;
     })}
     {hasSeries && Array.from({ length: timeTicks }, (_, index) => {
-      const time = range[0] + (range[1] - range[0]) * index / (timeTicks - 1);
-      return <span key={index} data-axis-label="time" className={styles.axisTime} style={{ left: PLOT.left + scales.x(time), top: size.height - PLOT.bottom + 17 }}>{formatTime(time, showSeconds)}</span>;
+      const fraction = index / (timeTicks - 1);
+      const time = range[0] + (range[1] - range[0]) * fraction;
+      // 회전 직후 ResizeObserver의 다음 갱신 전에도 눈금은 현재 화면 폭을 따른다.
+      return <span key={index} data-axis-label="time" className={styles.axisTime} style={compact ? {
+        left: `calc(${fraction * 100}% + ${PLOT.left * (1 - fraction) - PLOT.right * fraction}px)`,
+        top: `calc(100% - ${PLOT.bottom - 17}px)`,
+      } : { left: PLOT.left + scales.x(time), top: size.height - PLOT.bottom + 17 }}>{formatTime(time, showSeconds)}</span>;
     })}
     {hasSeries && <svg className={styles.svg} viewBox={"0 0 " + size.width + " " + size.height} preserveAspectRatio="none"
       role="img" tabIndex={0} onFocus={() => setHoverX(0)} onBlur={() => setHoverX(null)} onKeyDown={onKeyDown}
