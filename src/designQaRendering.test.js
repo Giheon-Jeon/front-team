@@ -49,7 +49,7 @@ before(async () => {
   for (const [name, path] of Object.entries(paths)) {
     components[name] = (await server.ssrLoadModule(`/src/features/${path}.jsx`)).default;
   }
-  components.QuickAction = (await server.ssrLoadModule("/src/features/admin/pages/AdminDashboardPage.jsx")).QuickActionButton;
+  components.QuickAction = (await server.ssrLoadModule("/src/features/admin/components/AdminWidgets.jsx")).ActionTile;
   components.DiceFallback = (await server.ssrLoadModule("/src/features/board/components/DiceFallback.jsx")).DiceFallback;
   components.LiveDiceStatus = (await server.ssrLoadModule("/src/features/board/components/BoardCountdownPanels.jsx")).BoardDiceStatusPanel;
   components.RouteLoadBoundary = (await server.ssrLoadModule("/src/routes/RouteLoadBoundary.jsx")).default;
@@ -290,11 +290,19 @@ test("리더보드 표는 모든 열과 긴 팀명, 원래 1~3위 이미지를 �
   assert.equal((html.match(/scope="col"/g) || []).length, 14);
 });
 
-test("순위표는 모바일에서도 모든 열과 점수를 유지하고 표 안에서만 가로 이동한다", () => {
+test("순위표는 폰에서 팀마다 카드로 쌓이고 태블릿에서는 모든 열을 유지한 채 표 안에서만 가로 이동한다", () => {
   const root = css("features/leaderboard/components/LeaderboardScreen.module.css");
   assert.ok(declarations(root, ".rankingGrid").some(([key, value]) => key === "width" && value === "100%"));
   assert.ok(declarations(root, ".tableContainer").some(([key, value]) => key === "overflow-x" && value === "auto"));
-  assert.ok(!declarations(root, ".rankingGrid tbody tr").some(([key]) => key === "grid-template-columns"));
+  // 폰 구간에서만 줄이 격자 카드가 되고, 밀어서 보라는 안내는 사라지며, 분야 이름이 값 위에 붙는다
+  const phone = root.nodes.find((node) => node.type === "atrule" && node.params === "(max-width: 767px)"
+    && declarations(node, ".rankingGrid tbody tr").length > 0);
+  assert.ok(declarations(phone, ".rankingGrid tbody tr").some(([key]) => key === "grid-template-columns"));
+  assert.ok(declarations(phone, ".mobileTableHint").some(([key, value]) => key === "display" && value === "none"));
+  assert.ok(declarations(phone, ".mobileCellLabel").some(([key, value]) => key === "display" && value === "block"));
+  const tablet = root.nodes.filter((node) => node.type === "atrule" && node.params === "(max-width: 1100px)");
+  assert.ok(tablet.some((node) => declarations(node, ".rankingGrid").some(([key, value]) => key === "min-width" && value === "960px")));
+  assert.ok(!tablet.some((node) => declarations(node, ".rankingGrid tbody tr").some(([key]) => key === "grid-template-columns")));
   assert.ok(!declarations(root, ".rankingGrid thead").some(([key]) => key === "clip-path"));
   const html = render("Leaderboard", {
     teams: [], leaderboardStatus: "empty", rankingStatus: "success",
@@ -353,8 +361,8 @@ test("관리자 공통 틀은 결제 탭 여부와 관계없이 같은 메뉴와
 
 test("관리자 빠른 작업에는 실제 동작 이름만 표시하고 다른 동작의 이미지 문구를 재사용하지 않는다", () => {
   for (const [variant, label] of [["restart", "강제 재시작"], ["stop", "강제 종료"], ["mileage", "마일리지 지급"], ["rollback", "롤백 실행"]]) {
-    const html = render("QuickAction", { variant, label });
-    assert.match(html, new RegExp(`data-action="${variant}">${label}<\/button>`));
+    const html = render("QuickAction", { glyph: variant, label });
+    assert.match(html, new RegExp(`data-action="${variant}"[^>]*>[\\s\\S]*?<span[^>]*>${label}<\\/span><\\/button>`));
     assert.doesNotMatch(html, /btn-(?:create|extend)\.png/);
   }
 });
@@ -677,7 +685,7 @@ test("모션 축소 설정에서는 카드 등장과 이동을 끄고 고대비 
 test("모바일에서 반복 안내를 줄여도 주사위 상태와 제한 시간은 접근성 정보에 남는다", () => {
   const ready = render("DiceStatusPanel", { rollsLeft: 3, canRoll: true });
   assert.match(ready, /data-roll-ready="true"/);
-  assert.match(ready, /aria-label="주사위 보유 3\/3\. 주사위를 굴릴 수 있습니다\./);
+  assert.match(ready, /aria-label="주사위 보유 3\/3\. 주사위를 굴릴 수 있습니다/);
   const waiting = render("DiceStatusPanel", {
     rollsLeft: 2, canRoll: false, blockedMessage: "문제 풀이 제한 시간이 끝나면 다시 이동할 수 있습니다", challengeRemainingSeconds: 900,
   });
