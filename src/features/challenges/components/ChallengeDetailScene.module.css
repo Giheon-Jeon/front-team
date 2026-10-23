@@ -1280,7 +1280,7 @@
     padding: 0;
     border: 0;
     border-radius: 0;
-    background: url("/assets/challenge-detail/panel-header.png") center / 100% 100% no-repeat;
+    background: url("/assets/challenge-detail/panel-header.webp") center / 100% 100% no-repeat;
   }
   .header .eyebrow {
     position: absolute;
@@ -1365,7 +1365,7 @@
     padding: 0;
     border: 0;
     border-radius: 0;
-    background: url("/assets/challenge-detail/panel-description-base.png") center / 100% 100% no-repeat;
+    background: url("/assets/challenge-detail/panel-description-base.webp") center / 100% 100% no-repeat;
   }
   .descriptionBody {
     position: absolute;
