@@ -71,21 +71,22 @@
   .stage .leftPanel { position: absolute; z-index: 40; left: 2.6%; top: 1.8%; width: max(18.2%, 240px); display: flex; flex-direction: column; }
   .stage .leftPanelCard { display: contents; }
   /* 플레이트: 바깥 장식 SVG(그림자 포함)와 안쪽 선을 가상 요소로 얹는다 */
-  .stage .leftPanel :is(.diceStatus, .chancePanel, .panelToggleSection) { position: relative; isolation: isolate; box-sizing: border-box; border: 0; border-image: none; background: none; box-shadow: none; filter: none; overflow: visible; }
-  .stage .leftPanel :is(.diceStatus, .chancePanel, .panelToggleSection)::before,
-  .stage .leftPanel :is(.diceStatus, .chancePanel, .panelToggleSection)::after { content: ""; position: absolute; z-index: -1; pointer-events: none; background-repeat: no-repeat; background-size: 100% 100%; }
-  .stage .leftPanel :is(.diceStatus, .chancePanel)::before { inset: -4.42% -2.87% -13.27% -2.87%; background-image: url("/assets/board/plates/plate-chance.svg"); }
-  .stage .leftPanel :is(.diceStatus, .chancePanel)::after { inset: 4px; background-image: url("/assets/board/plates/plate-chance-line.svg"); background-size: 100.44% 101.42%; background-position: center; }
+  .stage .leftPanel :is(.chancePanel, .panelToggleSection) { position: relative; isolation: isolate; box-sizing: border-box; border: 0; border-image: none; background: none; box-shadow: none; filter: none; overflow: visible; }
+  .stage .leftPanel :is(.chancePanel, .panelToggleSection)::before,
+  .stage .leftPanel :is(.chancePanel, .panelToggleSection)::after { content: ""; position: absolute; z-index: -1; pointer-events: none; background-repeat: no-repeat; background-size: 100% 100%; }
+  .stage .leftPanel .chancePanel::before { inset: -4.42% -2.87% -13.27% -2.87%; background-image: url("/assets/board/plates/plate-chance.svg"); }
+  .stage .leftPanel .chancePanel::after { inset: 4px; background-image: url("/assets/board/plates/plate-chance-line.svg"); background-size: 100.44% 101.42%; background-position: center; }
   .stage .leftPanel .panelToggleSection::before { inset: -8.62% -2.87% -25.86% -2.87%; background-image: url("/assets/board/plates/plate-open.svg"); }
   .stage .leftPanel .panelToggleSection::after { inset: 4px; background-image: url("/assets/board/plates/plate-open-line.svg"); background-size: 100.44% 103%; background-position: center; }
-  .stage .leftPanelCard .diceStatus {
-    inset: auto; width: auto; height: auto; aspect-ratio: auto; padding: 0.73cqw 0.83cqw;
-    display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0.3cqw 0.5cqw;
-  }
-  .stage .leftPanelCard .diceStatus > :not(.diceReadout, .diceChallengeRow, .diceStatusMessage) { display: none; }
-  .stage .leftPanelCard .diceReadout { position: static; width: auto; grid-column: 1; grid-row: 1; font-size: clamp(12px, 0.73cqw, 15px); }
-  .stage .leftPanelCard .diceChallengeRow { position: static; grid-column: 2; grid-row: 1; font-size: clamp(11px, 0.66cqw, 14px); }
-  .stage .leftPanelCard .diceStatusMessage { position: static; width: auto; margin: 0; grid-column: 1 / -1; grid-row: 2; font-size: clamp(11px, 0.63cqw, 13px); line-height: 1.4; }
+  /* Figma 5:19 주사위판(333×146)을 너비 100%로 놓고 값은 시안 좌표를 퍼센트로 바꿔 겹친다 */
+  .stage .leftPanelCard .diceStatus { position: relative; inset: auto; width: 100%; height: auto; aspect-ratio: 333 / 146; padding: 0; display: block; }
+  .stage .leftPanelCard .diceStatusIcon { display: block; position: absolute; left: 7.4%; top: 52.7%; width: 3.7%; height: auto; transform: translateY(-50%); }
+  .stage .leftPanelCard .diceReadout { position: absolute; left: 15.1%; right: 4.5%; top: 52.7%; width: auto; transform: translateY(-50%); font-size: clamp(11px, 0.8cqw, 16px); }
+  .stage .leftPanelCard .diceChallengeRow { position: absolute; left: auto; right: 4.5%; top: 22%; font-size: clamp(10px, 0.62cqw, 13px); }
+  .stage .leftPanelCard .diceStatusMessage { position: absolute; left: 42%; right: 4.5%; top: 34%; width: auto; margin: 0; text-align: right; font-size: clamp(10px, 0.58cqw, 12px); line-height: 1.35; }
+  .stage .leftPanelCard .diceGauge { display: block; position: absolute; left: 7.4%; top: 59.4%; width: 88.1%; height: 8.4%; box-sizing: border-box; padding: 0.1cqw 0.14cqw; border-radius: 0.3cqw; }
+  .diceGauge span { display: block; height: 100%; min-width: 0; border-radius: 0.2cqw; background: linear-gradient(#fbbb35, #fbb934 38%, #d3861f); box-shadow: 0 0 0.3cqw #f4a8286b; transition: width 1s linear; }
+  .diceGauge[data-idle="true"] span { opacity: .45; box-shadow: none; }
   .stage .leftPanelCard .chancePanel {
     position: relative; inset: auto; width: auto; max-height: none; margin-top: 0.21cqw;
     padding: 0.73cqw 0.83cqw; display: flex; flex-direction: column; gap: 0.26cqw;
@@ -525,6 +526,7 @@
 }
 
 .mobileDiceIcon { display: none; }
+.diceGauge, .diceStatusIcon { display: none; }
 @media (max-width: 1100px) {
   .mobileMenuItems .mobileNavIcon { width: 32px; height: 32px; }
   .mobileNav .mobileMenuItems .mobileNavPrimary { flex-direction: row; gap: 8px; }
@@ -547,7 +549,7 @@
 .diceStatus > .dicePanelArtwork { display: block; position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 @media (max-width: 1100px) {
   .diceStatus > svg { display: block; }
-  .diceStatus > .dicePanelArtwork { display: none; }
+  .diceStatus > .dicePanelArtwork, .diceStatus > .diceStatusIcon { display: none; }
   .mobileNav a.mobileNavPrimary { min-width: 44px; }
   .stage { container-name: board-stage; }
 }
