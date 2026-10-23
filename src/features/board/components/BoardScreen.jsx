@@ -7,7 +7,7 @@ import useTrainWhistle from "../hooks/useTrainWhistle.js";
 import useMobileBoardBackdrop from "../hooks/useMobileBoardBackdrop.js";
 import useBoardTextLayout from "../hooks/useBoardTextLayout.js";
 import { preloadBoardTrain } from "./BoardTrain.jsx";
-import { prepareBoardLines } from "../utils/boardLines.js";
+import { getBoardLineCounts, prepareBoardLines } from "../utils/boardLines.js";
 import { normalizeBoardListView } from "../utils/boardChallengeList.js";
 import { getChallengeSelectionKey } from "../utils/challengeSelection.js";
 import { getAirportSelectableCellIndexes, isAirportSelectionMode } from "../utils/boardOverlays.js";
@@ -95,12 +95,40 @@ export default function BoardScreen({
   const lineSummary = useRef(null);
   const lines = useMemo(() => prepareBoardLines(lineProgress, boardDefinition?.cells), [lineProgress, boardDefinition?.cells]);
   const hasLines = lines.length > 0;
+  const lineCounts = getBoardLineCounts(lines);
   const activeLineId = lines.find((line) => line.lineId === selectedLineId)?.lineId ?? lines[0]?.lineId ?? null;
   const boardRegionId = useId();
   const boardViewport = useRef(null);
   const frameRef = useRef(null);
+  const leftPanelCard = useRef(null);
   useMobileBoardBackdrop(frameRef, boardViewport);
   useBoardTextLayout(frameRef);
+  // 데스크톱 왼쪽 열에서 주사위판과 열린 문제 버튼 플레이트까지의 높이(찬스카드 목록 제외)를 무대에 알린다
+  // KoTH 배너 위 끝을 열린 문제 패널 위선(이 높이 + 간격)에 맞추는 데 쓴다 휴대폰에서는 열이 없어 재지 않는다
+  useEffect(() => {
+    const frame = frameRef.current;
+    const card = leftPanelCard.current;
+    if (!frame || !card || typeof ResizeObserver === "undefined") return undefined;
+    const dice = card.querySelector(`.${styles.diceStatus}`);
+    const toggle = card.querySelector(`.${styles.panelToggleSection}`);
+    if (!dice || !toggle) return undefined;
+    const update = () => {
+      if (getComputedStyle(card.parentElement).display !== "flex") return;
+      const diceHeight = dice.getBoundingClientRect().height;
+      const toggleHeight = toggle.getBoundingClientRect().height;
+      if (!diceHeight || !toggleHeight) return;
+      const toggleGap = parseFloat(getComputedStyle(toggle).marginTop) || 0;
+      frame.style.setProperty("--left-card-height", `${diceHeight + toggleGap + toggleHeight}px`);
+    };
+    const observer = new ResizeObserver(update);
+    observer.observe(dice);
+    observer.observe(toggle);
+    update();
+    return () => {
+      observer.disconnect();
+      frame.style.removeProperty("--left-card-height");
+    };
+  }, []);
   const trainTravel = useTrainTravel();
   const trainWhistle = useTrainWhistle();
   const followTrain = (pose) => {
@@ -122,6 +150,7 @@ export default function BoardScreen({
   const closeOpenList = () => {
     setIsOpenListVisible(false);
     setIsLineSummaryOpen(false);
+    setSelectedLineId(null);
     const trigger = openListTrigger.current;
     if (trigger?.isConnected && typeof trigger.focus === "function") trigger.focus({ preventScroll: true });
     else {
@@ -318,7 +347,7 @@ export default function BoardScreen({
       {/* 데스크톱에서는 주사위 상태·찬스카드·열린 문제 버튼을 한 패널에 모은다.
           모바일에서는 display: contents라 각 요소가 기존 흐름 그대로 놓인다. */}
       <div className={styles.leftPanel}>
-      <div className={styles.leftPanelCard}>
+      <div className={styles.leftPanelCard} ref={leftPanelCard}>
       <BoardDiceStatusPanel
         rollsLeft={diceStatus?.diceRollsLeft ?? myBoard?.diceRollsLeft ?? 0}
         maxRolls={diceStatus?.maxDiceRolls ?? myBoard?.maxDiceRolls ?? 3}
@@ -363,10 +392,13 @@ export default function BoardScreen({
           instanceInfo={instanceInfo}
           onSelectChallenge={onOpenChallengeDetail}
           onClose={closeOpenList}
+          lineCount={`${lineCounts.done}/${lineCounts.total}`}
+          showLines={isLineSummaryOpen}
+          onShowLinesChange={setIsLineSummaryOpen}
+          linesTabRef={lineSummary}
         >
-          {hasLines && <BoardLineSummary lines={lines} selectedLineId={activeLineId}
-            onSelectLine={setSelectedLineId} isOpen={isLineSummaryOpen} onToggle={setIsLineSummaryOpen}
-            summaryRef={lineSummary} isPreview={lineProgressPreview} />}
+          {/* 보드에서 고른 라인만 강조한다 고르지 않았으면 아무 라인도 강조하지 않는다 */}
+          {hasLines && <BoardLineSummary lines={lines} selectedLineId={selectedLineId} isPreview={lineProgressPreview} />}
         </OpenChallengesSidePanel>
       )}
       </div>
