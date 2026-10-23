@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import admin, auth, board, challenges, koth, leaderboard, mypage, ranking, timer
+from .views import admin, auth, board, challenges, koth, leaderboard, mypage, ranking, signatures, timer
 
 urlpatterns = [
     # 1. 인증
@@ -35,6 +35,10 @@ urlpatterns = [
     path("instances/<uuid:instance_id>/reset", challenges.InstanceResetView.as_view()),
     path("instances/<uuid:instance_id>/extend", challenges.InstanceExtendView.as_view()),
     path("instances/<uuid:instance_id>", challenges.InstanceDeleteView.as_view()),
+    # 부스 시그니처(목 전용, 메모리 풀이 기록)
+    path("signatures", signatures.SignatureListView.as_view()),
+    path("signatures/<str:signature_id>", signatures.SignatureDetailView.as_view()),
+    path("signatures/<str:signature_id>/submit", signatures.SignatureSubmitView.as_view()),
     # 4. 리더보드
     path("leaderboard", leaderboard.LeaderboardView.as_view()),
     # 5. 랭킹
