@@ -13,7 +13,9 @@ const useBrowserLayoutEffect = typeof window === "undefined" ? useEffect : useLa
 // Figma 원본 에셋이고, 좌표는 1920x1080 무대 기준 %로 옮겼다(패널 32,179 / 284x814).
 // 문제 목록과 라인 완성은 이 패널 안에서 확인하고 문제를 고를 때만 상세로 이동한다.
 // 데이터는 GET /board/opened_challenges(연 순서 오름차순).
-export function OpenChallengesToggle({ isOpen, count, onToggle, buttonRef }) {
+// placement="panel"은 데스크톱 좌상단 통합 패널 안의 버튼, 기본값은 모바일 도구줄의 버튼이다.
+// 두 버튼은 CSS로 화면 크기에 따라 한쪽만 보인다.
+export function OpenChallengesToggle({ isOpen, count, onToggle, buttonRef, placement = "tools" }) {
   return (
     <button
       type="button"
@@ -21,11 +23,10 @@ export function OpenChallengesToggle({ isOpen, count, onToggle, buttonRef }) {
       onClick={onToggle}
       aria-expanded={isOpen}
       aria-controls="board-open-challenges-panel"
-      // 주사위판과 같은 금테 프레임 명판. 양끝을 주사위판·찬스카드 테두리에 맞춘다.
-      // 기존 배치대로 주사위판 → 이 버튼 → 카드 또는 열린 문제 목록 순서를 유지한다.
-      // 카드 수와 목록의 열림 상태가 버튼 좌표에 영향을 주지 않는다.
       // 열린 동안에도 자리를 옮기지 않아 닫을 때 초점이 이 버튼으로 바로 돌아온다.
-      className={`${styles.plateFrame} ${styles.plaqueButton} ${styles.openToggle} absolute left-[2.45%] top-[17%] z-30 w-[17.29%]`}
+      className={placement === "panel"
+        ? `${styles.plaqueButton} ${styles.panelToggle}`
+        : `${styles.plateFrame} ${styles.plaqueButton} ${styles.openToggle}`}
     >
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M6 4h9l3 3v13H6z" /><path d="M9 10h6M9 13.5h6M9 17h4" />
