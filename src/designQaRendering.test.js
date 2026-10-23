@@ -196,8 +196,10 @@ test("좌측 보드 UI는 타이머를 분리하고 열린 문제 패널을 열�
   assert.match(obscured, /추가 이동 칸 수/);
   assert.doesNotMatch(render("ChanceCardSummary", cards), /aria-hidden="true"|inert=""/);
   const panel = readFileSync(new URL("./features/board/components/OpenChallengesSidePanel.jsx", import.meta.url), "utf8");
-  assert.match(panel, /top-\[17%\]/);
+  // 데스크톱에서는 주사위 상태·찬스카드·열린 문제 버튼이 leftPanelCard 한 패널 안에 모인다
+  assert.match(panel, /placement === "panel"/);
   assert.match(panel, /top-\[22\.4%\]/);
+  assert.match(screen, /className=\{styles\.leftPanelCard\}[\s\S]*<BoardDiceStatusPanel[\s\S]*<ChanceCardSummary[\s\S]*placement="panel"/);
 });
 
 test("문제 후보가 0개면 재조회 안내를 띄우고 다음 칸으로 넘기지 않는다", () => {

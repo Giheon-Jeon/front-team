@@ -1,4 +1,5 @@
-.desktopOnly, .boardViewport, .boardArea, .boardTools, .boardScene { display: contents; }
+.desktopOnly, .boardViewport, .boardArea, .boardTools, .boardScene, .leftPanel, .leftPanelCard { display: contents; }
+.panelToggleSection { display: none; }
 .mobileNav, .boardControls, .boardHint, .sceneBackdrop, .mobileCellInfo { display: none; }
 .frame {
   --board-label-font: "Song Myung", "Batang", serif;
@@ -63,23 +64,39 @@
 /* 풍경은 FixedAspectStage의 배경 한 장으로 화면 전체를 채운다
    원판과 조작 패널은 기존 1920×1080 무대에서 같은 비율로 축소한다 */
 @media (min-width: 1101px) {
-  /* 원래 가로 명판의 비율과 장식은 유지하고 글자가 들어갈 최소 크기만 확보한다. */
-  .stage {
-    --dice-panel-width: max(19.69cqw, 240px);
-    --dice-panel-left: min(1.35%, calc(448 / 1920 * 100% - var(--dice-panel-width) * 355 / 378 - 12px));
-    --dice-art-left: calc(var(--dice-panel-left) + var(--dice-panel-width) * 23 / 378);
-    --dice-art-width: calc(var(--dice-panel-width) * 332 / 378);
-    --dice-toggle-top: max(17%, calc(var(--dice-panel-width) * 151 / 378 + 8px));
-    --open-toggle-height: max(44px, 3.12cqw);
-    --dice-following-top: max(22.4%, calc(var(--dice-toggle-top) + var(--open-toggle-height) + 10px));
+  /* Figma 753:300 좌상단 통합 패널. 주사위 상태·보유 찬스카드·열린 문제 버튼을 한 프레임에 모으고
+     열린 문제 목록(양피지)은 그 아래에 이어 붙인다. */
+  .stage { --dice-panel-width: max(19.69cqw, 240px); }
+  .stage .leftPanel { position: absolute; z-index: 40; left: 2.6%; top: 2.2%; width: max(18.2%, 240px); display: flex; flex-direction: column; gap: 0.6cqw; }
+  .stage .leftPanelCard {
+    display: flex; flex-direction: column; overflow: hidden;
+    padding-block: 0.3cqw; border: max(1.5px, 0.1cqw) solid #b88d55; border-radius: 0.42cqw;
+    background: #2a190df0; box-shadow: 0 0.2cqw 0.62cqw #00000073;
   }
-  .stage .diceStatus { left: var(--dice-panel-left); width: var(--dice-panel-width); height: auto; aspect-ratio: 378 / 223; }
-  .stage .openToggle { left: var(--dice-art-left); top: var(--dice-toggle-top); width: var(--dice-art-width); height: var(--open-toggle-height); }
-  .stage .chancePanel { left: var(--dice-art-left); top: var(--dice-following-top); width: var(--dice-art-width); }
+  .stage .leftPanelCard .diceStatus {
+    position: relative; inset: auto; width: auto; height: auto; aspect-ratio: auto; padding: 0.52cqw 0.83cqw;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0.3cqw 0.5cqw;
+  }
+  .stage .leftPanelCard .diceStatus > :not(.diceReadout, .diceChallengeRow, .diceStatusMessage) { display: none; }
+  .stage .leftPanelCard .diceReadout { position: static; width: auto; grid-column: 1; grid-row: 1; font-size: clamp(12px, 0.73cqw, 15px); }
+  .stage .leftPanelCard .diceChallengeRow { position: static; grid-column: 2; grid-row: 1; font-size: clamp(11px, 0.66cqw, 14px); }
+  .stage .leftPanelCard .diceStatusMessage { position: static; width: auto; margin: 0; grid-column: 1 / -1; grid-row: 2; font-size: clamp(11px, 0.63cqw, 13px); line-height: 1.4; }
+  .stage .leftPanelCard .chancePanel {
+    position: static; inset: auto; width: auto; max-height: calc(var(--board-scene-height) * 0.34);
+    padding: 0.52cqw 0.83cqw; border: 0; border-image: none; border-top: 1px solid #6f4929; filter: none;
+  }
+  .stage .leftPanelCard .chancePanel[data-obscured="true"] { display: none; }
   .stage .chancePanel h2 { font-size: clamp(14px, 0.8cqw, 18px); }
   .stage .chancePanel :is(li, p, span, select, button) { font-size: clamp(12px, 0.65cqw, 15px); line-height: 1.5; }
   .stage .chancePanel :is(select, button) { min-height: 28px; }
-  .stage .openPanel { left: calc(var(--dice-art-left) - 0.78cqw); top: var(--dice-following-top); width: calc(var(--dice-panel-width) * 284 / 378); height: min(69.54%, calc(92% - var(--dice-following-top))); }
+  .stage .leftPanelCard .chancePanel li { padding: 0.36cqw 0.52cqw; }
+  .stage .panelToggleSection { display: block; padding: 0.42cqw 0.52cqw 0.3cqw; border-top: 1px solid #6f4929; }
+  .stage .panelToggle {
+    display: flex; width: 100%; min-height: 44px; padding: 0.62cqw 0.73cqw; gap: 0.47cqw;
+    border: 1px solid #b88d55; border-radius: 0.31cqw; background: #8a623659; font-size: clamp(14px, 0.99cqw, 22px);
+  }
+  .stage .openToggle { display: none; }
+  .stage .leftPanel .openPanel { position: relative; inset: auto; align-self: center; width: calc(var(--dice-panel-width) * 284 / 378); height: calc(var(--board-scene-height) * 0.6954); }
   .frame {
     /* WebKit 리사이즈 중 스크롤바가 사라져도 무대와 배경의 기준 크기를 유지한다. */
     width: 100vw;
@@ -563,4 +580,47 @@
   .frame[data-board-text-layout] .boardTools { flex-direction: column; align-items: stretch; }
   .frame[data-board-text-layout] .openToggle { width: 100%; justify-content: center; padding-inline: 8px; word-break: keep-all; }
   .frame[data-board-text-layout] .boardControls { justify-content: center; }
+}
+
+/* 로그인 후 첫 주사위 굴림 안내: 주사위 위치에 겹친 원형 레이어가 숨 쉬듯 깜빡이며 튄다 */
+.diceIntro {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.diceIntroCircle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 62%;
+  aspect-ratio: 1;
+  margin: -31% 0 0 -31%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff0c4aa 0%, #f0b04a66 60%, #f0b04a22 100%);
+  box-shadow: 0 0 24px #f0b04a88;
+  animation: diceIntroPulse 1.4s ease-in-out infinite;
+}
+.diceIntroText {
+  position: relative;
+  color: #fff;
+  font-size: clamp(13px, 1.6vw, 22px);
+  font-weight: 700;
+  white-space: nowrap;
+  text-shadow: 0 1px 4px #000c, 0 0 10px #000a;
+  animation: diceIntroBounce 1.4s ease-in-out infinite;
+}
+@keyframes diceIntroPulse {
+  0%, 100% { opacity: 0.25; transform: translateY(0) scale(0.92); }
+  50% { opacity: 1; transform: translateY(-8%) scale(1.06); }
+}
+@keyframes diceIntroBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .diceIntroCircle, .diceIntroText { animation: none; opacity: 0.85; }
 }
