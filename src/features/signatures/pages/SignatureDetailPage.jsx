@@ -1,8 +1,9 @@
+import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ROUTES } from "../../../routes/routePaths.js";
 import { toKst } from "../../../utils/time.js";
 import FlagSubmitPanel from "../../challenges/components/FlagSubmitPanel.jsx";
-import RequestFeedback from "../../challenges/components/RequestFeedback.jsx";
+import FlagResultModal from "../../challenges/components/FlagResultModal.jsx";
 import PanelTexture from "../../../components/common/PanelTexture.jsx";
 import { useSignatureDetail } from "../hooks/useSignatures.js";
 import { getFestivalBrand } from "../utils/festivalBrand.js";
@@ -15,6 +16,8 @@ import festival from "../components/SignatureFestival.module.css";
 // 로고, 시그니처 제목, 배점·해결한 팀, 보상 안내는 기존 내용을 모두 유지한다.
 function SignatureDetail({ signatureId }) {
   const state = useSignatureDetail(signatureId);
+  // 정답·오답 결과는 문제 상세처럼 화면 가운데 모달로 알린다
+  const [dismissedFeedback, setDismissedFeedback] = useState(null);
   const challenge = state.data;
   const brand = getFestivalBrand(challenge?.club_name);
   // 제목에 부스 이름이 이미 들어 있으면(예: MJSEC 시그니처) 이름을 한 번만 보여준다
@@ -29,7 +32,7 @@ function SignatureDetail({ signatureId }) {
     : "축제장으로 돌아가기";
   const showDock =
     challenge &&
-    (state.feedback || state.retrySeconds > 0 || state.status === "loading");
+    (state.retrySeconds > 0 || state.status === "loading");
   return (
     <div className={`${scene.page} ${styles.signaturePage}`}>
       <div className={scene.stage}>
@@ -168,11 +171,6 @@ function SignatureDetail({ signatureId }) {
                       풀이 기록을 확인하는 중
                     </p>
                   )}
-                  <RequestFeedback
-                    id="flag-feedback"
-                    feedback={state.feedback}
-                    rewards
-                  />
                   {state.retrySeconds > 0 && (
                     <p id="flag-retry" className={scene.retryNotice}>
                       <strong>{state.retrySeconds}초</strong> 후 다시 제출할 수
@@ -185,6 +183,12 @@ function SignatureDetail({ signatureId }) {
           )}
         </main>
       </div>
+      {state.feedback && state.feedback !== dismissedFeedback && (
+        <FlagResultModal
+          feedback={state.feedback}
+          onClose={() => setDismissedFeedback(state.feedback)}
+        />
+      )}
     </div>
   );
 }
