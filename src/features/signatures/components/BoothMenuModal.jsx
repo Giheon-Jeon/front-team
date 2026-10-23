@@ -1,20 +1,27 @@
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Link } from "react-router-dom";
+import FlagResultModal from "../../challenges/components/FlagResultModal.jsx";
 import styles from "./BoothMenuModal.module.css";
 
-export default function BoothMenuModal({ club, challenge, status, error, onRetry, onClose, solveTo }) {
+// submission: useSignatureDetail 결과. 없으면(미리보기) 제출 칸을 그리지 않는다
+export default function BoothMenuModal({ club, challenge, status, error, onRetry, onClose, submission }) {
   const titleId = useId();
+  const flagId = useId();
   const panel = useRef(null);
+  // 정답·오답은 문제 상세와 같은 중앙 모달로 알린다. 닫은 피드백은 다시 띄우지 않는다
+  const [dismissed, setDismissed] = useState(null);
+  const result = submission?.feedback && submission.feedback !== dismissed ? submission.feedback : null;
+  const resultOpen = useRef(false);
+  resultOpen.current = Boolean(result);
   useEffect(() => {
     const previous = document.activeElement;
     const overflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     panel.current?.querySelector("button")?.focus();
     const key = (event) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape" && !resultOpen.current) onClose();
       if (event.key !== "Tab") return;
-      const nodes = [...panel.current.querySelectorAll('button:not(:disabled),a[href],[tabindex="0"]')];
+      const nodes = [...panel.current.querySelectorAll('button:not(:disabled),input:not(:disabled),a[href],[tabindex="0"]')];
       const first = nodes[0], last = nodes.at(-1);
       if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
@@ -46,9 +53,25 @@ export default function BoothMenuModal({ club, challenge, status, error, onRetry
           </>}
         </div>
       </div>
-      {/* 메뉴판은 소개만 하고 플래그는 상세 풀이 페이지에서 낸다 단추는 지문 길이와 상관없이 보이게 메뉴판 아래에 둔다 */}
-      {status === "success" && challenge && solveTo && <Link to={solveTo} className={styles.solve}>{challenge.is_solved ? "풀이 완료 · 문제 다시 보기" : "플래그 제출하기"}</Link>}
+      {/* 제출 칸은 지문 길이와 상관없이 보이게 메뉴판 아래에 둔다 */}
+      {status === "success" && challenge && submission && <form className={styles.submit} onSubmit={event => { event.preventDefault(); if (!submission.disabled) submission.submit(); }} aria-busy={submission.busy}>
+        {submission.solved ? <p className={styles.solved} role="status">풀이 완료 ✓</p> : <>
+          <label htmlFor={flagId}>플래그 제출</label>
+          <div className={styles.row}>
+            <input id={flagId} type="text" placeholder="MSG{...}" autoComplete="off" autoCapitalize="off" spellCheck={false}
+              value={submission.flag} maxLength={512} disabled={submission.busy}
+              onChange={event => submission.setFlag(event.target.value)}
+              aria-invalid={["INCORRECT_FLAG", "INVALID_REQUEST"].includes(submission.feedback?.code) || undefined} />
+            <button type="submit" disabled={submission.disabled}>{submission.busy ? "확인 중…" : submission.retrySeconds > 0 ? `${submission.retrySeconds}초` : "제출"}</button>
+          </div>
+        </>}
+      </form>}
     </section>
   </div>;
-  return typeof document === "undefined" ? content : createPortal(content, document.body);
+  if (typeof document === "undefined") return content;
+  // 오버레이의 backdrop-filter가 fixed 자식의 기준을 바꾸므로 결과 모달은 body로 따로 올린다
+  return <>
+    {createPortal(content, document.body)}
+    {result && createPortal(<FlagResultModal feedback={result} onClose={() => setDismissed(result)} />, document.body)}
+  </>;
 }

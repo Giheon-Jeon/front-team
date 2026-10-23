@@ -7,10 +7,10 @@ import { SignatureFestivalScreen } from "./SignaturesPage.jsx";
 import BoothMenuModal from "../components/BoothMenuModal.jsx";
 
 function ProblemMenu({ club, signatureId, onClose }) {
-  // 기존 상세 GET과 검증기를 재사용한다. 제출 함수는 연결하지 않고 상세 풀이 페이지로 보낸다.
+  // 상세 조회와 플래그 제출을 같은 훅으로 처리해 모달에서 바로 낸다
   const detail = useSignatureDetail(signatureId);
   return <BoothMenuModal club={club} challenge={detail.data} status={detail.status}
-    error={detail.error} onRetry={detail.retry} onClose={onClose} solveTo={ROUTES.signatureDetail(signatureId)} />;
+    error={detail.error} onRetry={detail.retry} onClose={onClose} submission={detail} />;
 }
 
 export default function SignatureClubPage() {
