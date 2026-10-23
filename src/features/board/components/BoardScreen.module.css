@@ -568,3 +568,46 @@
   .frame[data-board-text-layout] .openToggle { width: 100%; justify-content: center; padding-inline: 8px; word-break: keep-all; }
   .frame[data-board-text-layout] .boardControls { justify-content: center; }
 }
+
+/* 로그인 후 첫 주사위 굴림 안내: 주사위 위치에 겹친 원형 레이어가 숨 쉬듯 깜빡이며 튄다 */
+.diceIntro {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.diceIntroCircle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 62%;
+  aspect-ratio: 1;
+  margin: -31% 0 0 -31%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff0c4aa 0%, #f0b04a66 60%, #f0b04a22 100%);
+  box-shadow: 0 0 24px #f0b04a88;
+  animation: diceIntroPulse 1.4s ease-in-out infinite;
+}
+.diceIntroText {
+  position: relative;
+  color: #fff;
+  font-size: clamp(13px, 1.6vw, 22px);
+  font-weight: 700;
+  white-space: nowrap;
+  text-shadow: 0 1px 4px #000c, 0 0 10px #000a;
+  animation: diceIntroBounce 1.4s ease-in-out infinite;
+}
+@keyframes diceIntroPulse {
+  0%, 100% { opacity: 0.25; transform: translateY(0) scale(0.92); }
+  50% { opacity: 1; transform: translateY(-8%) scale(1.06); }
+}
+@keyframes diceIntroBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .diceIntroCircle, .diceIntroText { animation: none; opacity: 0.85; }
+}
