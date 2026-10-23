@@ -333,7 +333,7 @@ test("규칙 문단은 원문을 유지하고 한 줄 고정과 항목별 절대
 test("KoTH 모바일 배치용 제목을 추가해도 비활성 문제는 접속할 수 없다", () => {
   const challenge = {
     kothChallengeId: "challenge-1", clubName: "seKUrity", title: "테스트 문제",
-    status: "SCHEDULED", imageSrc: "/assets/koth/challenge-maple-pass.png",
+    status: "SCHEDULED", imageSrc: "/assets/koth/challenge-maple-pass.webp",
     position: { left: "5%", top: "60%", width: "12%", height: "26%" },
     challengeUrl: "https://example.invalid",
   };

@@ -17,7 +17,7 @@ export default function KothEventBanner() {
   return (
     <>
       <img
-        src="/assets/board/banner-koth-event.png"
+        src="/assets/board/banner-koth-event.webp"
         alt="KOTH 이벤트 배너"
         className="absolute left-[81.45%] top-[26.48%] w-[17.66%] h-[58.06%] object-contain pointer-events-none"
       />
