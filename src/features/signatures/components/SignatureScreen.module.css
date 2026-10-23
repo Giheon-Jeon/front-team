@@ -168,9 +168,8 @@
     padding-inline: calc(var(--u) * 14);
   }
   .signaturePage .clubName {
-    font-size: calc(var(--u) * 40);
-    line-height: calc(var(--u) * 51);
-    white-space: nowrap;
+    font: inherit;
+    color: inherit;
   }
   .signaturePage .titleDivider {
     flex: none;
@@ -183,7 +182,7 @@
     flex: 0 1 auto;
     min-width: 0;
     width: auto;
-    font-size: calc(var(--u) * 48);
+    font-size: calc(var(--u) * 58);
     line-height: calc(var(--u) * 60);
   }
   .signaturePage .signatureStamp {

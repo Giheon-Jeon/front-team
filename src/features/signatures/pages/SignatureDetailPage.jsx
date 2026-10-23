@@ -17,6 +17,10 @@ function SignatureDetail({ signatureId }) {
   const state = useSignatureDetail(signatureId);
   const challenge = state.data;
   const brand = getFestivalBrand(challenge?.club_name);
+  // 제목에 부스 이름이 이미 들어 있으면(예: MJSEC 시그니처) 이름을 한 번만 보여준다
+  const showClubName =
+    challenge &&
+    !challenge.title.toLowerCase().includes(challenge.club_name.toLowerCase());
   const backTo = challenge
     ? ROUTES.signatureClub(challenge.club_id)
     : ROUTES.signatures;
@@ -77,10 +81,14 @@ function SignatureDetail({ signatureId }) {
                         <img src={brand.src} alt="" />
                       </span>
                     )}
-                    <span className={styles.clubName}>{challenge.club_name}</span>
                   </div>
                   <span className={styles.titleDivider} aria-hidden="true" />
                   <h1 className={scene.title} title={challenge.title}>
+                    {showClubName && (
+                      <span className={styles.clubName}>
+                        {challenge.club_name}{" "}
+                      </span>
+                    )}
                     {challenge.title}
                   </h1>
                   {state.solved && brand && (
