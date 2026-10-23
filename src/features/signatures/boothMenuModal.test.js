@@ -34,8 +34,6 @@ test("부스 메뉴는 제출 정보가 있을 때만 플래그 입력칸을 그
     const open = renderToStaticMarkup(createElement(Modal, { ...base, submission }));
     assert.match(open, /<input/);
     assert.ok(open.includes("플래그 제출"));
-    const wrong = renderToStaticMarkup(createElement(Modal, { ...base, submission: { ...submission, feedback: { type: "error", code: "INCORRECT_FLAG", message: "틀렸습니다" } } }));
-    assert.ok(wrong.includes("틀렸습니다"));
     const solved = renderToStaticMarkup(createElement(Modal, { ...base, submission: { ...submission, solved: true } }));
     assert.ok(solved.includes("풀이 완료"));
     assert.doesNotMatch(solved, /<input/);

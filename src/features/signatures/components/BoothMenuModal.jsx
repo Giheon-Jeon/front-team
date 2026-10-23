@@ -1,5 +1,6 @@
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import FlagResultModal from "../../challenges/components/FlagResultModal.jsx";
 import styles from "./BoothMenuModal.module.css";
 
 // submission: useSignatureDetail 결과. 없으면(미리보기) 제출 칸을 그리지 않는다
@@ -7,13 +8,18 @@ export default function BoothMenuModal({ club, challenge, status, error, onRetry
   const titleId = useId();
   const flagId = useId();
   const panel = useRef(null);
+  // 정답·오답은 문제 상세와 같은 중앙 모달로 알린다. 닫은 피드백은 다시 띄우지 않는다
+  const [dismissed, setDismissed] = useState(null);
+  const result = submission?.feedback && submission.feedback !== dismissed ? submission.feedback : null;
+  const resultOpen = useRef(false);
+  resultOpen.current = Boolean(result);
   useEffect(() => {
     const previous = document.activeElement;
     const overflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     panel.current?.querySelector("button")?.focus();
     const key = (event) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape" && !resultOpen.current) onClose();
       if (event.key !== "Tab") return;
       const nodes = [...panel.current.querySelectorAll('button:not(:disabled),input:not(:disabled),a[href],[tabindex="0"]')];
       const first = nodes[0], last = nodes.at(-1);
@@ -59,10 +65,13 @@ export default function BoothMenuModal({ club, challenge, status, error, onRetry
             <button type="submit" disabled={submission.disabled}>{submission.busy ? "확인 중…" : submission.retrySeconds > 0 ? `${submission.retrySeconds}초` : "제출"}</button>
           </div>
         </>}
-        {submission.feedback && <p className={submission.feedback.type === "error" ? styles.error : styles.ok}
-          role={submission.feedback.type === "error" ? "alert" : "status"}>{submission.feedback.message}</p>}
       </form>}
     </section>
   </div>;
-  return typeof document === "undefined" ? content : createPortal(content, document.body);
+  if (typeof document === "undefined") return content;
+  // 오버레이의 backdrop-filter가 fixed 자식의 기준을 바꾸므로 결과 모달은 body로 따로 올린다
+  return <>
+    {createPortal(content, document.body)}
+    {result && createPortal(<FlagResultModal feedback={result} onClose={() => setDismissed(result)} />, document.body)}
+  </>;
 }
