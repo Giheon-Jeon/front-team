@@ -12,6 +12,8 @@ urlpatterns = [
     path("board", board.BoardView.as_view()),
     path("board/me", board.BoardMeView.as_view()),
     path("board/dice/status", board.DiceStatusView.as_view()),
+    path("board/dice/request", board.DiceRequestView.as_view()),
+    path("board/dice/request/ack", board.DiceRequestAckView.as_view()),
     path("board/dice/roll", board.DiceRollView.as_view()),
     path("board/cell/current", board.CellCurrentView.as_view()),
     path("board/cell/open", board.CellOpenView.as_view()),
