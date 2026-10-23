@@ -70,13 +70,19 @@ function SignatureDetail({ signatureId }) {
           {challenge && (
             <>
               <header className={scene.header}>
-                <div className={styles.detailClub}>
-                  {brand && (
-                    <span className={styles.clubMark} data-kind={brand.kind}>
-                      <img src={brand.src} alt="" />
-                    </span>
-                  )}
-                  <span className={styles.clubName}>{challenge.club_name}</span>
+                <div className={styles.titleRow}>
+                  <div className={styles.detailClub}>
+                    {brand && (
+                      <span className={styles.clubMark} data-kind={brand.kind}>
+                        <img src={brand.src} alt="" />
+                      </span>
+                    )}
+                    <span className={styles.clubName}>{challenge.club_name}</span>
+                  </div>
+                  <span className={styles.titleDivider} aria-hidden="true" />
+                  <h1 className={scene.title} title={challenge.title}>
+                    {challenge.title}
+                  </h1>
                   {state.solved && brand && (
                     <span
                       className={`${festival.detailAchievement} ${styles.signatureStamp}`}
@@ -86,9 +92,6 @@ function SignatureDetail({ signatureId }) {
                     </span>
                   )}
                 </div>
-                <h1 className={scene.title} title={challenge.title}>
-                  {challenge.title}
-                </h1>
                 <dl className={scene.metrics}>
                   <div className={scene.metric}>
                     <dt className={scene.bakedLabel}>배점</dt>

@@ -87,6 +87,16 @@
   letter-spacing: 0.2em;
   text-align: right;
 }
+.titleRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  min-width: 0;
+}
+.titleDivider {
+  display: none;
+}
 .metricUnit {
   font-family: var(--sans);
   font-size: 0.4em;
@@ -116,6 +126,9 @@
 }
 
 @media (min-width: 1101px) and (min-height: 620px) {
+  .signaturePage .titleDivider {
+    display: block;
+  }
   .pageLocation {
     position: absolute;
     z-index: 2;
@@ -127,36 +140,56 @@
     font-size: max(10px, calc(var(--u) * 18));
     text-shadow: 0 1px 3px #000a;
   }
-  /* 헤더: 로고·부스 이름 줄 아래에 제목을 둔다 */
-  .signaturePage .detailClub {
+  /* 헤더: 로고 · 부스 이름 | 제목을 한 줄에 둔다 */
+  .signaturePage .titleRow {
     position: absolute;
     left: calc(var(--u) * 29);
-    top: calc(var(--u) * 15);
+    top: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
     flex-wrap: nowrap;
-    gap: calc(var(--u) * 12);
-    height: calc(var(--u) * 38);
+    gap: calc(var(--u) * 22);
+    width: calc(var(--u) * 1230);
+  }
+  .signaturePage .detailClub {
+    flex: none;
+    flex-wrap: nowrap;
+    gap: calc(var(--u) * 16);
     margin: 0;
   }
   .signaturePage .clubMark {
-    width: calc(var(--u) * 38);
-    height: calc(var(--u) * 38);
-    padding: calc(var(--u) * 5);
+    width: calc(var(--u) * 76);
+    height: calc(var(--u) * 76);
+    padding: calc(var(--u) * 10);
   }
   .signaturePage .clubMark[data-kind="wordmark"] {
-    width: calc(var(--u) * 84);
-    padding-inline: calc(var(--u) * 8);
+    width: calc(var(--u) * 150);
+    padding-inline: calc(var(--u) * 14);
   }
   .signaturePage .clubName {
-    font-size: calc(var(--u) * 26);
-    line-height: calc(var(--u) * 38);
+    font-size: calc(var(--u) * 40);
+    line-height: calc(var(--u) * 51);
     white-space: nowrap;
   }
-  .signaturePage .signatureStamp {
-    width: calc(var(--u) * 52);
-    margin-left: calc(var(--u) * 4);
+  .signaturePage .titleDivider {
+    flex: none;
+    width: calc(var(--u) * 2);
+    height: calc(var(--u) * 56);
+    background: #b99a66;
   }
-  .signaturePage header h1 {
-    top: calc(var(--u) * 62);
+  .signaturePage .titleRow h1 {
+    position: static;
+    flex: 0 1 auto;
+    min-width: 0;
+    width: auto;
+    font-size: calc(var(--u) * 48);
+    line-height: calc(var(--u) * 60);
+  }
+  .signaturePage .signatureStamp {
+    flex: none;
+    width: calc(var(--u) * 64);
+    margin-left: calc(var(--u) * 4);
   }
   .signaturePage .metricUnit {
     font-size: calc(var(--u) * 20);
