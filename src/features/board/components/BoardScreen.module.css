@@ -44,8 +44,21 @@
   user-select: none;
   transition: left var(--piece-transition, 150ms) linear, top var(--piece-transition, 150ms) linear;
 }
+/* 한 칸 이동할 때 곡선으로 뛰어올랐다 착지한다. transform은 위치 보정에 쓰여 개별 translate 속성을 쓴다 */
+.boardPieceHopA { animation: boardPieceHopA var(--piece-transition, 150ms) linear; }
+.boardPieceHopB { animation: boardPieceHopB var(--piece-transition, 150ms) linear; }
+@keyframes boardPieceHopA {
+  0% { translate: 0 0; animation-timing-function: ease-out; }
+  50% { translate: 0 -38%; animation-timing-function: ease-in; }
+  100% { translate: 0 0; }
+}
+@keyframes boardPieceHopB {
+  0% { translate: 0 0; animation-timing-function: ease-out; }
+  50% { translate: 0 -38%; animation-timing-function: ease-in; }
+  100% { translate: 0 0; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .boardPiece { transition: none; }
+  .boardPiece { transition: none; animation: none; }
 }
 /* 풍경은 FixedAspectStage의 배경 한 장으로 화면 전체를 채운다
    원판과 조작 패널은 기존 1920×1080 무대에서 같은 비율로 축소한다 */
