@@ -1,4 +1,4 @@
-"""README.md 0-2절: 모든 응답은 { code, message, data } 3개 키 고정."""
+"""AGENT.md 0-2절: 모든 응답은 { code, message, data } 3개 키 고정."""
 
 from rest_framework.response import Response
 

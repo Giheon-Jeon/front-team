@@ -9,7 +9,7 @@ class LeaderboardView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        # README 4절: 밴 팀·미풀이 팀 제외, 최대 8팀, 동점은 solved_at 이른 순
+        # AGENT.md 4절: 밴 팀·미풀이 팀 제외, 최대 8팀, 동점은 solved_at 이른 순
         # (🔴 0-6절과 상충하는 미해결 이슈지만, 이 목서버는 API 명세 원문 그대로 구현한다)
         teams = (
             Team.objects.filter(is_banned=False)

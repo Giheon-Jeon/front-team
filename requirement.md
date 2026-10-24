@@ -1,6 +1,6 @@
 # 프론트엔드 실행/연동 요구사항
 
-백엔드가 로컬(또는 통합 테스트) 환경에서 프론트엔드를 같이 띄우기 위해 필요한 정보를 정리한 문서다. 상세 API 규약·응답 포맷은 이 문서가 아니라 `README.md`가 기준이다.
+백엔드가 로컬(또는 통합 테스트) 환경에서 프론트엔드를 같이 띄우기 위해 필요한 정보를 정리한 문서다. 상세 API 규약·응답 포맷은 이 문서가 아니라 `AGENT.md`가 기준이다.
 
 ## 1. 실행 환경
 
@@ -19,7 +19,7 @@
 
 Docker로 띄우는 방법은 `Dockerfile` / `docker-compose.yml` / `nginx.conf` 참고(같은 커밋에 포함).
 
-**`docker compose up --build`** 한 번이면 프론트(nginx, 3000번)뿐 아니라 실제 백엔드를 대신할 **목(mock) 백엔드**(`mock-backend/`, Django + DRF + SimpleJWT, 8000번)까지 같이 뜬다. 실제 백엔드가 아직 "시작 전"/"논의" 단계인 API가 많아서(README.md 8절), 그 전까지 프론트가 API 계약을 로컬에서 검증할 수 있게 만든 것이다. 의존성·데모 계정·구현 범위는 `mock-backend/README.md` 참고.
+**`docker compose up --build`** 한 번이면 프론트(nginx, 3000번)뿐 아니라 실제 백엔드를 대신할 **목(mock) 백엔드**(`mock-backend/`, Django + DRF + SimpleJWT, 8000번)까지 같이 뜬다. 실제 백엔드가 아직 "시작 전"/"논의" 단계인 API가 많아서(AGENT.md 8절), 그 전까지 프론트가 API 계약을 로컬에서 검증할 수 있게 만든 것이다. 의존성·데모 계정·구현 범위는 `mock-backend/AGENT.md` 참고.
 
 **`mock-backend/requirements.txt`에 대해:**
 - 이 리포는 프론트엔드 리포(`FRONT`)이고, 이 파일은 프론트가 로컬에서 실제 백엔드 대신 띄우는 **목 서버(Django) 전용** Python 의존성 고정 목록이다 — 루트의 `package.json`(Node/JS)과는 별개다. **프론트 개발/빌드에는 필요 없다.**
@@ -34,7 +34,7 @@ Docker로 띄우는 방법은 `Dockerfile` / `docker-compose.yml` / `nginx.conf`
 - 개발 서버(`npm run dev`)로 띄운다면: Vite dev server에 `/api/v1` → 백엔드로 넘기는 프록시 설정이 필요하다(현재 `vite.config.js`에는 없음 — 아직 추가 안 된 상태).
 - Docker/프로덕션 빌드로 띄운다면: 이 리포에 포함된 `nginx.conf`가 그 프록시 역할을 한다(`location /api/v1/ { proxy_pass http://backend:8000/api/v1/; }`). 지금은 `backend`가 `mock-backend/`(목 서버)를 가리킨다 — **실제 백엔드가 준비되면 이 대상을 실제 백엔드 서비스명·포트로 교체해야 한다.**
 
-이 부분은 README.md 12-5절에도 "Phase 0 인프라 미완 항목"으로 적혀 있는 알려진 이슈다. 절대경로(`VITE_API_BASE_URL` env 변수) 방식으로 바꿀지, 계속 상대경로+리버스프록시 방식으로 갈지는 아직 팀 내 결정 전이다 — 백엔드가 선호하는 방식이 있으면 알려주면 그쪽으로 맞춘다.
+이 부분은 AGENT.md 12-5절에도 "Phase 0 인프라 미완 항목"으로 적혀 있는 알려진 이슈다. 절대경로(`VITE_API_BASE_URL` env 변수) 방식으로 바꿀지, 계속 상대경로+리버스프록시 방식으로 갈지는 아직 팀 내 결정 전이다 — 백엔드가 선호하는 방식이 있으면 알려주면 그쪽으로 맞춘다.
 
 ## 4. 포트
 
@@ -58,4 +58,4 @@ Docker로 띄우는 방법은 `Dockerfile` / `docker-compose.yml` / `nginx.conf`
 
 - 위 3번 base URL 처리 방식(상대경로+프록시 vs 절대경로+env) 최종 결정
 - 실제 백엔드가 준비되면 `nginx.conf` / `docker-compose.yml`의 `backend` 대상을 목 서버(`mock-backend/`)에서 실제 백엔드로 교체
-- README.md Appendix B에 정리된 API 스펙 미해결 이슈들(밴 팀 노출 여부, `GET /ranking/me` 인증 방식 등) — 연동 전 백엔드와 재확인 필요. 목 서버는 이런 미해결 이슈에 대해 어떤 선택을 했는지 `mock-backend/README.md`의 "구현 범위"에 명시해뒀다.
+- AGENT.md Appendix B에 정리된 API 스펙 미해결 이슈들(밴 팀 노출 여부, `GET /ranking/me` 인증 방식 등) — 연동 전 백엔드와 재확인 필요. 목 서버는 이런 미해결 이슈에 대해 어떤 선택을 했는지 `mock-backend/AGENT.md`의 "구현 범위"에 명시해뒀다.

@@ -202,7 +202,7 @@ class MyInstanceView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # README Appendix B #16: 이름과 달리 "팀"이 아니라 "본인(user_id)" 기준
+        # AGENT.md Appendix B #16: 이름과 달리 "팀"이 아니라 "본인(user_id)" 기준
         instance = (
             Instance.objects.filter(
                 user=request.user,
@@ -273,7 +273,7 @@ class InstanceExtendView(APIView):
 
         instance.expires_at = (instance.expires_at or timezone.now()) + timezone.timedelta(minutes=extend_minutes)
         instance.save()
-        # README 0-12절: extend 응답엔 host/ports가 없음 — 그대로 재현
+        # AGENT.md 0-12절: extend 응답엔 host/ports가 없음 — 그대로 재현
         return success(
             {
                 "instance_id": str(instance.id),
@@ -295,7 +295,7 @@ class InstanceDeleteView(APIView):
 
         instance.status = "STOPPING"
         instance.save()
-        # README 0-12절: delete 응답엔 host/ports/expires_at이 없음 — 그대로 재현
+        # AGENT.md 0-12절: delete 응답엔 host/ports/expires_at이 없음 — 그대로 재현
         return success(
             {"instance_id": str(instance.id), "challenge_id": str(instance.challenge_id), "status": instance.status},
             status=202,

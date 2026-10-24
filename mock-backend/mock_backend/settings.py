@@ -1,9 +1,9 @@
 """
 MSG CTF 로컬 통합테스트용 목(mock) 백엔드 설정.
 
-실제 프로덕션 백엔드가 아니다 — README.md의 API 명세(0장 공통 규약 포함)를
+실제 프로덕션 백엔드가 아니다 — AGENT.md의 API 명세(0장 공통 규약 포함)를
 프론트가 로컬에서 붙여볼 수 있도록 최소한으로 흉내낸 것. 자세한 배경은
-mock-backend/README.md 참고.
+mock-backend/AGENT.md 참고.
 """
 
 import os
@@ -52,7 +52,7 @@ DATABASES = {
 AUTH_USER_MODEL = "api.User"
 AUTH_PASSWORD_VALIDATORS = []  # 로컬 목데이터 계정이라 정책 강제 안 함
 
-# README.md 0-8절: 모든 시간 필드는 ISO-8601 UTC로 응답, KST 변환은 프론트 책임
+# AGENT.md 0-8절: 모든 시간 필드는 ISO-8601 UTC로 응답, KST 변환은 프론트 책임
 LANGUAGE_CODE = "ko-kr"
 TIME_ZONE = "UTC"
 USE_TZ = True
@@ -68,7 +68,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": None,
 }
 
-# README.md 0-4절: access_token 1시간 / refresh_token 12시간, claim sub=user_id
+# AGENT.md 0-4절: access_token 1시간 / refresh_token 12시간, claim sub=user_id
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(hours=12),

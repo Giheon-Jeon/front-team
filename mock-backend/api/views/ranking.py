@@ -48,7 +48,7 @@ def _last_solved_at(solves):
 
 
 class RankingMeView(APIView):
-    """README 5절(2026-08-27): 비표준 team 헤더 대신 표준 Bearer로 변경.
+    """AGENT.md 5절(2026-08-27): 비표준 team 헤더 대신 표준 Bearer로 변경.
     -> { rank, team_id, team_name, team_score, mileage, last_solved_at }. 팀 없으면 404, 밴 팀은 200 + null."""
 
     permission_classes = [IsAuthenticated]
@@ -71,7 +71,7 @@ class RankingMeView(APIView):
 
 
 class RankingMemberView(APIView):
-    """README 5절(2026-08-29): 개인 순위 단건(user_id 기준).
+    """AGENT.md 5절(2026-08-29): 개인 순위 단건(user_id 기준).
     개인 점수 = 본인이 제출해 정답 처리된 제오파디 문제들의 현재 배점 합(earned_score 미사용).
     정렬 user_score DESC -> last_solved_at ASC -> user_id ASC. 밴 팀 제외, 0솔브 포함."""
 

@@ -29,7 +29,7 @@ urlpatterns = [
     path("challenges/<uuid:challenge_id>", challenges.ChallengeDetailView.as_view()),
     path("challenges/<uuid:challenge_id>/submit", challenges.ChallengeSubmitView.as_view()),
     path("instances", challenges.InstanceCreateView.as_view()),
-    # README 2/3절, Appendix A #16: URL이 /instance -> /instances(복수)로
+    # AGENT.md 2/3절, Appendix A #16: URL이 /instance -> /instances(복수)로
     # 확정됐는데 목서버는 singular로 남아있었다.
     path("teams/me/instances", challenges.MyInstanceView.as_view()),
     path("instances/<uuid:instance_id>/reset", challenges.InstanceResetView.as_view()),
