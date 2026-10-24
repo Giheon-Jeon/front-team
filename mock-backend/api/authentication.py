@@ -5,7 +5,7 @@ from .exceptions import ApiError
 
 
 class MsgCTFJWTAuthentication(JWTAuthentication):
-    """README.md 0-4절: 인증 실패는 TOKEN_MISSING / TOKEN_EXPIRED / TOKEN_INVALID
+    """AGENT.md 0-4절: 인증 실패는 TOKEN_MISSING / TOKEN_EXPIRED / TOKEN_INVALID
     3종으로 구분해서 내려준다.
 
     TOKEN_MISSING(헤더 자체가 없음)은 DRF의 NotAuthenticated로 자연히 떨어지므로

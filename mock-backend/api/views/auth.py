@@ -65,7 +65,7 @@ class RefreshView(APIView):
         if not User.objects.filter(id=user_id).exists():
             raise ApiError("REFRESH_TOKEN_NOT_FOUND", "토큰을 찾을 수 없습니다", status=401)
 
-        # refresh_token은 재발급하지 않고 기존 것을 그대로 재사용한다(README 1절)
+        # refresh_token은 재발급하지 않고 기존 것을 그대로 재사용한다(AGENT.md 1절)
         return success({"access_token": str(refresh.access_token)})
 
 

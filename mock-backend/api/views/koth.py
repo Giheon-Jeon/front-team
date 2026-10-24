@@ -135,7 +135,7 @@ class KothTeamTokenView(APIView):
             {
                 "team_id": str(team.id),
                 "team_name": team.team_name,
-                # 로그인 JWT와 무관한 별도 값(README 9절) — 목서버에서는 team_id 기반 고정값으로 대체
+                # 로그인 JWT와 무관한 별도 값(AGENT.md 9절) — 목서버에서는 team_id 기반 고정값으로 대체
                 "team_token": f"koth_{str(team.id).replace('-', '')[:16]}",
                 "issued_at": timezone.now(),
             }

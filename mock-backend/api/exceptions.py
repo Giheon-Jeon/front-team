@@ -2,7 +2,7 @@ from rest_framework import exceptions as drf_exceptions
 
 
 class ApiError(Exception):
-    """code/message/status를 명시해 던지는 API 에러. README.md 0-11절 공통 에러 +
+    """code/message/status를 명시해 던지는 API 에러. AGENT.md 0-11절 공통 에러 +
     각 절의 API별 추가 에러 코드를 그대로 던질 때 쓴다."""
 
     def __init__(self, code, message, status=400, data=None):
@@ -40,5 +40,5 @@ def msgctf_exception_handler(exc, context):
     if response is not None:
         return fail("INTERNAL_ERROR", "서버 오류가 발생했습니다", status=response.status_code)
 
-    # 여기까지 왔으면 DRF가 처리하지 못한 예외 -> README 0-11절 공통 500
+    # 여기까지 왔으면 DRF가 처리하지 못한 예외 -> AGENT.md 0-11절 공통 500
     return fail("INTERNAL_ERROR", "서버 오류가 발생했습니다", status=500)

@@ -311,7 +311,7 @@ class AdminResourcesView(APIView):
 
 
 class AdminEventsView(APIView):
-    """GET /admin/events(README 8절, 백엔드: 진행 중) - AdminEvent를 그대로 노출한다."""
+    """GET /admin/events(AGENT.md 8절, 백엔드: 진행 중) - AdminEvent를 그대로 노출한다."""
 
     permission_classes = [IsAuthenticated]
 
@@ -621,7 +621,7 @@ class AdminChallengeDockerImageView(APIView):
 
 
 class AdminDashboardView(APIView):
-    """GET /admin/dashboard(README 8절, 백엔드: 논의) - 집계 전용."""
+    """GET /admin/dashboard(AGENT.md 8절, 백엔드: 논의) - 집계 전용."""
 
     permission_classes = [IsAuthenticated]
 
@@ -680,7 +680,7 @@ class AdminDashboardView(APIView):
 
 
 class AdminTeamDetailView(APIView):
-    """GET /admin/teams/{id}(README 8절, 백엔드: 진행 중)."""
+    """GET /admin/teams/{id}(AGENT.md 8절, 백엔드: 진행 중)."""
 
     permission_classes = [IsAuthenticated]
 
@@ -857,7 +857,7 @@ class AdminTeamDetailView(APIView):
 
 
 class AdminChallengesView(APIView):
-    """GET /admin/challenges(README 8절, 백엔드: 논의)."""
+    """GET /admin/challenges(AGENT.md 8절, 백엔드: 논의)."""
 
     permission_classes = [IsAuthenticated]
 
@@ -915,7 +915,7 @@ class AdminChallengesView(APIView):
 
 
 class AdminChallengeVisibilityView(APIView):
-    """PATCH /admin/challenges/{id}/visibility(README 8절, 백엔드: 논의)."""
+    """PATCH /admin/challenges/{id}/visibility(AGENT.md 8절, 백엔드: 논의)."""
 
     permission_classes = [IsAuthenticated]
 
@@ -982,7 +982,7 @@ def _contest_settings_dict():
 
 
 class AdminSettingsView(APIView):
-    """GET/PATCH /admin/settings(README 8절, 백엔드: 논의). 대회당 1행 싱글턴."""
+    """GET/PATCH /admin/settings(AGENT.md 8절, 백엔드: 논의). 대회당 1행 싱글턴."""
 
     permission_classes = [IsAuthenticated]
 
@@ -1029,7 +1029,7 @@ class AdminSettingsView(APIView):
 
 
 class AdminAccountRegisterView(APIView):
-    """POST /admin/accounts(README 8절, 백엔드: PR 대기 중) - 회원가입 없는 대회 운영 특성상
+    """POST /admin/accounts(AGENT.md 8절, 백엔드: PR 대기 중) - 회원가입 없는 대회 운영 특성상
     아이디/비밀번호를 관리자가 미리 등록해 나눠준다(2026-09-07 신규 요구사항). team_name을
     주면 동명의 팀이 없을 때 새로 만들고, team_id를 주면 기존 팀에 합류시킨다. 둘 다
     비우면 팀 없이 계정만 만든다."""
@@ -1100,7 +1100,7 @@ class AdminAccountRegisterView(APIView):
 
 
 class AdminMileageHistoryView(APIView):
-    """GET /admin/mileage_history(README 8절, 백엔드: PR 대기 중) - 팀별이 아닌 전체 조회."""
+    """GET /admin/mileage_history(AGENT.md 8절, 백엔드: PR 대기 중) - 팀별이 아닌 전체 조회."""
 
     permission_classes = [IsAuthenticated]
 
@@ -1150,7 +1150,7 @@ def _snapshot_dict(snapshot):
 
 
 class AdminTeamSnapshotsView(APIView):
-    """GET /admin/teams/{id}/snapshots(README 8절, 백엔드: 시작 전) - 롤백 지점 목록."""
+    """GET /admin/teams/{id}/snapshots(AGENT.md 8절, 백엔드: 시작 전) - 롤백 지점 목록."""
 
     permission_classes = [IsAuthenticated]
 
@@ -1166,7 +1166,7 @@ class AdminTeamSnapshotsView(APIView):
 
 
 class AdminTeamRollbackView(APIView):
-    """POST /admin/teams/{id}/rollback(README 8절, 백엔드: 시작 전) - snapshot_id 시점으로 복원."""
+    """POST /admin/teams/{id}/rollback(AGENT.md 8절, 백엔드: 시작 전) - snapshot_id 시점으로 복원."""
 
     permission_classes = [IsAuthenticated]
 
@@ -1224,7 +1224,7 @@ BOARD_CELL_STATUSES = ("UNVISITED", "CONSUMED", "OPENED", "CLEARED")
 
 
 class AdminBoardCellView(APIView):
-    """PATCH /admin/teams/{id}/board/cells/{cell_index}(README 8절, 백엔드: 진행 중)
+    """PATCH /admin/teams/{id}/board/cells/{cell_index}(AGENT.md 8절, 백엔드: 진행 중)
     - clear 칸 관리. 점수는 변경하지 않는다."""
 
     permission_classes = [IsAuthenticated]
@@ -1284,7 +1284,7 @@ class AdminBoardCellView(APIView):
 
 
 class AdminBoardPositionView(APIView):
-    """PATCH /admin/teams/{id}/board/position(README 8절, 백엔드: 진행 중)
+    """PATCH /admin/teams/{id}/board/position(AGENT.md 8절, 백엔드: 진행 중)
     - 말 위치 강제 이동. 도착 칸 효과는 발동하지 않는다."""
 
     permission_classes = [IsAuthenticated]
@@ -1328,7 +1328,7 @@ class AdminBoardPositionView(APIView):
 
 
 class AdminBoardDiceView(APIView):
-    """POST /admin/teams/{id}/board/dice(README 8절, 백엔드: PR 대기 중)
+    """POST /admin/teams/{id}/board/dice(AGENT.md 8절, 백엔드: PR 대기 중)
     - 주사위 보유 횟수 강제 지급/회수. 어떤 경로로도 3회를 넘지 않는다."""
 
     permission_classes = [IsAuthenticated]

@@ -12,7 +12,7 @@ class TimerView(APIView):
     def get(self, request):
         contest = ContestTimer.objects.order_by("-id").first()
         if contest is None:
-            # README 0-2절: 활성 대회 없음 -> 200 + data: null (404 아님)
+            # AGENT.md 0-2절: 활성 대회 없음 -> 200 + data: null (404 아님)
             return success(None)
 
         now = timezone.now()

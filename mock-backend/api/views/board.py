@@ -43,7 +43,7 @@ class BoardMeView(APIView):
         team = require_team(request)
         active_challenge = None
         if team.active_challenge_id:
-            # README Appendix B #9: 실제 응답에도 solve_deadline_at/remaining_seconds가
+            # AGENT.md Appendix B #9: 실제 응답에도 solve_deadline_at/remaining_seconds가
             # 없다고 문서화되어 있음 — 그 결핍을 그대로 재현한다(프론트 방어 렌더링 테스트용).
             active_challenge = {
                 "challenge_id": str(team.active_challenge_id),
@@ -96,7 +96,7 @@ class DiceStatusView(APIView):
 
 
 class DiceRequestView(APIView):
-    """POST /board/dice/request(README 2절) - 굴림용 request_key 발급. 목서버는 미확인 키를 저장하지 않는다."""
+    """POST /board/dice/request(AGENT.md 2절) - 굴림용 request_key 발급. 목서버는 미확인 키를 저장하지 않는다."""
 
     permission_classes = [IsAuthenticated]
 
@@ -188,7 +188,7 @@ class CellCurrentView(APIView):
             entry.get("cell_index") == team.position for entry in team.opened_challenge_log
         )
         if cell_type(team.position) != "CHALLENGE" or already_opened:
-            # README 2절: CHALLENGE가 아니거나 이미 오픈한 칸이면 에러가 아니라
+            # AGENT.md 2절: CHALLENGE가 아니거나 이미 오픈한 칸이면 에러가 아니라
             # 200 + challenge_candidates: [] 다. 예전엔 404 CELL_NOT_FOUND를
             # 던졌는데, 그러면 무인도/찬스/공항 등 칸에 있을 때 보드 전체
             # 로딩(useBoardController.load)이 깨졌다.
@@ -212,7 +212,7 @@ class CellCurrentView(APIView):
                 "challenge_candidates": [
                     {
                         "challenge_id": str(c.id),
-                        "challenge_title": c.title,  # README 0-15절 명명 규칙 교정 반영
+                        "challenge_title": c.title,  # AGENT.md 0-15절 명명 규칙 교정 반영
                         "category": c.category,
                         "score": c.score,
                     }
@@ -375,7 +375,7 @@ class QuarantineEscapeView(APIView):
 
         team.quarantine_attempts_left = max(0, team.quarantine_attempts_left - 1)
         team.save()
-        # README 2절: 실패해도 HTTP 200 + code: "ESCAPE_FAILED" (success()는 항상
+        # AGENT.md 2절: 실패해도 HTTP 200 + code: "ESCAPE_FAILED" (success()는 항상
         # code: "SUCCESS"를 박아버리므로 여기만 Response를 직접 만든다)
         from rest_framework.response import Response
 
@@ -446,7 +446,7 @@ class ChanceNowView(APIView):
 
 
 class ChanceUseView(APIView):
-    """README 자체가 "카드별 Req/Res 형태 다름(전부 초안)"이라고 명시한 API라
+    """AGENT.md 자체가 "카드별 Req/Res 형태 다름(전부 초안)"이라고 명시한 API라
     이 목서버에서도 카드 종류별 개별 효과는 구현하지 않는다. 카드를 사용 처리하고
     범용적인 응답만 내려준다 — 실제 카드별 동작은 백엔드 스펙이 확정된 뒤에 채운다.
     """
