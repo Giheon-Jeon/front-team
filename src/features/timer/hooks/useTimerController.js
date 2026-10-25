@@ -2,10 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getTimer } from "../../../api/timer.js";
 import { isSuccess } from "../../../utils/response.js";
 import { startVisiblePolling } from "../../../utils/visiblePolling.js";
-import { adaptTimer, getRemainingSeconds } from "../utils/timerData.js";
+import useCountdownClock from "../../countdown/hooks/useCountdownClock.js";
+import { adaptTimer, timerOffset, timerStage } from "../utils/timerData.js";
 
 const RESYNC_INTERVAL_MS = 30_000; // 클라이언트 시계 오차 누적 방지용 주기 재동기화
-const TICK_INTERVAL_MS = 1_000;
 
 function getErrorMessage(error, fallbackMessage) {
   return error?.response?.data?.message || error?.message || fallbackMessage;
@@ -18,7 +18,6 @@ export default function useTimerController() {
     contest: null,
     error: "",
   });
-  const [now, setNow] = useState(Date.now);
   const lastBoundaryRef = useRef(null);
   const active = useRef(false);
   const requestId = useRef(0);
@@ -53,11 +52,12 @@ export default function useTimerController() {
       });
     } catch (error) {
       if (!active.current || request.signal.aborted || sequence !== requestId.current) return;
-      setState({
-        status: "error",
-        contest: null,
+      // 현장 화면에 띄워 둔 타이머가 잠깐의 재동기화 실패로 사라지지 않게 받아 둔 시각은 그대로 쓴다
+      setState((current) => ({
+        status: current.contest ? "success" : "error",
+        contest: current.contest,
         error: getErrorMessage(error, "타이머 정보를 불러오지 못했습니다"),
-      });
+      }));
     }
   }, []);
 
@@ -72,52 +72,37 @@ export default function useTimerController() {
     };
   }, [load, requestSequence]);
 
-  // 1초마다 화면을 갱신(클라이언트 측 보간)하고, 별도로 일정 주기마다 서버와
-  // 다시 동기화한다(시계 드리프트 누적 방지 + BEFORE/RUNNING/ENDED 전환 반영).
-  useEffect(() => {
-    return startVisiblePolling(() => setNow(Date.now()), { intervalMs: TICK_INTERVAL_MS });
-  }, []);
-
   const retry = useCallback(() => {
     setRequestSequence((sequence) => sequence + 1);
   }, []);
 
+  // 남은 초가 바뀌는 순간에 맞춰 화면을 갱신하고, 별도로 일정 주기마다 서버와 다시 동기화한다
   const contest = state.contest;
-  const liveRemainingSeconds = (() => {
-    if (!contest) return 0;
-    if (contest.status === "BEFORE") {
-      return getRemainingSeconds(contest.startTime, contest, now);
-    }
-    if (contest.status === "RUNNING") {
-      return getRemainingSeconds(contest.endTime, contest, now);
-    }
-    return 0;
-  })();
+  const now = useCountdownClock(
+    [Date.parse(contest?.startTime), Date.parse(contest?.endTime)],
+    timerOffset(contest),
+    Boolean(contest),
+  );
+  const { stage, secondsLeft } = timerStage(contest, now);
 
-  // BEFORE -> RUNNING, RUNNING -> ENDED 경계를 넘으면(카운트다운이 0에 닿으면)
-  // remaining_seconds/time_until_start가 어느 쪽이든 더는 정확하지 않으므로
-  // 한 번만 다시 불러온다.
+  // 시작이나 종료 시각을 넘겨 서버가 알려 준 단계와 화면 단계가 달라지면 한 번만 다시 불러온다
   useEffect(() => {
-    const target = contest?.status === "BEFORE" ? contest.startTime
-      : contest?.status === "RUNNING" ? contest.endTime : null;
-    const boundary = target && Number.isFinite(Date.parse(target)) ? `${contest.status}:${target}` : null;
-    if (
-      boundary && state.status === "success" && !document.hidden &&
-      liveRemainingSeconds === 0 &&
-      lastBoundaryRef.current !== boundary
-    ) {
-      // A server still reporting the same expired phase must not cause a loop.
+    const served = { BEFORE: "before", RUNNING: "running", ENDED: "ended" }[String(contest?.status ?? "").toUpperCase()];
+    const boundary = contest && stage && served && stage !== served ? `${contest.status}:${stage}` : null;
+    if (boundary && state.status === "success" && !document.hidden && lastBoundaryRef.current !== boundary) {
+      // 서버가 같은 단계를 계속 알려 줘도 다시 불러오기를 반복하지 않는다
       lastBoundaryRef.current = boundary;
       load();
     }
-  }, [contest, state.status, liveRemainingSeconds, load]);
+  }, [contest, stage, state.status, load]);
 
   return {
     status: state.status,
     contest,
     error: state.error,
     isSynced: contest?.serverTime != null,
-    liveRemainingSeconds,
+    stage,
+    secondsLeft,
     retry,
   };
 }

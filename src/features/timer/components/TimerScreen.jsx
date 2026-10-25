@@ -1,78 +1,39 @@
-import { formatRemaining, toKst } from "../../../utils/time.js";
+import ContestCountdown from "../../countdown/components/ContestCountdown.jsx";
+import useStartFinale from "../../countdown/hooks/useStartFinale.js";
+import styles from "./TimerScreen.module.css";
 
-// TODO(timer): Figma 시안이 아직 없어(다른 페이지와 달리 참고할 node ID가
-// 없음) 픽셀 단위 디자인 대신 기능 우선으로 만든 화면이다. 시안이 나오면
-// 이 컴포넌트만 교체하면 되도록 훅(useTimerController)과 분리해뒀다.
+// 대회 타이머: 대기 화면과 같은 광장과 로고 위에서 시작 전에는 시작까지, 진행 중에는 종료까지 센다
+// 마지막 10초에는 같은 숫자 셈을 하고, 시작과 종료 순간에는 마무리 연출을 덮은 뒤 다음 단계 화면을 연다
+// 현장 화면에 띄워 두는 화면이라 다른 화면으로 가는 버튼 없이 시계만 둔다
+const UNSYNCED_NOTE = "서버 시각을 받지 못해 이 기기 시계를 기준으로 표시합니다";
 
-const STATUS_LABEL = {
-  BEFORE: "대회 시작 전",
-  RUNNING: "대회 진행 중",
-  ENDED: "대회 종료",
-};
+export default function TimerScreen({ status, contest, error, isSynced, stage, secondsLeft, onRetry }) {
+  const watching = Boolean(contest);
+  const startFinale = useStartFinale(stage === "before", watching);
+  const endFinale = useStartFinale(stage === "running", watching);
 
-function StatusBadge({ status }) {
-  return (
-    <span className="inline-block rounded-full border border-current px-3 py-1 text-sm font-semibold">
-      {STATUS_LABEL[status] || status}
-    </span>
-  );
-}
-
-export default function TimerScreen({
-  status,
-  contest,
-  error,
-  isSynced,
-  liveRemainingSeconds,
-  onRetry,
-}) {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-[#1c1207] px-6 text-center text-[#fff0c4]">
-      {status === "loading" && <p>타이머 정보를 불러오는 중입니다...</p>}
-
-      {status === "error" && (
-        <div className="flex flex-col items-center gap-3">
+  if (!contest) {
+    if (status === "error") {
+      return (
+        <main className={styles.notice}>
           <p role="alert">{error}</p>
-          <button
-            type="button"
-            onClick={onRetry}
-            className="rounded border border-[#c89252] bg-[#6d391c] px-4 py-2"
-          >
-            다시 시도
-          </button>
-        </div>
-      )}
+          <button type="button" onClick={onRetry}>다시 시도</button>
+        </main>
+      );
+    }
+    if (status === "empty") return <main className={styles.notice}><p>현재 진행 중이거나 예정된 대회가 없습니다</p></main>;
+    return <div role="status" className={styles.notice}>타이머 정보를 불러오는 중입니다</div>;
+  }
 
-      {status === "empty" && <p>현재 진행 중이거나 예정된 대회가 없습니다</p>}
-
-      {status === "success" && contest && (
-        <>
-          <h1 className="text-2xl font-bold">{contest.name}</h1>
-          <StatusBadge status={contest.status} />
-
-          {contest.status !== "ENDED" && (
-            <p className="font-mono text-5xl tabular-nums" aria-live="polite">
-              {formatRemaining(liveRemainingSeconds)}
-            </p>
-          )}
-
-          {/* 시작·종료 시각의 글자 폭이 달라도 값의 왼쪽 선이 맞도록 목록만 왼쪽 정렬한다 */}
-          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-left text-sm opacity-80">
-            <dt>시작</dt>
-            <dd>{toKst(contest.startTime)}</dd>
-            <dt>종료</dt>
-            <dd>{toKst(contest.endTime)}</dd>
-          </dl>
-
-          {!isSynced && (
-            <p className="text-xs opacity-60">
-              서버 시각 동기화에 실패해 이 기기의 로컬 시계를 기준으로 표시하고 있습니다
-              <br />
-              표시된 시간이 실제와 다를 수 있습니다
-            </p>
-          )}
-        </>
-      )}
-    </main>
-  );
+  const note = isSynced ? null : UNSYNCED_NOTE;
+  // 단계마다 자리를 고정해야 시작과 종료 순간의 셈과 마무리 연출이 끊기지 않고 이어진다
+  return <>
+    {stage === "ended" && <ContestCountdown variant="timer" goal="end" targetTime={contest.endTime} ended links={false} note={note} />}
+    {(stage === "running" || endFinale) && (
+      <ContestCountdown variant="timer" goal="end" targetTime={contest.endTime} secondsLeft={stage === "running" ? secondsLeft : 0} overlay={stage !== "running"} links={false} note={note} />
+    )}
+    {(stage === "before" || startFinale) && (
+      <ContestCountdown variant="timer" goal="start" targetTime={contest.startTime} secondsLeft={stage === "before" ? secondsLeft : 0} overlay={stage !== "before"} links={false} note={note} />
+    )}
+  </>;
 }

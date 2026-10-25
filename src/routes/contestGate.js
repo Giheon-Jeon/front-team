@@ -23,13 +23,3 @@ export function contestGateState({ timer, role, pathname, now = Date.now(), offs
     name: timer.name ?? "",
   };
 }
-
-export function formatWaiting(seconds) {
-  if (!Number.isFinite(seconds)) return "-";
-  const days = Math.floor(seconds / 86400);
-  const hours = Math.floor((seconds % 86400) / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const rest = seconds % 60;
-  const clock = [hours, minutes, rest].map((value) => String(value).padStart(2, "0")).join(":");
-  return days > 0 ? `${days}일 ${clock}` : clock;
-}

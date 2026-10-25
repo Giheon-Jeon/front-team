@@ -1,21 +1,24 @@
-import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Suspense, useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { getTimer } from "../api/timer.js";
 import { isSuccess } from "../utils/response.js";
-import { contestGateState, formatWaiting, isGatedPath } from "./contestGate.js";
-import { ROUTES } from "./routePaths.js";
+import ContestCountdown from "../features/countdown/components/ContestCountdown.jsx";
+import useCountdownClock from "../features/countdown/hooks/useCountdownClock.js";
+import useStartFinale from "../features/countdown/hooks/useStartFinale.js";
+import { contestGateState, isGatedPath } from "./contestGate.js";
+import { preloadGatedPage } from "./gatedPagePreload.js";
+import { markBoardIntro } from "../features/board/utils/boardIntro.js";
 import styles from "./ContestGate.module.css";
 
-const startFormat = new Intl.DateTimeFormat("ko-KR", {
-  timeZone: "Asia/Seoul", month: "long", day: "numeric", weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false,
-});
+// 시작까지 30초 넘게 남았으면 1분마다 서버 시각을 다시 맞춘다 관리자가 시작 시각을 바꿔도 따라간다
+const RESYNC_MS = 60000;
 
-// 대회 시작 전 대기 화면: 시작까지 남은 시간을 1초마다 세고, 시작 시각이 되면 원래 화면을 바로 연다
+// 대회 시작 전 대기 화면: 시작까지 남은 시간을 세고, 시작 시각이 되면 시작 연출과 함께 원래 화면을 연다
 export default function ContestGate({ role, children }) {
   const { pathname } = useLocation();
   const gated = role !== "ADMIN" && isGatedPath(pathname);
   const [timer, setTimer] = useState({ status: gated ? "loading" : "idle", data: null, offset: 0 });
-  const [now, setNow] = useState(() => Date.now());
+  const [sync, setSync] = useState(0);
 
   useEffect(() => {
     if (!gated) return undefined;
@@ -28,34 +31,41 @@ export default function ContestGate({ role, children }) {
         setTimer({ status: "ready", data, offset: Number.isFinite(serverTime) ? serverTime - Date.now() : 0 });
       })
       .catch(() => {
-        if (!controller.signal.aborted) setTimer({ status: "ready", data: null, offset: 0 });
+        // 다시 맞추다 실패하면 앞서 받은 시각을 그대로 쓴다
+        if (!controller.signal.aborted) setTimer((value) => (value.status === "ready" ? value : { status: "ready", data: null, offset: 0 }));
       });
     return () => controller.abort();
-  }, [gated]);
+  }, [gated, sync]);
 
-  const gate = gated && timer.status === "ready" ? contestGateState({ timer: timer.data, role, pathname, now, offsetMs: timer.offset }) : { blocked: false };
+  const ready = gated && timer.status === "ready";
+  const waiting = ready && String(timer.data?.status ?? "").toUpperCase() === "BEFORE";
+  const now = useCountdownClock(Date.parse(timer.data?.start_time), timer.offset, waiting);
+  const gate = ready ? contestGateState({ timer: timer.data, role, pathname, now, offsetMs: timer.offset }) : { blocked: false };
+  const finale = useStartFinale(gate.blocked, gated);
+  const resync = gate.blocked && (gate.secondsLeft == null || gate.secondsLeft > 30);
 
   useEffect(() => {
-    if (!gate.blocked) return undefined;
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, [gate.blocked]);
+    if (!resync) return undefined;
+    const id = window.setTimeout(() => setSync((value) => value + 1), RESYNC_MS);
+    return () => window.clearTimeout(id);
+  }, [resync, sync]);
+
+  useEffect(() => {
+    if (gate.blocked) void preloadGatedPage(pathname);
+  }, [gate.blocked, pathname]);
+
+  // 마지막 10초를 같이 본 사람은 시작 직후 보드에서 판이 생기는 연출과 첫 주사위 안내를 본다
+  const finalCount = gate.blocked && gate.secondsLeft != null && gate.secondsLeft <= 10;
+  useEffect(() => {
+    if (finalCount) markBoardIntro("countdown");
+  }, [finalCount]);
 
   if (!gated) return children;
   if (timer.status === "loading") return <div role="status" className={styles.checking}>대회 시간을 확인하는 중</div>;
-  if (!gate.blocked) return children;
-  return <main className={styles.screen} aria-labelledby="contest-waiting-title">
-    <section className={styles.card}>
-      <p className={styles.eyebrow}>{gate.name || "MSG CTF"}</p>
-      <h1 id="contest-waiting-title">대회 시작 전입니다</h1>
-      <p className={styles.countdown} role="timer" aria-live="off">{formatWaiting(gate.secondsLeft)}</p>
-      <p className={styles.when}>{gate.startTime ? `${startFormat.format(new Date(gate.startTime))} 시작` : "시작 시각이 정해지면 열립니다"}</p>
-      <p className={styles.note}>시작 시각이 되면 이 화면이 저절로 열립니다 그 전에 게임 규칙과 팀 정보를 확인해주세요</p>
-      <nav className={styles.links} aria-label="시작 전에 볼 수 있는 화면">
-        <Link to={ROUTES.rules}>게임 규칙</Link>
-        <Link to={ROUTES.mypage}>마이페이지</Link>
-        <Link to="/timer">대회 타이머</Link>
-      </nav>
-    </section>
-  </main>;
+  // 카운트다운과 시작 연출이 같은 자리에 있어야 0초에서 끊기지 않고 이어진다
+  // 게임 화면 코드를 받는 동안의 대기는 여기서 받아 시작 연출까지 함께 멈추지 않게 한다
+  return <>
+    {!gate.blocked && <Suspense fallback={<div role="status" className={styles.loading}>화면을 불러오는 중</div>}>{children}</Suspense>}
+    {(gate.blocked || finale) && <ContestCountdown targetTime={gate.startTime ?? timer.data?.start_time} secondsLeft={gate.blocked ? gate.secondsLeft : 0} overlay={!gate.blocked} />}
+  </>;
 }

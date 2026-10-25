@@ -1,0 +1,35 @@
+/* 대회 시각을 아직 못 받았거나 대회가 없을 때만 보이는 화면 받은 뒤에는 features/countdown 이 그린다 */
+.notice {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 14px;
+  padding: 24px 16px;
+  background: #17120d;
+  color: #f6f2e9;
+  font: 500 16px/1.6 Pretendard, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  text-align: center;
+  word-break: keep-all;
+}
+.notice p {
+  margin: 0;
+}
+.notice button {
+  min-height: 38px;
+  padding: 0 18px;
+  border: 1px solid rgb(224 188 134 / 45%);
+  border-radius: 19px;
+  background: transparent;
+  color: #efe4d2;
+  font: inherit;
+  cursor: pointer;
+}
+.notice button:hover {
+  background: rgb(224 188 134 / 10%);
+}
+.notice button:focus-visible {
+  outline: 2px solid #e0bc86;
+  outline-offset: 2px;
+}
