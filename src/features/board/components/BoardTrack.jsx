@@ -2,6 +2,7 @@ import { Suspense, lazy, useCallback, useEffect, useId, useMemo, useRef, useStat
 import { BOARD_CELL_COUNT, getBoardCellPosition } from "../utils/boardData.js";
 import { getBoardCellVisitState, getBoardSpentSpecialCells } from "../utils/boardVisited.js";
 import { getBoardSolvedCellIndexes } from "../utils/boardLines.js";
+import { DICE_INTRO_KEY } from "../utils/boardIntro.js";
 import BoardLineOverlay from "./BoardLineOverlay.jsx";
 import BoardSurface from "./BoardSurface.jsx";
 import BoardCellTarget from "./BoardCellTarget.jsx";
@@ -11,9 +12,6 @@ import BoardTrain from "./BoardTrain.jsx";
 import BoardStartReward from "./BoardStartReward.jsx";
 import { DiceErrorBoundary, DiceFallback } from "./DiceFallback.jsx";
 import styles from "./BoardScreen.module.css";
-
-// LoginPage가 로그인 성공 때 켜고, 첫 주사위 굴림에서 끈다
-const DICE_INTRO_KEY = "board.diceIntroPending";
 
 const Dice3D = lazy(() => import("./Dice3D.jsx"));
 
@@ -53,6 +51,9 @@ export default function BoardTrack({
   selectableCellIndexes = null,
   highlightedCellIndex = null,
   isHidden = false,
+  // 처음 들어올 때 판이 생기는 연출 단계 pending 은 준비를 기다림, playing 은 재생 중, done 은 평소 화면
+  assembly = "done",
+  onAssemblyReady,
 }) {
   const [hoveredCell, setHoveredCell] = useState(null);
   const tooltipId = useId();
@@ -81,6 +82,12 @@ export default function BoardTrack({
   const solvedCellIndexes = useMemo(() => getBoardSolvedCellIndexes(cells, cellStatesByIndex), [cells, cellStatesByIndex]);
   const spentSpecialCells = useMemo(() => getBoardSpentSpecialCells(cells, consumedCellIndexes, cellStatesByIndex), [cells, consumedCellIndexes, cellStatesByIndex]);
 
+  // 3D 주사위까지 준비되면 판이 생기는 연출을 시작한다 무거운 준비가 끝난 뒤라 연출이 끊기지 않는다
+  useEffect(() => {
+    if (assembly === "pending" && diceReady && cells.length > 0) onAssemblyReady?.();
+  }, [assembly, diceReady, cells.length, onAssemblyReady]);
+  const startPosition = getBoardCellPosition(1);
+
   const handleRollDice = async () => {
     if ((!canRoll && !diceAnimationTest) || !diceReady || rollingRef.current) return;
     rollingRef.current = true;
@@ -102,10 +109,15 @@ export default function BoardTrack({
   };
 
   return (
-    <div data-board-layer="track" style={{ visibility: isHidden ? "hidden" : undefined }} className={styles.track}>
+    <div data-board-layer="track" data-assembly={assembly === "done" ? undefined : assembly} style={{ visibility: isHidden ? "hidden" : undefined }} className={styles.track}>
       <BoardSurface cells={cells} visitedCellIndexes={visitedCellIndexes} />
       <BoardLineOverlay lines={lines} boardCells={cells} solvedCellIndexes={solvedCellIndexes} spentSpecialCells={spentSpecialCells} selectedLineId={selectedLineId} onSelectLine={onSelectLine}
         isInteractive={!isRolling && !rolling && !trainTravel?.journey && selectableCellIndexes == null} />
+      {assembly === "playing" && <>
+        {/* START 에서 시작한 금빛이 판을 따라 한 바퀴 돌며 칸을 드러내고, 다시 START 에 닿으면 빛난다 */}
+        <span className={styles.assemblyGlow} aria-hidden="true" />
+        <span className={styles.assemblyStart} style={{ left: `${startPosition.x}%`, top: `${startPosition.y}%` }} aria-hidden="true" />
+      </>}
       <BoardStartReward reward={startRewardEvent} />
 
       {trainTravel?.journey
@@ -130,6 +142,7 @@ export default function BoardTrack({
         onClick={handleRollDice}
         disabled={(!canRoll && !diceAnimationTest) || !diceReady || rolling}
         aria-label={isRolling || rolling ? "주사위 처리 중" : "주사위 굴리기"}
+        data-board-dice="true"
         className="absolute left-[28%] top-[31%] z-20 w-[44%] h-[32%] border-0 bg-transparent p-0 cursor-pointer transition-[filter] duration-150 hover:brightness-110 active:brightness-95 disabled:cursor-not-allowed disabled:brightness-90"
       >
         <DiceErrorBoundary fallback={<DiceFallback ref={diceRef} onReady={() => setDiceReady(true)} />}>
@@ -137,7 +150,7 @@ export default function BoardTrack({
             <Dice3D ref={diceRef} onReady={() => setDiceReady(true)} />
           </Suspense>
         </DiceErrorBoundary>
-        {showIntro && canRoll && diceReady && !isRolling && !rolling && (
+        {showIntro && canRoll && diceReady && !isRolling && !rolling && assembly === "done" && (
           <span aria-hidden="true" className={styles.diceIntro}>
             <span className={styles.diceIntroCircle} />
             <span className={styles.diceIntroText}>주사위를 눌러 시작하세요!</span>

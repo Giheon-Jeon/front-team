@@ -42,3 +42,26 @@ export function getRemainingSeconds(targetIso, contest, now = Date.now()) {
 
   return Math.max(0, Math.ceil((targetAt - estimatedServerNow) / 1000));
 }
+
+// 서버 시각 - 응답을 받은 기기 시각 카운트다운 시계가 1초 경계를 맞출 때 쓴다
+export function timerOffset(contest) {
+  if (!contest) return 0;
+  const serverAt = contest.serverTime ? Date.parse(contest.serverTime) : Number.NaN;
+  return Number.isFinite(serverAt) ? serverAt - contest.receivedAt : 0;
+}
+
+// 서버 상태와 지금 시각으로 화면 단계를 정한다
+// 서버가 아직 시작 전이라고 해도 시작 시각을 넘겼으면 바로 진행 화면으로 넘어가 다시 불러오는 동안 시계가 멈추지 않게 한다
+// stage: before 는 시작까지, running 은 종료까지, ended 는 끝난 뒤 / secondsLeft: 그 시각까지 남은 초, 시각을 모르면 null
+export function timerStage(contest, now = Date.now()) {
+  if (!contest) return { stage: null, secondsLeft: null };
+  const hasStart = Number.isFinite(Date.parse(contest.startTime));
+  const hasEnd = Number.isFinite(Date.parse(contest.endTime));
+  const toStart = hasStart ? getRemainingSeconds(contest.startTime, contest, now) : null;
+  const toEnd = hasEnd ? getRemainingSeconds(contest.endTime, contest, now) : null;
+  const status = String(contest.status ?? "").toUpperCase();
+  if (status === "ENDED") return { stage: "ended", secondsLeft: 0 };
+  if (status === "BEFORE" && (toStart == null || toStart > 0)) return { stage: "before", secondsLeft: toStart };
+  if (toEnd === 0) return { stage: "ended", secondsLeft: 0 };
+  return { stage: "running", secondsLeft: toEnd };
+}

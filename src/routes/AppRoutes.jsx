@@ -13,6 +13,8 @@ const BoothMenuPreviewPage = import.meta.env.DEV
   ? lazy(() => import("../features/signatures/preview/BoothMenuPreviewPage.jsx")) : null;
 const RemoteRunPreviewPage = import.meta.env.DEV
   ? lazy(() => import("../features/challenges/preview/RemoteRunPreviewPage.jsx")) : null;
+const CountdownPreviewPage = import.meta.env.DEV
+  ? lazy(() => import("../features/countdown/preview/CountdownPreviewPage.jsx")) : null;
 const GoldenKeyPreviewPage = import.meta.env.DEV
   ? lazy(() => import("../features/board/preview/GoldenKeyPreviewPage.jsx")) : null;
 const LineRailPreviewPage = import.meta.env.DEV
@@ -119,6 +121,7 @@ export default function AppRoutes() {
         {import.meta.env.DEV && <Route path="/dev/booth-menu-preview" element={<BoothMenuPreviewPage />} />}
         {import.meta.env.DEV && <Route path="/dev/golden-key-preview" element={<GoldenKeyPreviewPage />} />}
         {import.meta.env.DEV && <Route path="/dev/remote-run-preview" element={<RemoteRunPreviewPage />} />}
+        {import.meta.env.DEV && <Route path="/dev/countdown-preview" element={<CountdownPreviewPage />} />}
         <Route element={<AuthenticatedRoute />}>
         <Route path={ROUTES.board} element={<BoardPage />} />
         {import.meta.env.DEV && <Route path={ROUTES.lineRailPreview} element={<LineRailPreviewPage />} />}

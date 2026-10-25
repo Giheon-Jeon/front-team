@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import FixedAspectStage from "../../../components/common/FixedAspectStage.jsx";
 import { BLOCKED_REASON_MESSAGES } from "../data/boardContent.js";
 import { getBoardZoomScrollLeft } from "../utils/boardViewport.js";
@@ -11,6 +11,7 @@ import { getBoardLineCounts, prepareBoardLines } from "../utils/boardLines.js";
 import { normalizeBoardListView } from "../utils/boardChallengeList.js";
 import { getChallengeSelectionKey } from "../utils/challengeSelection.js";
 import { getAirportSelectableCellIndexes, isAirportSelectionMode } from "../utils/boardOverlays.js";
+import { assemblyHoldMs, clearAssemblyPending, isAssemblyPending } from "../utils/boardIntro.js";
 import AirportTravelOverlay from "./AirportTravelOverlay.jsx";
 import BoardEventPanel from "./BoardEventPanel.jsx";
 import BoardLineSummary from "./BoardLineSummary.jsx";
@@ -25,6 +26,16 @@ import "../../../styles/pretendard/tooltip.generated.css";
 import styles from "./BoardScreen.module.css";
 
 const NO_LINES = Object.freeze([]);
+// 판이 생기는 연출 길이와, 3D 주사위를 기다리다 그냥 시작하는 한도
+const ASSEMBLY_MS = 2500;
+const ASSEMBLY_WAIT_MS = 3000;
+
+function startsWithAssembly() {
+  if (!isAssemblyPending()) return false;
+  const reduced = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  if (reduced) clearAssemblyPending();
+  return !reduced;
+}
 
 // Figma node 3:2 "BoardPage" (1920x1080)
 // + 518:300 "열린 문제" + 555:342 "기차여행" + 555:306 "룰렛" + 104:502 "칸 눌럿음~".
@@ -103,6 +114,45 @@ export default function BoardScreen({
   const leftPanelCard = useRef(null);
   useMobileBoardBackdrop(frameRef, boardViewport);
   useBoardTextLayout(frameRef);
+  // 새 로그인 세션이나 대회 시작 직후 처음 들어오면 판이 생기는 연출을 한 번 보인다
+  const [assembly, setAssembly] = useState(() => (startsWithAssembly() ? "pending" : false));
+  const [hold] = useState(assemblyHoldMs);
+  const [held, setHeld] = useState(hold === 0);
+  const [assemblyReady, setAssemblyReady] = useState(false);
+  const markAssemblyReady = useCallback(() => setAssemblyReady(true), []);
+  const startAssembly = useCallback(() => setAssembly((value) => (value === "pending" ? "playing" : value)), []);
+  useEffect(() => {
+    if (held) return undefined;
+    const id = window.setTimeout(() => setHeld(true), hold);
+    return () => window.clearTimeout(id);
+  }, [held, hold]);
+  useEffect(() => {
+    if (assembly === "pending" && assemblyReady && held) startAssembly();
+  }, [assembly, assemblyReady, held, startAssembly]);
+  useLayoutEffect(() => {
+    const frame = frameRef.current;
+    if (!frame) return;
+    if (assembly) frame.dataset.assembly = assembly;
+    else delete frame.dataset.assembly;
+  }, [assembly]);
+  useEffect(() => {
+    if (assembly === "pending") {
+      // 보드를 못 불러왔거나 주사위가 늦으면 기다리지 않고 평소 화면이나 연출로 넘어간다
+      if (error) {
+        setAssembly(false);
+        clearAssemblyPending();
+        return undefined;
+      }
+      const id = window.setTimeout(startAssembly, hold + ASSEMBLY_WAIT_MS);
+      return () => window.clearTimeout(id);
+    }
+    if (assembly !== "playing") return undefined;
+    const id = window.setTimeout(() => {
+      setAssembly(false);
+      clearAssemblyPending();
+    }, ASSEMBLY_MS);
+    return () => window.clearTimeout(id);
+  }, [assembly, error, hold, startAssembly]);
   // 데스크톱 왼쪽 열에서 주사위판과 열린 문제 버튼 플레이트까지의 높이(찬스카드 목록 제외)를 무대에 알린다
   // KoTH 배너 위 끝을 열린 문제 패널 위선(이 높이 + 간격)에 맞추는 데 쓴다 휴대폰에서는 열이 없어 재지 않는다
   useEffect(() => {
@@ -339,6 +389,8 @@ export default function BoardScreen({
               onSelectLine={openLineSummary}
               selectableCellIndexes={trainTravel.journey ? null : airportSelectableCellIndexes}
               highlightedCellIndex={trainTravel.journey ? null : airportDestination?.cellIndex ?? null}
+              assembly={assembly || "done"}
+              onAssemblyReady={markAssemblyReady}
             />
           </BoardScene>
         </div>

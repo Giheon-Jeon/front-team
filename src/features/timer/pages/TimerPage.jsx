@@ -14,7 +14,8 @@ export default function TimerPage() {
       contest={timer.contest}
       error={timer.error}
       isSynced={timer.isSynced}
-      liveRemainingSeconds={timer.liveRemainingSeconds}
+      stage={timer.stage}
+      secondsLeft={timer.secondsLeft}
       onRetry={timer.retry}
     />
   );

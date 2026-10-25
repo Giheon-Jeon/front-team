@@ -11,6 +11,7 @@ import { ROLE } from "../../../constants/enums.js";
 import { isSuccess } from "../../../utils/response.js";
 import { ROUTES } from "../../../routes/routePaths.js";
 import LoginScreen from "../components/LoginScreen.jsx";
+import { markBoardIntro } from "../../board/utils/boardIntro.js";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -74,8 +75,8 @@ export default function LoginPage() {
       } else {
         localStorage.removeItem(ROLE_STORAGE_KEY);
       }
-      // 새 로그인 세션의 첫 주사위 굴림 전까지만 보드에 시작 안내를 보인다
-      try { sessionStorage.setItem("board.diceIntroPending", "1"); } catch { /* 저장 불가 시 안내만 생략 */ }
+      // 새 로그인 세션에서 보드에 처음 들어오면 판이 생기는 연출과 첫 주사위 안내를 보인다
+      markBoardIntro();
       setFeedback({ type: "success", message: "로그인에 성공했습니다" });
       navigate(role === ROLE.ADMIN ? ROUTES.adminDashboard : ROUTES.board, { replace: true });
     } catch (error) {
