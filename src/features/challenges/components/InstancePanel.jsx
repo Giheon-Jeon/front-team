@@ -39,11 +39,20 @@ function formatElapsed(seconds) {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
+// 점 세 개가 차례로 나타났다 사라져 화면이 멈춘 게 아니라 기다리는 중임을 보인다
+function LoadingDots() {
+  return (
+    <span className={styles.loadingDots} aria-hidden="true">
+      <span>.</span><span>.</span><span>.</span>
+    </span>
+  );
+}
+
 function WaitingProgress({ step, busyLabel, seconds }) {
   return (
     <div className={styles.waiting} role="status">
       {busyLabel ? (
-        <p className={styles.waitingBusy}><i aria-hidden="true" />{busyLabel}</p>
+        <p className={styles.waitingBusy}><i aria-hidden="true" />{busyLabel}<LoadingDots /></p>
       ) : (
         <ol className={styles.createSteps} aria-label="인스턴스 준비 단계">
           {CREATE_STEPS.map((item, index) => {
@@ -51,7 +60,7 @@ function WaitingProgress({ step, busyLabel, seconds }) {
             return (
               <li key={item.status} data-state={state}>
                 <i aria-hidden="true" />
-                <span>{item.label}</span>
+                <span>{item.label}{state === "active" && <LoadingDots />}</span>
                 <span className={styles.srOnly}>{state === "done" ? " 완료" : state === "active" ? " 진행 중" : " 대기"}</span>
               </li>
             );
@@ -225,6 +234,7 @@ export default function InstancePanel({ instance, otherInstance, error, pendingA
           <span className={styles.statusBadge} role="status" data-waiting={waitingKey ? "true" : undefined}>
             <i aria-hidden="true" />
             {statusLabel}
+            {waitingKey && <LoadingDots />}
           </span>
         )}
       </div>
