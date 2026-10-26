@@ -17,6 +17,15 @@ function optionalScore(value) {
 const CHALLENGE_SOURCE_TYPES = Object.freeze(["JEOPARDY", "KOTH", "SIGNATURE"]);
 const SCORE_SOURCE_TYPES = Object.freeze([...CHALLENGE_SOURCE_TYPES, "LINE"]);
 
+
+const RANKING_CATEGORY_KEYS = Object.freeze(["MISC", "WEB", "FORENSIC", "REV", "PWN", "CRYPTO", "OSINT", "WEB3"]);
+
+function adaptCategoryScores(value) {
+  if (!value || typeof value !== "object") return null;
+  return RANKING_CATEGORY_KEYS.map((key) => optionalScore(value[key]) ?? 0);
+}
+
+
 export function adaptLeaderboardTeams(data) {
   if (!Array.isArray(data?.teams)) return [];
 
@@ -57,7 +66,7 @@ export function adaptRankingRows(data) {
     solveCount: null,
     signatureScore: optionalScore(ranking.signature_score),
     kothScore: optionalScore(ranking.koth_score),
-    categoryScores: null,
+    categoryScores: adaptCategoryScores(ranking.category_scores),
     isPreview: false,
   }));
 }
