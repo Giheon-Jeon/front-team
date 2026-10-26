@@ -6,9 +6,9 @@ import ChallengeDescriptionPanel from "./ChallengeDescriptionPanel.jsx";
 import InstancePanel from "./InstancePanel.jsx";
 import InstanceControls from "./InstanceControls.jsx";
 import InstanceActionDialog from "./InstanceActionDialog.jsx";
+import InstanceNotice from "./InstanceNotice.jsx";
 import RemoteRunPanel from "./RemoteRunPanel.jsx";
 import FlagSubmitPanel from "./FlagSubmitPanel.jsx";
-import RequestFeedback from "./RequestFeedback.jsx";
 import { formatRemaining } from "../../../utils/time.js";
 import styles from "./ChallengeDetailScene.module.css";
 import PanelTexture from "../../../components/common/PanelTexture.jsx";
@@ -52,11 +52,7 @@ export default function ChallengeDetailScreen({
     challenge &&
     !loading &&
     !pageError &&
-    (refreshError ||
-      instanceError ||
-      instanceFeedback ||
-      retrySeconds > 0 ||
-      showBonus);
+    (refreshError || retrySeconds > 0 || showBonus);
   return (
     <div className={styles.page}>
       <div className={styles.stage}>
@@ -131,6 +127,12 @@ export default function ChallengeDetailScreen({
                         pendingAction={pendingAction}
                         onAction={onInstanceAction}
                       />
+                      <InstanceNotice
+                        feedback={instanceFeedback}
+                        error={instanceError}
+                        refreshing={refreshing}
+                        onRetry={onRetry}
+                      />
                     </>
                   )}
                   <FlagSubmitPanel
@@ -171,20 +173,6 @@ export default function ChallengeDetailScreen({
                       </button>
                     </div>
                   )}
-                  {instanceError && (
-                    <div className={styles.errorMessage}>
-                      <p role="alert">{instanceError.message}</p>
-                      <button
-                        type="button"
-                        className={styles.noticeButton}
-                        onClick={onRetry}
-                        disabled={refreshing}
-                      >
-                        {refreshing ? "확인 중…" : "다시 조회"}
-                      </button>
-                    </div>
-                  )}
-                  <RequestFeedback feedback={instanceFeedback} />
                   {retrySeconds > 0 && (
                     <p id="flag-retry" className={styles.retryNotice}>
                       <strong>{retrySeconds}초</strong> 후 다시 제출할 수
