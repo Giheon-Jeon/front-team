@@ -123,3 +123,14 @@ test("알 수 없는 점수 유형이나 깨진 LINE 기록은 풀이 수를 추
     assert.equal(row.signatureScore, null);
   }
 });
+
+test("분야별 점수는 순위표 칸 순서로 바꾸고 FORENSIC·CRYPTO를 FOR·CRY 칸에 넣는다", () => {
+  const [row] = adaptRankingRows({ rankings: [{ team_id: "a", rank: 1, team_score: 1000, category_scores: {
+    WEB: 500, PWN: 0, REV: 0, CRYPTO: 200, FORENSIC: 300, MISC: 0, WEB3: 0, OSINT: 0,
+  } }] });
+  assert.deepEqual(row.categoryScores, [0, 500, 300, 0, 0, 200, 0, 0]);
+});
+test("분야별 점수가 없으면 추측하지 않고 비워 둔다", () => {
+  const [row] = adaptRankingRows({ rankings: [{ team_id: "a", rank: 1, team_score: 1000 }] });
+  assert.equal(row.categoryScores, null);
+});
