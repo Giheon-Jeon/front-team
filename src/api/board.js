@@ -1,4 +1,5 @@
 import apiClient from "./client.js";
+import { parseScoreJson } from "../utils/scoreJson.js";
 
 // 보드 페이지 API. 경로와 스키마는 README.md "2. 문제 리스트(보드) 페이지"
 // (Notion API명세서 2026-08-23 스냅샷)와 브라우저 간 요청 복구 계약 기준.
@@ -31,7 +32,7 @@ export function getBoard() {
 
 export function getMyBoard(config) {
   // GET /board/me - 내 팀 진행 상태 전체(cell_states, chance_cards, active_challenge 등).
-  return apiClient.get("/board/me", config);
+  return apiClient.get("/board/me", { ...config, transformResponse: [parseScoreJson] });
 }
 
 export function getDiceStatus(config) {

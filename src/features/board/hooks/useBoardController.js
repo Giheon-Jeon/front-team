@@ -626,8 +626,8 @@ export default function useBoardController() {
   );
 
   const lineProgress = useMemo(
-    () => getBoardLineProgress(boardDefinition?.cells, cellStatesByIndex),
-    [boardDefinition?.cells, cellStatesByIndex],
+    () => getBoardLineProgress(boardDefinition?.cells, cellStatesByIndex, myBoard?.lineMonopolies),
+    [boardDefinition?.cells, cellStatesByIndex, myBoard?.lineMonopolies],
   );
 
   const reload = useCallback(() => {
