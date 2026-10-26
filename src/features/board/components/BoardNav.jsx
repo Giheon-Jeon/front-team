@@ -14,6 +14,8 @@ import styles from "./BoardScreen.module.css";
 // 위 끝은 동전마다 그림 여백이 달라 top 을 따로 줄여 주사위판과 같은 위 여백선(무대 4.444%)에 맞춘다.
 const NAV_SHIFT = 5.47;
 const NAV_ALIGN = 3.18;
+// 동전마다 그림 여백이 달라 이름표는 무대 기준 같은 높이(%)에 둔다
+const CAPTION_TOP = 12;
 const preparePage = (path) => ({
   onPointerEnter: () => preloadGameArtwork(document, path),
   onFocus: () => preloadGameArtwork(document, path),
@@ -22,6 +24,7 @@ const preparePage = (path) => ({
 const BUTTONS = [
   {
     key: "rules",
+    caption: "Rule",
     to: ROUTES.rules,
     label: "규칙 설명서",
     mobileLabel: "규칙",
@@ -34,6 +37,7 @@ const BUTTONS = [
   },
   {
     key: "mypage",
+    caption: "Mypage",
     to: ROUTES.mypage,
     label: "마이 페이지",
     mobileLabel: "마이페이지",
@@ -46,6 +50,7 @@ const BUTTONS = [
   },
   {
     key: "scoreboard",
+    caption: "Scoreboard",
     to: ROUTES.leaderboard,
     label: "스코어보드",
     mobileLabel: "순위",
@@ -57,6 +62,7 @@ const BUTTONS = [
   },
   {
     key: "logout",
+    caption: "Logout",
     onClick: performLogout,
     label: "로그아웃",
     mobileLabel: "로그아웃",
@@ -126,6 +132,7 @@ export default function BoardNav() {
             aria-hidden="true"
             className="absolute inset-0 w-full h-full object-contain pointer-events-none transition-[filter] duration-150 group-hover:brightness-110 group-active:brightness-95"
           />
+          <span className={styles.navCaption} style={{ top: `${(CAPTION_TOP - button.box.top) / button.box.height * 100}%` }} aria-hidden="true">{button.caption}</span>
           <button
             type="button"
             {...(button.to ? preparePage(button.to) : {})}
