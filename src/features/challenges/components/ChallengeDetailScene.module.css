@@ -2006,9 +2006,10 @@
     top: calc(var(--u) * 333);
     width: calc(var(--u) * 640);
     height: calc(var(--u) * 382);
-    align-content: center;
-    gap: calc(var(--u) * 12);
-    padding: 0;
+    /* 마스코트 아래 끝(290)과 플래그 판 위(402) 사이의 한가운데에 문구를 둔다 */
+    align-content: start;
+    gap: calc(var(--u) * 39);
+    padding: calc(var(--u) * 40) 0 0;
   }
   .mascotPanel img {
     height: calc(var(--u) * 250);
