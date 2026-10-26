@@ -553,6 +553,8 @@ export default function useBoardController() {
   useEffect(() => {
     if (
       isLoading ||
+      isMutating ||
+      mutationLockRef.current ||
       pendingRoll ||
       pendingChanceChoice ||
       awaitingDiscard ||
@@ -578,6 +580,7 @@ export default function useBoardController() {
     currentCell,
     handleDrawChance,
     isLoading,
+    isMutating,
     pendingChanceChoice,
     pendingRoll,
   ]);
