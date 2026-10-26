@@ -68,17 +68,26 @@ const BUTTONS = [
   },
 ];
 
+// 모바일 메뉴 동전: 로그아웃 동전 그림 위에 같은 안쪽 원을 덮고 항목별 금색 아이콘을 그린다
+// 메뉴 버튼과 KoTH·동아리 부스가 다른 동전과 같은 틀·색을 쓴다
+const MENU_GLYPHS = {
+  menu: <path d="M101 65h32M101 76h32M101 87h32" />,
+  koth: <path d="M102 87 100 66l9 8 8-11 8 11 9-8-2 21Z" />,
+  booth: <><path d="m99 72 5-10h26l5 10Z" /><path d="M103 72v18h28V72M112 90V80h10v10" /></>,
+};
+const MENU_COIN_ART = BUTTONS[3];
+
 // Normalize the visible artwork, including a small transparent margin, instead
 // of enlarging each PNG's different empty canvas inside a clipped square.
-function MobileNavArtwork({ button, menu = false }) {
+function MobileNavArtwork({ button, glyph }) {
   const id = useId();
   return (
-    <svg className={styles.mobileNavIcon} viewBox={button.mobileViewBox} aria-hidden="true" focusable="false" data-mobile-nav-icon={menu ? "menu" : button.key}>
+    <svg className={styles.mobileNavIcon} viewBox={button.mobileViewBox} aria-hidden="true" focusable="false" data-mobile-nav-icon={glyph ?? button.key}>
       <image href={button.src} width={button.imageSize[0]} height={button.imageSize[1]} />
-      {menu && <>
+      {glyph && <>
         <defs><linearGradient id={id} x2="0" y2="1"><stop stopColor="#513615" /><stop offset="1" stopColor="#211609" /></linearGradient></defs>
         <circle cx="117" cy="76" r="30" fill={`url(#${id})`} />
-        <path d="M101 65h32M101 76h32M101 87h32" fill="none" stroke="#f1cf7f" strokeWidth="5" strokeLinecap="round" />
+        <g fill="none" stroke="#f1cf7f" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round">{MENU_GLYPHS[glyph]}</g>
       </>}
     </svg>
   );
@@ -97,7 +106,7 @@ export default function BoardNav() {
           <span>{button.mobileLabel}</span>
         </Link>)}
         <details ref={mobileMenu} className={styles.mobileMenu} onKeyDown={event => { if (event.key === "Escape") { closeMenu(); mobileMenu.current?.querySelector("summary")?.focus(); } }}>
-          <summary aria-label="대회 전체 메뉴"><MobileNavArtwork button={BUTTONS[3]} menu /><span>메뉴</span></summary>
+          <summary aria-label="대회 전체 메뉴"><MobileNavArtwork button={MENU_COIN_ART} glyph="menu" /><span>메뉴</span></summary>
           <div className={styles.mobileMenuItems} onClick={closeMenu}>
         {BUTTONS.filter(button => !button.to).map((button) => {
           const content = <>
@@ -108,8 +117,14 @@ export default function BoardNav() {
             ? <Link key={button.key} to={button.to} className={styles.mobileNavPrimary}>{content}</Link>
             : <button key={button.key} type="button" onClick={button.onClick} className={styles.mobileNavPrimary}>{content}</button>;
         })}
-        <Link to={ROUTES.koth} {...preparePage(ROUTES.koth)}>KoTH</Link>
-        <Link to={ROUTES.signatures} {...preparePage(ROUTES.signatures)}>동아리 부스</Link>
+        <Link to={ROUTES.koth} {...preparePage(ROUTES.koth)} className={styles.mobileNavPrimary}>
+          <MobileNavArtwork button={MENU_COIN_ART} glyph="koth" />
+          <span>KoTH</span>
+        </Link>
+        <Link to={ROUTES.signatures} {...preparePage(ROUTES.signatures)} className={styles.mobileNavPrimary}>
+          <MobileNavArtwork button={MENU_COIN_ART} glyph="booth" />
+          <span>동아리 부스</span>
+        </Link>
           </div>
         </details>
       </nav>
