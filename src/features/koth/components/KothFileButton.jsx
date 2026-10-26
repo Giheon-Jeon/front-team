@@ -36,11 +36,17 @@ export default function KothFileButton({ challengeId, file, download = downloadK
     }
   }
 
-  return <div className={styles.fileDownload}>
-    <button type="button" className={styles.fileButton} onClick={start} disabled={state.status === "loading"} data-file-download>
-      {state.status === "loading" ? "받는 중" : "문제 파일 받기"}
-    </button>
-    <span className={styles.fileMeta}>{file.name}{file.sizeBytes ? ` · ${formatFileSize(file.sizeBytes)}` : ""}</span>
-    {state.message && <p className={styles.fileMessage} role={state.status === "error" ? "alert" : "status"}>{state.message}</p>}
+  // 문제 상세 화면의 첨부파일 줄처럼 상자 그림, 파일 이름, 크기를 한 줄에 두고 이름을 누르면 받는다
+  return <div className={styles.attachmentRow}>
+    <img className={styles.attachmentIcon} src="/assets/challenge-detail/icon-checkbox.png" alt="" aria-hidden="true" />
+    <div className={styles.attachmentInfo}>
+      <button type="button" className={styles.attachmentButton} onClick={start} disabled={state.status === "loading"}
+        data-file-download title={file.name} aria-label={`문제 파일 ${file.name} 받기`}>
+        {file.name}
+      </button>
+      {state.message && <span className={state.status === "error" ? styles.downloadError : styles.downloadNote}
+        role={state.status === "error" ? "alert" : "status"}>{state.message}</span>}
+    </div>
+    {file.sizeBytes && <span className={styles.fileSize}>{formatFileSize(file.sizeBytes)}</span>}
   </div>;
 }

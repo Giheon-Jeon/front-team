@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { applyKothClubDetail, validateKothClubDetail, createKothChallengeViewModels, flattenKothChallenges, getKothCardAvailability, getKothConnection, kothFile, validateKothClubs } from "./kothChallengeState.js";
+import { applyKothClubDetail, validateKothClubDetail, createKothChallengeViewModels, flattenKothChallenges, getKothCardAvailability, getKothConnection, kothFile, kothRound, validateKothClubs } from "./kothChallengeState.js";
 import { KOTH_CHALLENGE_VISUALS } from "../config/kothVisualConfig.js";
 
 const clubs = Array.from({ length: 6 }, (_, index) => ({
@@ -80,4 +80,11 @@ test("문제 파일은 이름이 있는 zip 하나만 보이고 새 상세 응�
   assert.equal(applyKothClubDetail(row, detail).file, null);
   const silent = { ...detail, challenges: [{ ...clubs[0].challenges[0] }] };
   assert.equal(applyKothClubDetail(row, silent).file.name, "k0.zip");
+});
+
+test("라운드는 지도 카드 순서나 공개 순번 두 개씩 묶고, 둘 다 없으면 1라운드다", () => {
+  assert.deepEqual([1, 2, 3, 4, 5, 6].map((slot) => kothRound({ slot })), [1, 1, 2, 2, 3, 3]);
+  assert.equal(kothRound({ openGroup: 5 }), 3);
+  assert.equal(kothRound({}), 1);
+  assert.equal(kothRound(null), 1);
 });

@@ -31,10 +31,11 @@
   pointer-events: none;
 }
 
-.mobileTitle, .mobileChallengeTitle, .mobileMapHeading, .mobileRoundArtwork, .mobileMapFooter, .mobileMapFrame { display: none; }
+.mobileTitle, .mobileMapHeading, .mobileRoundArtwork, .mobileMapFooter, .mobileMapFrame { display: none; }
 .challengeRound { display: contents; }
 .challengeGrid { display: contents; }
 .challengeButton {
+  container-type: inline-size;
   left: var(--card-left);
   top: var(--card-top);
   width: var(--card-width);
@@ -99,6 +100,29 @@
   pointer-events: none;
 }
 
+/* 우표 카드 이름: 그림의 이름 줄은 비어 있고 출제 동아리 이름을 같은 자리(세로 78.4%)에 라운드 색 세리프로 얹는다
+   동아리가 정한 대소문자는 그대로 두고, 글자 크기는 카드 폭(cqw)을 따라 지도, 휴대폰, 문제 시트에서 같은 비율이다
+   긴 이름은 --name-scale 로 한 줄에 맞춘다 카드 아래 글자는 문제 이름이다 */
+.cardName {
+  position: absolute;
+  z-index: 1;
+  top: 78.4%;
+  left: 50%;
+  max-width: 80%;
+  overflow: hidden;
+  transform: translate(-50%, -50%);
+  color: #6c6140;
+  font: 400 calc(9.6cqw * var(--name-scale, 1))/1.15 "Detail Caslon", "Song Myung", serif;
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  -webkit-text-stroke: 0.03em currentColor;
+  pointer-events: none;
+}
+
+.cardName[data-round="1"] { color: #934c22; }
+.cardName[data-round="3"] { color: #46524f; }
+
 .mainNavigationButton {
   left: 4.0625%;
   top: 6.7593%;
@@ -107,8 +131,6 @@
 }
 
 .dataState,
-.challengeDetail,
-.tokenPanel,
 .mappingWarning {
   color: #4b2b17;
   font-family: Georgia, "Times New Roman", serif;
@@ -117,50 +139,98 @@
   box-shadow: 0 0.35em 1em rgba(79, 39, 13, 0.3);
 }
 
+/* 내 팀 요약: 팀 이름과 KoTH 점수를 한 줄로 두고, 팀 토큰은 나무 명판, 새로고침은 금테 명판으로 둔다
+   글자와 단추는 지도와 같이 줄고 노트북 화면에서 너무 작아지지 않게 아래 한계만 둔다 */
 .teamSummary {
   position: absolute;
   z-index: 3;
-  top: 4.3%;
-  right: 5%;
+  top: 4.45%;
+  right: 6%;
   display: flex;
-  align-items: baseline;
-  gap: 1.2em;
-  max-width: 58%;
+  align-items: center;
+  gap: 1.1em;
+  max-width: 62%;
   color: #4b2b17;
-  font-size: 0.9em;
-  line-height: 1.4;
+  font: 400 max(0.86em, 12.5px)/1.3 "Pretendard", sans-serif;
   white-space: nowrap;
 }
 
-.teamSummary strong {
+.teamScore {
+  display: flex;
+  align-items: baseline;
+  gap: 0.85em;
+  min-width: 0;
+  margin: 0;
+}
+
+.teamScore strong {
   overflow: hidden;
   max-width: 13em;
+  color: #2e1d0d;
+  font-weight: 700;
   text-overflow: ellipsis;
 }
 
-.teamSummary span {
-  font-variant-numeric: tabular-nums;
+.teamScore span {
+  padding-left: 0.85em;
+  border-left: 1px solid #8a5f3466;
+  color: #74512c;
 }
 
-.teamSummary button {
-  flex-shrink: 0;
-  padding: 0.15em 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
+.teamScore small {
+  font: 400 0.82em/1 "Inria Serif", serif;
+  letter-spacing: 0.08em;
+}
+
+.teamScore b {
+  color: #2e1d0d;
+  font: 400 1.45em/1 "Inria Serif", serif;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.teamActions {
+  display: flex;
+  gap: 0.45em;
+}
+
+.summaryAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 6.4em;
+  height: 2.3em;
+  padding: 0 0.85em 0.08em;
+  border: 0.4em solid transparent;
+  border-image: url("/assets/board/panel-frame.png") 14 fill / 0.4em stretch;
+  background: none;
+  color: #ecd9b4;
+  font: 400 1em/1 "Song Myung", serif;
+  letter-spacing: 0.04em;
   cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 0.3em;
+  filter: drop-shadow(0 0.1em 0.18em #3a200b4d);
 }
 
-.teamSummary button:focus-visible {
+.summaryAction[data-tone="quiet"] {
+  border-image-source: url("/assets/board/panel-frame-outline.png");
+  color: #74512c;
+  filter: none;
+}
+
+.summaryAction:hover:not(:disabled) { color: #fff3dc; }
+.summaryAction[data-tone="quiet"]:hover:not(:disabled) { color: #2e1d0d; }
+.summaryAction:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.summaryAction:focus-visible {
   outline: 2px solid #6f3e19;
-  outline-offset: 3px;
+  outline-offset: 2px;
 }
 
-.dataState button,
-.tokenPanel button {
+.summaryNote {
+  color: #74512c;
+  font-size: 0.86em;
+}
+
+.dataState button {
   margin-top: 0.65em;
   padding: 0.45em 0.9em;
   border: 1px solid #6f3e19;
@@ -201,165 +271,6 @@
   text-align: center;
 }
 
-.challengeDetail {
-  position: absolute;
-  z-index: 5;
-  top: 27%;
-  left: 34%;
-  box-sizing: border-box;
-  width: 32%;
-  padding: 1em 1.25em;
-}
-
-.challengeDetail h2 {
-  margin: 0.1em 1em 0.55em 0;
-  font-size: 1.15em;
-}
-
-.challengeDescription {
-  max-height: 8.6em;
-  margin: 0 0 0.8em;
-  overflow-y: auto;
-  font-size: 0.64em;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  word-break: keep-all;
-  overflow-wrap: anywhere;
-}
-
-.challengeClub {
-  margin: 0;
-  font-size: 0.68em;
-  font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-}
-
-.challengeDetail dl {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.35em 1em;
-  margin: 0;
-}
-
-.challengeDetail dl div {
-  min-width: 0;
-}
-
-.challengeDetail dt {
-  font-size: 0.58em;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-}
-
-.challengeDetail dd {
-  overflow: hidden;
-  margin: 0.12em 0 0;
-  font-size: 0.7em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.routeNotice {
-  margin: 0.8em 0 0;
-  padding-top: 0.55em;
-  border-top: 1px solid rgba(112, 64, 27, 0.35);
-  font-size: 0.62em;
-}
-
-.panelCloseButton {
-  position: absolute;
-  top: 0.25em;
-  right: 0.45em;
-  padding: 0;
-  border: 0;
-  color: #4b2b17;
-  font: inherit;
-  font-size: 1.3em;
-  line-height: 1;
-  background: transparent;
-  cursor: pointer;
-}
-
-.tokenBackdrop {
-  position: absolute;
-  z-index: 20;
-  inset: 0;
-  background: rgba(32, 18, 9, 0.52);
-}
-
-.tokenPanel {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  box-sizing: border-box;
-  width: 44%;
-  min-height: 24%;
-  padding: 1.8em 2em;
-  transform: translate(-50%, -50%);
-  text-align: center;
-}
-
-/* 팀 토큰 모달은 화면 폭 1% 기준이라 노트북 화면에서 9px대로 작아져, 단계별로 키우고 최소 크기를 둔다 */
-.tokenPanel h2 {
-  margin: 0 0 0.8em;
-  font-size: max(1.5em, 22px);
-}
-
-.tokenPanel p {
-  margin: 0.5em 0;
-  font-size: max(0.95em, 15px);
-  line-height: 1.5;
-}
-
-.tokenContent label {
-  display: block;
-  margin: 0.8em 0 0.4em;
-  font-size: max(0.9em, 14px);
-}
-
-.tokenContent input {
-  box-sizing: border-box;
-  width: 100%;
-  padding: 0.55em 0.7em;
-  border: 1px solid #8c653d;
-  color: #362010;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: max(0.95em, 15px);
-  background: rgba(255, 247, 225, 0.8);
-}
-
-.tokenTeamName {
-  font-size: max(1.2em, 18px) !important;
-  font-weight: 700;
-}
-
-.tokenIssuedAt {
-  opacity: 0.8;
-}
-
-.tokenState {
-  padding-top: 0.3em;
-}
-
-.tokenPanel button {
-  font-size: max(0.9em, 14px);
-}
-
-/* 토큰 패널의 실행 버튼 모양이 닫기 버튼까지 덮지 않게 문제 정보 패널의 닫기와 같은 모양으로 되돌린다 */
-.tokenPanel .panelCloseButton {
-  min-width: 32px;
-  min-height: 32px;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  color: #4b2b17;
-  background: transparent;
-  font-size: 1.3em;
-  font-weight: 400;
-  line-height: 1;
-}
-
 @media (prefers-reduced-motion: no-preference) {
   .challengeButton,
   .mainNavigationButton {
@@ -380,36 +291,227 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.challengeDetail { top: 17%; left: 30%; width: 40%; max-height: 43%; overflow-y: auto; }
-.connectButton { display: inline-block; padding: 0.5em 1em; color: #f4dfb4; background: #6f3e19; text-decoration: none; }
-/* 문제 파일 받기: 접속 버튼과 같은 줄에 테두리만 있는 버튼과 파일 이름을 둔다 */
-/* 패널 안에서는 지문 바로 아래에 두고, 밑줄로 점령 정보와 나눈다 */
-.challengeDetail .routeNotice { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: 0 0 0.9em; padding: 0 0 0.9em; border-top: 0; border-bottom: 1px solid rgba(112, 64, 27, 0.35); white-space: normal; }
-.fileDownload { display: contents; }
-.fileButton { padding: 0.5em 1em; border: 1px solid #6f3e19; background: transparent; color: #6f3e19; font: inherit; cursor: pointer; }
-.fileButton:hover:not(:disabled) { background: rgba(111, 62, 25, 0.08); }
-.fileButton:disabled { opacity: 0.6; cursor: progress; }
-.fileMeta { min-width: 0; color: #7a5532; overflow-wrap: anywhere; }
-.fileMessage { flex-basis: 100%; margin: 0; color: #6f3e19; }
-.problemRanking { margin-top: 0.8em; font-size: 0.72em; }
-.problemRanking table { width: 100%; text-align: left; border-collapse: collapse; }
-.problemRanking th, .problemRanking td { border-bottom: 1px solid #b39260; padding: 0.4em; overflow-wrap: anywhere; }
-/* 표의 양 끝 글자를 패널 본문의 왼쪽·오른쪽 선에 붙이고 점수 열은 고정폭 숫자로 오른쪽 정렬한다 */
-.problemRanking th:first-child, .problemRanking td:first-child { padding-left: 0; }
-.problemRanking th:last-child, .problemRanking td:last-child { padding-right: 0; text-align: right; }
-.problemRanking td:first-child, .problemRanking td:last-child { font-variant-numeric: lining-nums tabular-nums; }
-.rankingMore { margin-top: 0.5em; padding: 0.4em 0; border: 0; background: none; color: #6f3e19; font: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
-.teamSummary button:disabled { opacity: 0.5; cursor: not-allowed; }
-.challengeDetail h2 { font-size: clamp(18px, 1.15em, 23px); overflow-wrap: anywhere; }
-.challengeDetail .challengeClub { font-size: 12px; }
-.challengeDetail dt { font-size: 12px; }
-.challengeDetail dd { font-size: 13px; }
-.challengeDetail .routeNotice { font-size: 13px; }
-.challengeDetail .challengeDescription { font-size: 13px; }
-.challengeDetail .problemRanking { font-size: 13px; }
-.challengeDetail .panelCloseButton { min-width: 32px; min-height: 32px; }
-.detailFeedback { font-size: 13px; line-height: 1.7; }
-.detailFeedback button { padding: 0.25em 0.5em; border: 1px solid #8c653d; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+
+/* 문제 시트와 팀 토큰 창은 문제 상세 화면과 같은 재료를 쓴다
+   금테 양피지 판(panel-board)을 바탕으로 깔고, 안쪽 판은 플래그 판(panel-flag)의 깎인 모서리 금테를,
+   서버 판은 인스턴스 판(panel-instance-base)의 어두운 금테를 9분할로 늘려 두른다 그림 원본 1px 은 화면 폭 1920에서 1px 이다
+   글꼴도 문제 상세와 같이 소제목은 Caslon 대문자, 제목은 IM Fell, 숫자와 파일 이름은 Kode Mono 를 쓴다
+   크기는 모두 시트 기준 글자(em) 하나를 따른다 화면 폭 1920에서 16px 이고 지도와 같이 줄되 노트북 화면에서는 14px 아래로 내려가지 않는다 */
+@font-face {
+  font-family: "Detail Fell";
+  src: url("/assets/intro/fonts/IMFeENrm28P.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Detail Caslon";
+  src: url("/assets/leaderboard/fonts/libre-caslon-text-400.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+.sheetBackdrop {
+  position: fixed;
+  z-index: 30;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgb(24 14 6 / 60%);
+  font-size: min(1vw, 1.7778vh);
+}
+
+.challengeSheet,
+.tokenSheet {
+  --brown: #613d15;
+  --brown-soft: #8a5e2e;
+  --gold: #d38e25;
+  --line: #8d6b3b;
+  --paper: #e4c395;
+  --field: #f3dfb8;
+  --serif: "Detail Fell", "Pretendard", serif;
+  --label: "Detail Caslon", "Detail Fell", "Pretendard", serif;
+  --mono: "Kode Mono", "Pretendard", ui-monospace, monospace;
+  position: relative;
+  box-sizing: border-box;
+  border: 2.125em solid transparent;
+  border-image: url("/assets/challenge-detail/panel-board.webp") 34 fill / 2.125em stretch;
+  color: var(--brown);
+  font: 400 max(0.8333em, min(14px, 1.125em))/1.5 "Pretendard", sans-serif;
+  filter: drop-shadow(0 1.2em 2.2em #12090380);
+  outline: none;
+}
+
+.challengeSheet *,
+.tokenSheet * {
+  box-sizing: border-box;
+}
+
+/* 문제 시트: 왼쪽에 지도에서 고른 우표 카드와 접속, 가운데에 제목과 왕좌, 설명, 오른쪽에 순위 판을 둔다
+   안쪽에 금테를 두르는 판은 순위 판 하나뿐이고 나머지는 선과 여백으로 나눈다
+   라운드 리본과 왕관은 지도 그림에서 잉크만 떼어 와 쓰고, 큰 숫자는 Inria Serif 로 쓴다 */
+.challengeSheet {
+  --well: #ecd1ab;
+  --gold-ink: #a8660f;
+  display: grid;
+  grid-template-columns: 15em minmax(0, 1fr) 21em;
+  column-gap: 2.25em;
+  width: 75em;
+  height: 44em;
+  padding: 0.6em 0.4em 0.4em 0.6em;
+}
+
+/* 닫기는 황금열쇠 카드처럼 판 오른쪽 위 모서리에 걸쳐 둔다 */
+.sheetClose {
+  position: absolute;
+  z-index: 2;
+  top: -3.1em;
+  right: -3.1em;
+  width: 2.9em;
+  height: 2.9em;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.sheetClose img { display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0.15em 0.3em #12090399); }
+.sheetClose:hover img { filter: drop-shadow(0 0.15em 0.3em #12090399) brightness(1.1); }
+:is(.challengeSheet, .tokenSheet) :is(a, button, input, [tabindex="0"]):focus-visible { outline: 2px solid #825725; outline-offset: 2px; }
+:is(.challengeSheet, .tokenSheet) .sheetClose:focus-visible { border-radius: 50%; }
+
+/* 왼쪽 열: 우표 카드는 판 위에 살짝 기울여 올려 두고, 그 아래 CONNECT 명판, 접속 주소, 첨부파일 순서 */
+.sheetCard { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.sheetStamp { position: relative; container-type: inline-size; align-self: center; width: 14em; aspect-ratio: 217 / 283; margin-top: 0.3em; transform: rotate(-1.5deg); filter: drop-shadow(0 0.45em 0.7em #3a200b59); }
+.sheetStamp > .layerImage { object-fit: contain; }
+.sheetStamp .completionStamp { inset: 4% -8%; }
+.sheetStamp .completionStamp .layerImage { object-fit: contain; }
+.sheetConnect { display: grid; justify-items: center; gap: 0.5em; margin-top: 1.5em; }
+.connectButton { display: grid; place-items: center; width: 100%; height: 2.6em; padding: 0 0 0.15em 0.14em; background: url("/assets/challenge-detail/button-submit-blank.webp") center / 100% 100% no-repeat; color: #f3e6cf; font: 400 1.25em/1 var(--label); letter-spacing: 0.14em; text-decoration: none; text-shadow: 0 1px 2px #000a; }
+a.connectButton:hover { filter: brightness(1.15); }
+.connectButton[data-disabled] { color: #b9ab94; filter: grayscale(0.85) brightness(0.72); text-shadow: none; }
+.endpoint { max-width: 100%; margin: 0; overflow: hidden; color: var(--brown-soft); font: 400 0.8125em/1.4 var(--mono); text-overflow: ellipsis; white-space: nowrap; }
+.endpoint[data-empty] { font: 500 0.8125em/1.5 "Pretendard", sans-serif; text-align: center; white-space: normal; word-break: keep-all; }
+.detailFeedback { margin: 0; color: var(--brown-soft); font-size: 0.75em; line-height: 1.5; text-align: center; }
+.detailFeedback button, .rankingState button { margin-left: 0.4em; padding: 0.2em 0.55em; border: 1px solid var(--line); border-radius: 0.3em; background: none; color: inherit; font: inherit; cursor: pointer; }
+.sheetFiles { margin-top: auto; }
+.sheetFiles .sheetLabel { margin-bottom: 0.6em; }
+/* 왼쪽 열은 좁아서 파일 크기를 이름 아래 줄로 내려 이름이 잘리지 않게 한다 */
+.sheetFiles .attachmentRow { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "icon info" "icon size"; column-gap: 0.6em; row-gap: 0.1em; }
+.sheetFiles .attachmentIcon { grid-area: icon; align-self: center; }
+.sheetFiles .attachmentInfo { grid-area: info; }
+.sheetFiles .fileSize { grid-area: size; font-size: 0.75em; }
+.sheetFiles .attachmentButton { white-space: normal; overflow-wrap: anywhere; }
+
+/* 가운데 열 */
+.sheetMain { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.sheetEyebrow { margin: 0.35em 0 0; color: var(--brown-soft); font: 400 0.875em/1.3 var(--label); letter-spacing: 0.18em; overflow-wrap: anywhere; }
+.sheetTitle { display: -webkit-box; margin: 0.12em 0 0; overflow: hidden; color: var(--brown); font: 400 2.6em/1.15 var(--serif); overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.sheetMeta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5em 1em; margin: 0.8em 0 0; }
+.roundRibbon { display: block; flex: none; width: auto; height: 2.1em; }
+.sheetTime { color: var(--brown); font: 400 1em/1 var(--label); letter-spacing: 0.1em; white-space: nowrap; }
+.statusBadge { display: inline-flex; align-items: center; gap: 0.45em; color: var(--brown-soft); font: 600 0.875em/1 "Pretendard", sans-serif; white-space: nowrap; }
+.statusBadge i { width: 0.5em; height: 0.5em; border-radius: 50%; background: currentColor; }
+.statusBadge[data-status="ACTIVE"] { color: #4f7a35; }
+.statusBadge[data-status="ACTIVE"] i { box-shadow: 0 0 0 0.22em #4f7a3524; }
+
+/* 왕좌와 우리 팀: 위아래 선 사이 두 칸, 왕좌 칸에는 지도의 왕관을 단다 */
+.sheetStanding { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); margin: 1.5em 0 0; padding: 1em 0 1.05em; border-block: 1px solid var(--line); }
+.sheetStanding > div { min-width: 0; padding: 0 1.2em; }
+.sheetStanding > div:first-child { padding-left: 0; }
+.sheetStanding > div:last-child { padding-right: 0; }
+.sheetStanding > div + div { border-left: 1px solid #8d6b3b59; }
+.sheetStanding dt { display: flex; align-items: center; gap: 0.45em; height: 1.6em; color: var(--brown-soft); font: 400 0.8125em/1 var(--label); letter-spacing: 0.18em; }
+.kingCrown { display: block; flex: none; width: auto; height: 1.9em; margin: -0.3em 0 -0.15em; }
+.sheetStanding dd { display: flex; align-items: baseline; gap: 0.6em; min-width: 0; margin: 0.45em 0 0; }
+.standingName { min-width: 0; overflow: hidden; color: var(--brown); font: 700 1.2em/1.3 "Pretendard", sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+.standingEmpty { color: var(--brown-soft); font: 600 1.1em/1.3 "Pretendard", sans-serif; }
+.standingScore { flex: none; margin-left: auto; color: var(--brown); font: 400 2.2em/1 "Inria Serif", serif; font-variant-numeric: lining-nums tabular-nums; }
+.standingScore[data-tone="gold"] { color: var(--gold-ink); }
+.sheetStanding .standingNote { display: block; margin: 0.35em 0 0; color: var(--brown-soft); font: 500 0.75em/1.3 "Pretendard", sans-serif; }
+.mineTag { flex: none; margin-left: 0.5em; padding: 0.22em 0.5em; border: 1px solid var(--line); border-radius: 0.7em; color: var(--brown-soft); font: 600 0.7rem/1 "Pretendard", sans-serif; white-space: nowrap; }
+
+/* 판 소제목: 문제 상세의 DESCRIPTION, ATTACHMENTS 처럼 Caslon 대문자에 밑줄을 긋는다 */
+.sheetLabel { display: flex; align-items: center; gap: 0.6em; margin: 0; padding-bottom: 0.4em; border-bottom: 1px solid var(--line); color: var(--brown); font: 400 1em/1.3 var(--label); letter-spacing: 0.18em; }
+.attachCount { min-width: 1.9em; padding: 0.1em 0.5em; border: 1px solid var(--line); border-radius: 0.8em; color: var(--brown-soft); font: 400 0.75rem/1.3 var(--mono); letter-spacing: 0; text-align: center; }
+
+.sheetDescription { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; margin-top: 1.4em; }
+.descriptionText { flex: 1 1 auto; min-height: 0; margin-top: 0.75em; padding-right: 0.4em; overflow-y: auto; color: var(--brown); font: 400 1em/1.85 "Pretendard", sans-serif; white-space: pre-wrap; word-break: keep-all; overflow-wrap: anywhere; scrollbar-width: thin; scrollbar-color: #a98550 transparent; }
+.descriptionDigits { font-variant-numeric: lining-nums; }
+.descriptionEmpty { color: var(--brown-soft); }
+
+/* 첨부파일 줄: 문제 상세처럼 상자 그림, 파일 이름, 크기 */
+.attachmentRow { display: flex; align-items: center; gap: 0.6em; min-height: 3.1em; padding: 0.35em 0.85em 0.35em 0.5em; border: 2px solid var(--line); border-radius: 0.55em; }
+.attachmentIcon { flex: none; width: 1.9em; height: 1.65em; }
+.attachmentInfo { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.attachmentButton { display: block; max-width: 100%; overflow: hidden; padding: 0; border: 0; background: none; color: var(--brown); font: 400 0.9375em/1.5 var(--mono); text-align: left; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.attachmentButton:hover:not(:disabled) { text-decoration: underline; text-underline-offset: 0.2em; }
+.attachmentButton:disabled { opacity: 0.6; cursor: progress; }
+.downloadNote, .downloadError { color: var(--brown-soft); font-size: 0.75em; line-height: 1.4; }
+.downloadError { color: #9a2f17; font-weight: 600; }
+.fileSize { flex: none; color: var(--brown-soft); font: 400 0.875em/1 var(--mono); font-variant-numeric: tabular-nums; }
+.attachmentEmpty { margin: 0; color: var(--brown-soft); font: 500 0.875em/1.6 "Pretendard", sans-serif; }
+
+/* 순위 판: 금테 안을 조금 밝은 종이로 두고 판 안에서만 스크롤한다 머리줄은 위에 붙고, 우리 팀 줄은 아래로 밀려나면 아래 끝에 붙는다
+   바탕은 양옆으로 조금 넓혀 그려 순위 숫자와 점수가 끝선에 그대로 닿게 한다 */
+.sheetRanking { display: flex; flex-direction: column; min-width: 0; min-height: 0; padding: 0.35em 0.75em 0.5em; border: 1.125em solid transparent; border-image: url("/assets/challenge-detail/panel-flag.webp") 18 / 1.125em stretch; background: var(--well) padding-box; }
+.rankingScroll { flex: 1 1 auto; min-height: 0; margin: 0.2em -0.5em 0; padding: 0 0.5em; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #a98550 transparent; }
+.rankingTable { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+.rankColumn { width: 2.6em; }
+.scoreColumn { width: 4.4em; }
+.rankingTable th { position: sticky; z-index: 1; top: 0; padding: 0.6em 0 0.45em; border-bottom: 1px solid var(--line); background: var(--well); color: var(--brown-soft); font: 400 0.75em/1.3 var(--label); letter-spacing: 0.12em; text-align: left; }
+.rankingTable th:first-child { box-shadow: -0.7em 0 0 var(--well); }
+.rankingTable th:last-child { box-shadow: 0.7em 0 0 var(--well); }
+.rankingTable :is(th, td):last-child { text-align: right; }
+.rankingTable td { height: 2.65em; padding: 0; border-bottom: 1px solid #8d6b3b40; color: var(--brown); vertical-align: middle; }
+.rankingTable td:first-child { color: var(--brown-soft); font: 400 1.05em/1 "Inria Serif", serif; font-variant-numeric: lining-nums tabular-nums; }
+.rankingTable tr[data-top] td:first-child { color: var(--gold-ink); }
+.rankingTable td:last-child { font: 400 1.05em/1 "Inria Serif", serif; font-variant-numeric: lining-nums tabular-nums; }
+.rankingName { display: flex; align-items: center; min-width: 0; padding-right: 0.6em; font: 600 0.9375em/1.3 "Pretendard", sans-serif; }
+.rankingName > span:not(.mineTag) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rankCrown { display: block; flex: none; width: auto; height: 1.3em; margin: -0.1em 0.35em 0 0; }
+.rankingTable tr[data-mine] td { position: sticky; z-index: 1; bottom: 0; background: var(--field); }
+.rankingTable tr[data-mine] td:first-child { box-shadow: -0.5em 0 0 var(--field); color: var(--gold-ink); }
+.rankingTable tr[data-mine] td:last-child { box-shadow: 0.5em 0 0 var(--field); }
+.rankingTable tr[data-mine] .rankingName { font-weight: 700; }
+/* 아래 끝에 붙은 우리 팀 줄이 지나가는 줄을 덮을 때도 경계가 보이게 윗선을 진하게 긋는다 */
+.rankingTable tr[data-mine] td::after { content: ""; position: absolute; top: -1px; right: 0; left: 0; height: 1px; background: var(--line); }
+.rankingTable tr[data-mine] td:first-child::after { left: -0.5em; }
+.rankingTable tr[data-mine] td:last-child::after { right: -0.5em; }
+.rankingState { margin: 0.9em 0 0; color: var(--brown-soft); font-size: 0.9375em; line-height: 1.7; word-break: keep-all; }
+
+/* 팀 토큰 창: 문제 상세의 플래그 제출 판처럼 소제목, 토큰 칸, 안내, COPY 명판 순서로 둔다 */
+.tokenSheet { width: 40em; padding: 0.5em 1.25em 1em; }
+.tokenLabel { margin: 0.2em 0 0; color: var(--brown-soft); font: 400 0.875em/1.3 var(--label); letter-spacing: 0.18em; }
+.tokenTeam { margin: 0.2em 0 0; padding-bottom: 0.55em; border-bottom: 1px solid var(--line); color: var(--brown); font: 400 2em/1.25 "Song Myung", serif; overflow-wrap: anywhere; }
+.tokenInput { display: block; width: 100%; height: 3em; margin-top: 1em; padding: 0 0.8em; border: 1px solid var(--line); border-radius: 0.4em; background: var(--field); color: var(--brown); font: 400 1.125em/1 var(--mono); }
+.tokenInput::placeholder { color: #a8875c; font-family: "Pretendard", sans-serif; opacity: 1; }
+.tokenInput:focus { outline: none; border-color: var(--brown); box-shadow: 0 0 0 1px var(--brown); }
+.tokenHint { margin: 0.55em 0 0; color: var(--brown-soft); font-size: 0.8125em; line-height: 1.5; word-break: keep-all; }
+.tokenError { margin: 1em 0 0; color: #9a2f17; font-size: 0.9375em; font-weight: 600; line-height: 1.5; word-break: keep-all; }
+.tokenFoot { display: flex; align-items: center; justify-content: space-between; gap: 1em; margin-top: 1em; }
+.tokenMeta { display: flex; flex-wrap: wrap; gap: 0.15em 0.9em; min-width: 0; margin: 0; color: var(--brown-soft); font-size: 0.8125em; font-weight: 600; }
+.tokenMeta span { font-weight: 500; }
+.copyButton { flex: none; display: grid; place-items: center; width: 12.2em; height: 2.65em; padding: 0 0 0.15em; border: 0; background: url("/assets/challenge-detail/button-submit-blank.webp") center / 100% 100% no-repeat; color: #f3e6cf; font: 400 1.25em/1 var(--label); letter-spacing: 0.12em; text-shadow: 0 1px 2px #000a; cursor: pointer; }
+.copyButton:hover:not(:disabled) { filter: brightness(1.15); }
+.copyButton:disabled { color: #b9ab94; filter: grayscale(0.85) brightness(0.72); cursor: wait; }
+.tokenStatus { margin: 0.6em 0 0; color: #4f7a35; font-size: 0.8125em; font-weight: 600; }
+.tokenStatus[data-tone="alert"] { color: #9a2f17; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .sheetBackdrop { animation: sheet-dim 180ms ease-out; }
+  .challengeSheet, .tokenSheet { animation: sheet-rise 260ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+}
+
+@keyframes sheet-dim {
+  from { background-color: transparent; }
+}
+
+@keyframes sheet-rise {
+  from { opacity: 0; transform: translateY(0.8em); }
+}
 
 @media (max-width: 1100px) {
   .page {
@@ -442,17 +544,14 @@
     inset: auto;
     max-width: none;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 6px 16px;
-    padding-bottom: 16px;
-    margin-bottom: 20px;
-    border-bottom: 1px solid #ad8a55;
-    font-size: 14px;
+    gap: 12px;
     white-space: normal;
   }
-  .teamSummary strong { max-width: none; white-space: nowrap; }
-  .teamSummary button { min-height: 44px; text-align: left; }
-  .teamSummary span:last-child { grid-column: 1 / -1; }
+  .teamScore { justify-content: space-between; }
+  .teamScore strong { max-width: none; overflow-wrap: anywhere; }
+  .teamScore span { flex: none; padding-left: 0; border-left: 0; }
+  .teamActions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .summaryAction { min-width: 0; height: 48px; font-size: 16px; }
   .challengeGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 20px; }
   .challengeButton {
     position: relative;
@@ -468,38 +567,58 @@
   }
   .challengeButton > .layerImage { width: 100%; height: auto; max-width: 190px; }
   .challengeCaption { position: static; order: 1; width: 100%; font-size: 14px; line-height: 1.5; }
-  .mobileChallengeTitle { display: block; order: 2; font: 16px/1.4 "IM Fell English", Georgia, serif; overflow-wrap: anywhere; }
   .completionStamp { top: 0; left: 0; right: 0; bottom: 60px; }
   .dataState, .mappingWarning { position: static; width: auto; margin: 16px 0; padding: 16px; font-size: 14px; line-height: 1.6; }
   .dataState button, .mappingWarning button { min-height: 44px; font-size: 14px; }
-  .challengeDetail {
-    position: fixed;
-    inset: 8dvh 12px auto;
-    width: min(calc(100% - 24px), 640px);
-    max-height: 84dvh;
-    margin: 0 auto;
-    padding: 24px 20px;
+  /* 휴대폰은 아래에서 올라오는 시트로 쌓는다 우표 카드와 제목을 한 줄에 두고, 접속, 왕좌, 설명, 첨부파일, 순위 순서
+     시트 전체가 스크롤되고 아래 여백은 순위 판 밖에 두어 우리 팀 줄이 시트 아래 끝에 바로 붙게 한다 */
+  .sheetBackdrop { place-items: end center; font-size: 15px; }
+  .challengeSheet, .tokenSheet {
+    width: min(100%, 640px);
+    max-height: 92dvh;
+    overflow-y: auto;
     overscroll-behavior: contain;
-    background: #f0dcb7;
-    box-shadow: 0 16px 60px #29150688;
+    border-width: 14px 14px 0;
+    border-image-width: 14px 14px 0;
+    font-size: 15px;
+    filter: none;
+    box-shadow: 0 -12px 40px #1e0f0466;
   }
-  .challengeDetail h2 { font-size: 24px; padding-right: 20px; }
-  .challengeDetail .challengeClub, .challengeDetail dt, .challengeDetail dd,
-  .challengeDetail .routeNotice, .challengeDetail .problemRanking, .challengeDetail .challengeDescription, .detailFeedback { font-size: 14px; line-height: 1.6; }
-  /* 폰에서는 패널 전체가 스크롤되므로 지문 안에서 따로 스크롤하지 않는다 */
-  .challengeDetail .challengeDescription { max-height: none; overflow: visible; }
-  .challengeDetail dl { gap: 16px 12px; }
-  .challengeDetail dd { white-space: normal; overflow-wrap: anywhere; }
-  .challengeDetail .panelCloseButton, .tokenPanel .panelCloseButton, .panelCloseButton { min-width: 44px; min-height: 44px; }
-  .connectButton, .fileButton, .detailFeedback button, .problemRanking button { min-height: 44px; padding: 10px 16px; }
-  .problemRanking table { table-layout: fixed; }
-  .tokenBackdrop { position: fixed; }
-  .tokenPanel { width: min(calc(100% - 24px), 520px); min-height: 0; max-height: 84dvh; overflow-y: auto; padding: 28px 20px; background: #f0dcb7; }
-  /* 가운데 정렬 제목이 본문과 같은 축에 오도록 닫기 버튼이 차지하는 폭(34)을 양쪽에 똑같이 비운다 */
-  .tokenPanel h2 { font-size: 22px; padding-inline: 34px; }
-  .tokenPanel p, .tokenPanel label, .tokenPanel button { font-size: 15px; line-height: 1.6; }
-  .tokenPanel input { font-size: 16px; min-height: 48px; }
-  .tokenPanel button { min-height: 44px; }
+  .challengeSheet {
+    grid-template-columns: 76px minmax(0, 1fr);
+    grid-template-areas: "stamp heading" "connect connect" "standing standing" "description description" "files files" "rank rank";
+    gap: 18px 14px;
+    height: auto;
+    padding: 6px 4px 0;
+  }
+  .sheetCard, .sheetMain { display: contents; }
+  .sheetClose { top: 0; right: 0; width: 44px; height: 44px; padding: 3px; }
+  .sheetStamp { grid-area: stamp; align-self: start; width: 76px; margin: 0; }
+  .sheetHeading { grid-area: heading; min-width: 0; padding-right: 36px; }
+  .sheetEyebrow { margin: 0; }
+  .sheetTitle { font-size: 26px; line-height: 1.2; }
+  .sheetMeta { gap: 6px 12px; margin-top: 10px; }
+  .roundRibbon { height: 26px; }
+  .sheetConnect { grid-area: connect; margin: 0; }
+  .connectButton { width: min(100%, 320px); height: 54px; font-size: 19px; }
+  .sheetStanding { grid-area: standing; margin: 0; }
+  .sheetStanding > div { padding: 0 12px; }
+  .standingName { font-size: 16px; }
+  .standingScore { font-size: 28px; }
+  .sheetDescription { grid-area: description; margin: 0; }
+  .descriptionText { flex: none; overflow: visible; font-size: 15px; }
+  .sheetFiles { grid-area: files; margin: 0; }
+  .sheetRanking { grid-area: rank; margin-bottom: calc(18px + env(safe-area-inset-bottom)); }
+  .rankingScroll { overflow: visible; margin-inline: 0; padding-inline: 0; }
+  .rankingTable th { position: static; box-shadow: none; }
+  .rankingTable td { height: 44px; }
+  .rankingTable tr[data-mine] td:first-child, .rankingTable tr[data-mine] td:last-child { box-shadow: none; }
+  .tokenSheet { padding: 6px 4px calc(20px + env(safe-area-inset-bottom)); }
+  .tokenLabel { padding-right: 44px; }
+  .tokenTeam { padding-right: 44px; font-size: 26px; }
+  .tokenInput { height: 50px; font-size: 15px; }
+  .tokenFoot { flex-wrap: wrap; }
+  .copyButton { width: min(100%, 244px); height: 53px; margin-left: auto; font-size: 20px; }
 }
 @media (max-width: 1100px) and (max-aspect-ratio: 9/10) {
   .page { background-image: url("/assets/login/background-plaza-portrait.webp"); }
@@ -519,21 +638,18 @@
   .mobileMapSeal { position: absolute; right: -4px; top: -2px; width: 50px; height: 50px; opacity: .75; }
   .mainNavigationButton { top: 12px; left: 12px; z-index: 2; }
   .mainNavigationButton .layerImage { object-fit: contain; }
-  .teamSummary { gap: 4px 12px; padding: 12px 0; margin: 0 0 14px; border-block: 1px solid #a67c4555; color: #563419; font-size: 15px; }
-  .teamSummary strong { overflow-wrap: anywhere; white-space: normal; }
+  .teamSummary { padding: 14px 0; margin: 0 0 14px; border-block: 1px solid #a67c4555; color: #563419; font-size: 15px; }
   .challengeGrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; }
   .challengeRound { --round-gap: 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px var(--round-gap); align-items: start; }
   .mobileRoundArtwork { display: block; grid-column: 1 / -1; width: calc(100% + var(--round-gap)); max-width: none; margin-left: calc(var(--round-gap) / -2); height: auto; }
   .challengeButton { gap: 8px; }
   /* 여섯 카드 그림은 높이가 같고 폭만 216~227로 달라, 가장 넓은 비율 상자에 담아 같은 줄 두 카드의 아래 끝과 이름 줄을 맞춘다 */
-  .challengeArtwork { display: block; position: relative; width: 100%; max-width: 190px; aspect-ratio: 227 / 283; }
+  .challengeArtwork { display: block; position: relative; width: 100%; max-width: 190px; aspect-ratio: 227 / 283; container-type: inline-size; }
   .challengeArtwork > .layerImage { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: contain; }
   .challengeArtwork .completionStamp { inset: 0 -8%; }
   .challengeArtwork .completionStamp .layerImage { object-fit: contain; }
   .challengeCaption { font-size: 16px; font-weight: 700; white-space: normal; overflow-wrap: anywhere; }
-  .mobileChallengeTitle { color: #69472a; }
   .mobileMapFooter { display: block; width: 100%; max-width: 440px; height: auto; margin: 40px auto 0; }
-  .challengeDetail, .tokenPanel { border: 5px double #9b7544; border-radius: 2px; background: #f3dfba; }
 }
 @media (max-width: 359px) {
   .stage { padding-inline: 26px; }
