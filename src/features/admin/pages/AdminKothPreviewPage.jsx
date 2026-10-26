@@ -13,6 +13,7 @@ import { kothLivePreviewUrl } from "../utils/kothLivePreview.js";
 import { isSuccess } from "../../../utils/response.js";
 import { loadKothList } from "./AdminKothPage.jsx";
 import styles from "../components/AdminWorkspace.module.css";
+import previewStyles from "./AdminKothPreviewPage.module.css";
 
 const NO_TOKEN = { status: "idle", data: null, error: "", requestTeamToken() {}, clearTeamToken() {} };
 const READY = { status: "success", data: null, error: "", retry() {} };
@@ -70,7 +71,7 @@ export default function AdminKothPreviewPage() {
     }
   }
 
-  return <>
+  return <div className={previewStyles.shell}>
     <aside className={`${styles.workspace} ${styles.previewNotice}`} aria-label="관리자 미리보기">
       <div><strong>참가자 화면 미리보기</strong><span>관리자 게임 테스트는 5분 동안 열립니다 공개 일정은 바뀌지 않습니다</span></div>
       {target && <span>{target.title} · 지금 {status.label}{target.status === "ACTIVE" ? "" : " · 진행 중일 때 모습으로 보입니다"}</span>}
@@ -80,7 +81,7 @@ export default function AdminKothPreviewPage() {
       {openError && <span role="alert">{openError}</span>}
       <button type="button" className={styles.button} onClick={() => navigate(ROUTES.adminKothDetail(kothChallengeId))}>KoTH 관리로</button>
     </aside>
-    <div onClickCapture={(event) => {
+    <div className={previewStyles.canvas} onClickCapture={(event) => {
       // 미리보기에서는 문제 접속과 파일 받기를 실제로 하지 않는다
       if (event.target.closest("a, [data-file-download]")) { event.preventDefault(); event.stopPropagation(); }
     }}>
@@ -90,5 +91,5 @@ export default function AdminKothPreviewPage() {
         isTeamTokenOpen={false} teamToken={NO_TOKEN} onRetry={list.retry} onSelectChallenge={() => {}} onCloseChallenge={() => navigate(ROUTES.adminKothDetail(kothChallengeId))}
         onOpenTeamToken={() => {}} onCloseTeamToken={() => {}} />
     </div>
-  </>;
+  </div>;
 }
