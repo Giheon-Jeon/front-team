@@ -52,8 +52,14 @@ export function applyKothClubDetail(selected, detail) {
   return { ...selected, clubName: detail.name, title: challenge.title,
     status: challenge.status, challengeUrl: challenge.challenge_url, description: challenge.description ?? selected.description ?? null,
     file: challenge.file === undefined ? selected.file ?? null : kothFile(challenge.file),
-    currentOwnerTeamName: challenge.current_owner_team_name,
+    currentOwnerTeamId: challenge.current_owner_team_id ?? null, currentOwnerTeamName: challenge.current_owner_team_name,
     currentScore: challenge.current_score, openedAt: challenge.opened_at, closedAt: challenge.closed_at };
+}
+
+// 지도 카드 순서(1~6)나 공개 순번으로 라운드(1~3)를 정한다 둘 다 없으면 1라운드로 둔다
+export function kothRound(challenge) {
+  const order = Number(challenge?.slot ?? challenge?.openGroup);
+  return Number.isFinite(order) && order > 0 ? Math.ceil(order / 2) : 1;
 }
 
 export function getKothCardAvailability(challenge, stale = false) {
@@ -74,7 +80,7 @@ export function createKothChallengeViewModels(visuals, clubs = [], teamChallenge
       kothChallengeId: challenge.koth_challenge_id, title: challenge.title,
       challengeUrl: challenge.challenge_url ?? null, description: challenge.description ?? null, file: kothFile(challenge.file),
       status: challenge.status, openGroup: challenge.open_group,
-      currentOwnerTeamName: challenge.current_owner_team_name,
+      currentOwnerTeamId: challenge.current_owner_team_id ?? null, currentOwnerTeamName: challenge.current_owner_team_name,
       currentScore: challenge.current_score, openedAt: challenge.opened_at, closedAt: challenge.closed_at,
       earnedScore: progress?.earned_score ?? null, rank: progress?.rank ?? null,
       solvedAt: progress?.solved_at ?? null, solved: isKothChallengeSolved(progress),

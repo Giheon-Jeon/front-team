@@ -1,4 +1,4 @@
-import KothCompletionStamp from "./KothCompletionStamp.jsx";
+import KothCardArt from "./KothCardArt.jsx";
 import { getKothCardAvailability } from "../utils/kothChallengeState.js";
 import styles from "./KothScreen.module.css";
 
@@ -21,20 +21,8 @@ export default function KothChallengeButton({ challenge, stale, onSelect }) {
       aria-pressed={challenge.selected}
       onClick={() => { if (!availability.disabled) onSelect(challenge); }}
     >
-      <span className={styles.challengeCaption}>{challenge.clubName}</span>
-      <span className={styles.mobileChallengeTitle}>{challenge.title}</span>
-      <span className={styles.challengeArtwork}>
-        <img
-          src={challenge.imageSrc}
-          alt=""
-          aria-hidden="true"
-          className={styles.layerImage}
-        />
-        <KothCompletionStamp
-          imageSrc={challenge.completionStampImageSrc}
-          visible={challenge.solved}
-        />
-      </span>
+      <span className={styles.challengeCaption}>{challenge.title}</span>
+      <KothCardArt challenge={challenge} className={styles.challengeArtwork} />
       {challenge.solved && (
         <span className="sr-only">최초 득점 완료</span>
       )}

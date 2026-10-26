@@ -70,6 +70,7 @@ export default function KothPage() {
       challenges={challenges}
       isEmpty={kothData.status === "success" && allChallenges.length === 0}
       unmappedChallengeCount={unmappedChallengeCount}
+      teamId={kothData.progressData?.team_id ?? null}
       teamName={kothData.progressData?.team_name ?? ""}
       totalKothScore={kothData.progressData?.total_koth_score ?? null}
       selectedChallenge={selectedChallenge}

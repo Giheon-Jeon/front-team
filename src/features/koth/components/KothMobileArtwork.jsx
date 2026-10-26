@@ -46,3 +46,13 @@ export function KothMapFrame() {
     </svg>)}
   </div>;
 }
+
+// 문제 시트에 지도의 라운드 리본과 왕관을 그대로 옮겨 쓴다 종이는 지우고 잉크만 남긴다
+const RIBBON_CROPS = ["236 514 194 34", "769 514 166 34", "1267 514 167 34"];
+export function KothRoundRibbon({ round, className }) {
+  return <MapCrop viewBox={RIBBON_CROPS[round - 1] ?? RIBBON_CROPS[0]} className={className} ink />;
+}
+
+export function KothCrown({ className }) {
+  return <MapCrop viewBox="256 62 60 44" className={className} ink />;
+}

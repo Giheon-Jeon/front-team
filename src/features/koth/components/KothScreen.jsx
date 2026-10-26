@@ -1,32 +1,14 @@
-import { useState } from "react";
 import { getKothConnection } from "../utils/kothChallengeState.js";
 import KothChallengeButton from "./KothChallengeButton.jsx";
-import KothFileButton from "./KothFileButton.jsx";
+import KothChallengeSheet from "./KothChallengeSheet.jsx";
 import { KothMobileHeading, KothRoundArtwork, KothMapFooter, KothMapFrame } from "./KothMobileArtwork.jsx";
 import PanelTexture from "../../../components/common/PanelTexture.jsx";
 import KothTeamTokenPanel from "./KothTeamTokenPanel.jsx";
 import MainNavigationButton from "./MainNavigationButton.jsx";
-import { toKst } from "../../../utils/time.js";
 import styles from "./KothScreen.module.css";
 
 function formatValue(value) {
   return value == null ? "-" : String(value);
-}
-
-const RANKING_ROWS = 10;
-
-// 문제별 누적 순위: 득점 팀이 많아도 패널이 끝없이 길어지지 않게 열 팀까지 보이고 나머지는 눌러서 연다
-function KothRankingTable({ rows }) {
-  const [all, setAll] = useState(false);
-  const shown = all ? rows : rows.slice(0, RANKING_ROWS);
-  return <>
-    <table>
-      <thead><tr><th>순위</th><th>팀</th><th>점수</th></tr></thead>
-      <tbody>{shown.map((row) => <tr key={row.team_id}><td>{row.rank}</td><td>{row.team_name}</td><td>{row.earned_score}</td></tr>)}</tbody>
-    </table>
-    {rows.length > RANKING_ROWS && <button type="button" className={styles.rankingMore} onClick={() => setAll((value) => !value)}>
-      {all ? `상위 ${RANKING_ROWS}팀만 보기` : `전체 ${rows.length}팀 보기`}</button>}
-  </>;
 }
 
 export default function KothScreen({
@@ -36,6 +18,7 @@ export default function KothScreen({
   challenges,
   isEmpty,
   unmappedChallengeCount,
+  teamId,
   teamName,
   totalKothScore,
   selectedChallenge,
@@ -67,13 +50,17 @@ export default function KothScreen({
 
         {requestStatus === "success" && (
           <aside className={styles.teamSummary} aria-label="내 팀 KoTH 점수">
-            <strong>{formatValue(teamName || null)}</strong>
-            <span>KoTH {formatValue(totalKothScore)} pts</span>
-            <button type="button" onClick={onOpenTeamToken} disabled={!authenticated}>
-              팀 토큰
-            </button>
-            <button type="button" onClick={onRetry}>새로고침</button>
-            {!authenticated && <span>로그인 후 팀 점수와 토큰 확인</span>}
+            <p className={styles.teamScore}>
+              <strong>{formatValue(teamName || null)}</strong>
+              <span><small>KoTH</small> <b>{formatValue(totalKothScore)}</b> <small>pts</small></span>
+            </p>
+            <div className={styles.teamActions}>
+              <button type="button" className={styles.summaryAction} onClick={onOpenTeamToken} disabled={!authenticated}>
+                팀 토큰
+              </button>
+              <button type="button" className={styles.summaryAction} data-tone="quiet" onClick={onRetry}>새로고침</button>
+            </div>
+            {!authenticated && <span className={styles.summaryNote}>로그인 후 팀 점수와 토큰 확인</span>}
           </aside>
         )}
 
@@ -122,60 +109,32 @@ export default function KothScreen({
           </p>
         )}
 
-        {selectedChallenge && (
-          <section className={styles.challengeDetail} aria-label="선택한 KoTH 문제 정보">
-            <button
-              type="button"
-              className={styles.panelCloseButton}
-              onClick={onCloseChallenge}
-              aria-label="선택한 문제 정보 닫기"
-            >
-              ×
-            </button>
-            <p className={styles.challengeClub}>{selectedChallenge.clubName}</p>
-            <h2>{selectedChallenge.title}</h2>
-            {selectedChallenge.description && <p className={styles.challengeDescription}>{selectedChallenge.description}</p>}
-            <div className={styles.routeNotice}>
-              {connection ? <a href={connection} target="_blank" rel="noopener noreferrer" className={styles.connectButton}>문제 접속</a>
-                : <span>{!detailReady ? "최신 상태 확인 후 접속할 수 있습니다" : clubsStale ? "목록 갱신 후 접속할 수 있습니다" : selectedChallenge.status === "ACTIVE" ? "접속 주소 준비 중" : "현재 접속할 수 없는 문제입니다"}</span>}
-              {detailReady && selectedChallenge.file && selectedChallenge.status !== "SCHEDULED"
-                && <KothFileButton challengeId={selectedChallenge.kothChallengeId} file={selectedChallenge.file} />}
-            </div>
-            {detailReady && <dl>
-              <div><dt>현재 점령 팀</dt><dd>{formatValue(selectedChallenge.currentOwnerTeamName)}</dd></div>
-              <div><dt>현재 점수</dt><dd>{formatValue(selectedChallenge.currentScore)}</dd></div>
-              <div><dt>우리 팀 점수</dt><dd>{formatValue(selectedChallenge.earnedScore)}</dd></div>
-              <div><dt>우리 팀 순위</dt><dd>{formatValue(selectedChallenge.rank)}</dd></div>
-              <div>
-                <dt>최초 득점 (KST)</dt>
-                <dd>{selectedChallenge.solvedAt ? toKst(selectedChallenge.solvedAt) : "-"}</dd>
-              </div>
-            </dl>}
-            {clubDetail.status === "loading" && <p className={styles.detailFeedback} role="status">최신 문제 정보를 확인하는 중</p>}
-            {clubDetail.status === "error" && <p className={styles.detailFeedback} role="alert">{clubDetail.error} <button type="button" onClick={clubDetail.retry}>다시 확인</button></p>}
-            <section className={styles.problemRanking} aria-label="문제별 팀 순위">
-              <h3>문제별 누적 순위</h3>
-              {problemRanking.status === "loading" && <p role="status">순위 조회 중</p>}
-              {problemRanking.status === "unauthenticated" && <p>로그인 후 순위를 확인할 수 있습니다</p>}
-              {problemRanking.status === "error" && <p role="alert">{problemRanking.error} <button type="button" onClick={problemRanking.retry}>다시 시도</button></p>}
-              {problemRanking.status === "success" && <KothRankingTable key={selectedChallenge.kothChallengeId} rows={problemRanking.data.leaderboard} />}
-              {problemRanking.status === "success" && problemRanking.data.leaderboard.length === 0 && <p>아직 득점한 팀이 없습니다</p>}
-            </section>
-          </section>
-        )}
-
         <MainNavigationButton />
-
-        {isTeamTokenOpen && (
-          <KothTeamTokenPanel
-            status={teamToken.status}
-            data={teamToken.data}
-            error={teamToken.error}
-            onRetry={teamToken.requestTeamToken}
-            onClose={onCloseTeamToken}
-          />
-        )}
       </div>
+
+      {selectedChallenge && (
+        <KothChallengeSheet
+          challenge={selectedChallenge}
+          connection={connection}
+          detail={clubDetail}
+          ranking={problemRanking}
+          stale={clubsStale}
+          authenticated={authenticated}
+          teamId={teamId}
+          onClose={onCloseChallenge}
+        />
+      )}
+
+      {isTeamTokenOpen && (
+        <KothTeamTokenPanel
+          status={teamToken.status}
+          data={teamToken.data}
+          error={teamToken.error}
+          teamName={teamName}
+          onRetry={teamToken.requestTeamToken}
+          onClose={onCloseTeamToken}
+        />
+      )}
     </main>
   );
 }
