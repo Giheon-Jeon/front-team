@@ -169,7 +169,7 @@ export function mapInstanceEndpoints(data) {
     try {
       const url = new URL(endpoint.service_url);
       if (
-        !["http:", "https:", "tcp:"].includes(url.protocol) ||
+        !["http:", "https:", "tcp:", "tls:"].includes(url.protocol) ||
         url.username ||
         url.password
       )
@@ -178,11 +178,16 @@ export function mapInstanceEndpoints(data) {
       const healthcheck = ["http:", "https:"].includes(url.protocol)
         && typeof healthPath === "string" && /^\/(?!\/)[^\s\\?#]*$/.test(healthPath);
       if (healthcheck) url.pathname = healthPath;
+      const connection = {};
+      for (const field of ["hostname", "connection_port", "tls", "server_name"]) {
+        if (Object.hasOwn(endpoint, field)) connection[field] = endpoint[field];
+      }
       return [
         {
           name: `${endpoint.container_name || "서비스"}${healthcheck ? " · 상태 확인" : ""}`,
           url: healthcheck ? url.href : endpoint.service_url,
           isWeb: ["http:", "https:"].includes(url.protocol),
+          ...connection,
         },
       ];
     } catch {

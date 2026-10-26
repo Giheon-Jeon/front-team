@@ -8,6 +8,8 @@ import { formatRemaining, toKst } from "../../../utils/time.js";
 import { getInstanceFailureNotice } from "../utils/instanceFailureNotice.js";
 import styles from "./ChallengeDetailScene.module.css";
 import PanelTexture from "../../../components/common/PanelTexture.jsx";
+import InstanceConnectionDetails from "./InstanceConnectionDetails.jsx";
+import { endpointConnectionDetails } from "../utils/instanceConnectionDetails.js";
 
 // 생성은 요청 접수 > 서버 배정 > 환경 준비 순서로 상태가 바뀐다 지금 칸에서 돌고, 지난 칸은 체크한다
 const CREATE_STEPS = [
@@ -73,6 +75,7 @@ function WaitingProgress({ step, busyLabel, seconds }) {
 }
 
 function Endpoint({ endpoint, compact }) {
+  const hasDetails = endpointConnectionDetails(endpoint).length > 0;
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
   const resetTimer = useRef(null);
@@ -105,7 +108,7 @@ function Endpoint({ endpoint, compact }) {
       <div className={styles.endpointBox}>
         <span className={styles.endpointName}>
           {endpoint.name}
-          <small>{endpoint.isWeb ? "WEB" : "TCP"}</small>
+          <small>{endpoint.isWeb ? "WEB" : endpoint.tls === true ? "TCP · TLS" : "TCP"}</small>
         </span>
         {endpoint.isWeb ? (
           <a
@@ -124,14 +127,14 @@ function Endpoint({ endpoint, compact }) {
           </span>
         )}
       </div>
-      <button
+      {hasDetails ? <InstanceConnectionDetails endpoint={endpoint} compact buttonClassName={styles.copyButton} /> : <button
         type="button"
         className={styles.copyButton}
         onClick={copy}
         aria-label={endpoint.name + " 접속 주소 복사"}
       >
         {copied ? "복사됨" : "복사"}
-      </button>
+      </button>}
       <span className={styles.srOnly} role="status">
         {copied ? endpoint.name + " 주소를 복사했습니다" : ""}
       </span>

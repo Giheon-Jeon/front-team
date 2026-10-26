@@ -14,11 +14,48 @@ import {
   getChallengeSubmissionState,
   mapChallengeDetail,
   mapChallengeInstance,
+  mapInstanceEndpoints,
   getRetryDeadline,
 } from "./challengeDetailMapper.js";
 
 const openedAt = "2026-09-06T23:55:00Z";
 const deadline = "2026-09-07T00:10:00.000Z";
+
+test("Gateway TCP endpoints preserve public TLS and SNI connection metadata", () => {
+  const endpoints = mapInstanceEndpoints({ status: "RUNNING", endpoints: [{
+    container_name: "pwn", port: 31337, protocol: "TCP",
+    service_url: "tls://i-example.ctf.example:443", hostname: "i-example.ctf.example",
+    connection_port: 443, tls: true, server_name: "route-example.ctf.example",
+  }] });
+  assert.deepEqual(endpoints, [{
+    name: "pwn", url: "tls://i-example.ctf.example:443", isWeb: false,
+    hostname: "i-example.ctf.example", connection_port: 443,
+    tls: true, server_name: "route-example.ctf.example",
+  }]);
+});
+
+test("optional connection fields retain omission, null and false without synthesizing SNI", () => {
+  const endpoints = mapInstanceEndpoints({ status: "RUNNING", endpoints: [
+    { container_name: "legacy", port: 31337, service_url: "tcp://old.example:31000" },
+    { container_name: "explicit", service_url: "tcp://old.example:31001", hostname: null,
+      connection_port: null, tls: false, server_name: null },
+  ] });
+  assert.deepEqual(endpoints, [
+    { name: "legacy", url: "tcp://old.example:31000", isWeb: false },
+    { name: "explicit", url: "tcp://old.example:31001", isWeb: false,
+      hostname: null, connection_port: null, tls: false, server_name: null },
+  ]);
+});
+
+test("TLS URLs never become web links or accept embedded credentials", () => {
+  assert.deepEqual(mapInstanceEndpoints({ status: "RUNNING", endpoints: [
+    { service_url: "tls://user:pass@i-example.ctf.example:443" },
+    { service_url: "javascript:alert(1)" },
+  ] }), []);
+  assert.deepEqual(mapInstanceEndpoints({ status: "STOPPING", endpoints: [
+    { service_url: "tls://i-example.ctf.example:443", tls: true },
+  ] }), []);
+});
 
 test("개방 시각에 15분을 더하며 UTC 날짜 경계를 처리한다", () => {
   assert.equal(getChallengeDeadline(openedAt), deadline);
