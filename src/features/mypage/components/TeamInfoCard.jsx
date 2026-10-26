@@ -12,6 +12,8 @@ function QrSlot({ qrState, onIssueQr, qrDisabled }) {
     qrState.remainingSeconds > 0;
   return (
     <div className={styles.qrBlock}>
+      {/* 발급 전 안내는 팀 이름과 QR 틀 사이에 둔다 */}
+      {qrState.status === "idle" && <p className={styles.qrHint}>결제할 때 QR을 발급하세요</p>}
       {/* Figma의 원형 틀을 사각형 QR 틀로 바꿨다. 발급·만료·재발급 흐름은 그대로 */}
       <section
         className={styles.qrSlot}
@@ -32,7 +34,6 @@ function QrSlot({ qrState, onIssueQr, qrDisabled }) {
         {showQr && <><strong>{qrState.remainingSeconds}초</strong> 후 만료</>}
         {qrState.status === "error" && qrState.error}
         {qrState.status === "expired" && "QR이 만료되었습니다"}
-        {qrState.status === "idle" && "결제할 때 QR을 발급하세요"}
       </p>
     </div>
   );

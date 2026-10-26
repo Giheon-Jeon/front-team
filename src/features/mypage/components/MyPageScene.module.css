@@ -239,6 +239,14 @@
   overflow-wrap: anywhere;
   text-align: center;
 }
+.qrHint {
+  margin: 0;
+  color: #775b33;
+  font-size: 15px;
+  line-height: 1.4;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
 .qrStatus strong {
   color: var(--brown);
   font-variant-numeric: tabular-nums;
@@ -681,10 +689,19 @@
   .qrBlock {
     display: contents;
   }
+  /* 팀 이름(172~232)과 QR 틀 사이 팀 이름과 같은 가운데 선(235)에 둔다 */
+  .qrHint {
+    position: absolute;
+    left: calc(var(--u) * 35);
+    top: calc(var(--u) * 232);
+    width: calc(var(--u) * 400);
+    font-size: max(10px, calc(var(--u) * 19));
+    line-height: calc(var(--u) * 24);
+  }
   .qrSlot {
     position: absolute;
     left: calc(var(--u) * 149);
-    top: calc(var(--u) * 245);
+    top: calc(var(--u) * 266);
     width: calc(var(--u) * 172);
     height: calc(var(--u) * 172);
     padding: calc(var(--u) * 7);
