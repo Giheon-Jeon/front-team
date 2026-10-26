@@ -50,7 +50,7 @@ function KothRanking({ ranking, teamId }) {
   </div>;
 }
 
-export default function KothChallengeSheet({ challenge, connection, detail, ranking, stale, authenticated, teamId, onClose }) {
+export default function KothChallengeSheet({ challenge, connection, detail, ranking, stale, authenticated, teamId, onClose, downloadFile }) {
   const sheet = useRef(null);
   const ids = useId();
   const close = useRef(onClose);
@@ -120,7 +120,7 @@ export default function KothChallengeSheet({ challenge, connection, detail, rank
               <span className={styles.attachCount}>{file ? 1 : 0}</span>
             </h3>
             {file
-              ? <KothFileButton challengeId={challenge.kothChallengeId} file={file} />
+              ? <KothFileButton challengeId={challenge.kothChallengeId} file={file} download={downloadFile} />
               : <p className={styles.attachmentEmpty}>{detailReady ? "이 문제에는 첨부파일이 없습니다" : "파일 정보를 확인하는 중"}</p>}
           </div>
         </div>

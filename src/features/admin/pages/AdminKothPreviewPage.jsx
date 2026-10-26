@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getKothLeaderboard } from "../../../api/koth.js";
-import { startAdminKothPreview } from "../../../api/admin.js";
+import { downloadAdminKothFiles, startAdminKothPreview } from "../../../api/admin.js";
 import { ROUTES } from "../../../routes/routePaths.js";
 import usePageResources from "../../../routes/usePageResources.js";
 import KothScreen from "../../koth/components/KothScreen.jsx";
@@ -97,14 +97,14 @@ export default function AdminKothPreviewPage() {
       <button type="button" className={styles.button} onClick={() => navigate(ROUTES.adminKothDetail(kothChallengeId))}>KoTH 관리로</button>
     </aside>
     <div className={previewStyles.canvas} onClickCapture={(event) => {
-      // 미리보기에서는 문제 접속과 파일 받기를 실제로 하지 않는다
-      if (event.target.closest("a, [data-file-download]")) { event.preventDefault(); event.stopPropagation(); }
+      // 게임은 위의 관리자 테스트 버튼으로 열고, 파일은 관리자 API로 받는다
+      if (event.target.closest("a")) { event.preventDefault(); event.stopPropagation(); }
     }}>
       <KothScreen requestStatus={list.status === "success" ? "success" : list.status === "loading" ? "loading" : "error"} requestError={list.error}
         authenticated clubsStale={false} problemRanking={problemRanking} challenges={models} isEmpty={list.status === "success" && models.length === 0}
         unmappedChallengeCount={0} teamName={teamToken.data?.team_name ?? "테스트 팀"} totalKothScore={null} selectedChallenge={isTeamTokenOpen ? null : selected ?? null} clubDetail={READY}
         isTeamTokenOpen={isTeamTokenOpen} teamToken={teamToken} onRetry={list.retry} onSelectChallenge={() => {}} onCloseChallenge={() => navigate(ROUTES.adminKothDetail(kothChallengeId))}
-        onOpenTeamToken={openTeamToken} onCloseTeamToken={closeTeamToken} />
+        onOpenTeamToken={openTeamToken} onCloseTeamToken={closeTeamToken} downloadFile={downloadAdminKothFiles} />
     </div>
   </div>;
 }
