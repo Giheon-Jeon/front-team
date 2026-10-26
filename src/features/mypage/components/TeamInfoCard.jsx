@@ -43,7 +43,7 @@ function PersonalRank({ memberRanking }) {
     <section className={styles.personalRank} aria-label="내 개인 순위">
       <h2>
         PERSONAL RANK
-        {memberRanking?.status === "success" && <span> · {memberRanking.data.nickname}</span>}
+        {memberRanking?.status === "success" && <span title={memberRanking.data.nickname}> · {memberRanking.data.nickname}</span>}
       </h2>
       {memberRanking?.status === "success" && (
         <dl className={styles.personalStats}>
@@ -83,11 +83,13 @@ export default function TeamInfoCard({ profile, memberRanking, qrState, onIssueQ
         로그아웃
       </button>
       <h2 className={styles.srOnly}>MEMBERS</h2>
-      <ul id={membersId} className={styles.members} data-expanded={showAllMembers || undefined}>
-        {members.map((member, index) => (
-          <li key={member + index} title={member}>{member}</li>
-        ))}
-      </ul>
+      <div className={styles.membersRegion}>
+        <ul id={membersId} className={styles.members} data-expanded={showAllMembers || undefined}>
+          {members.map((member, index) => (
+            <li key={member + index} title={member}>{member}</li>
+          ))}
+        </ul>
+      </div>
       {foldedMembers > 0 && (
         <button type="button" className={styles.moreMembers} aria-expanded={showAllMembers} aria-controls={membersId}
           onClick={() => setShowAllMembers((value) => !value)}>

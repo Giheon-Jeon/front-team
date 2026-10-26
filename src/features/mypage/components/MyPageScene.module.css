@@ -237,6 +237,7 @@
   font-size: 12px;
   line-height: 1.5;
   overflow-wrap: anywhere;
+  text-align: center;
 }
 .qrStatus strong {
   color: var(--brown);
@@ -260,8 +261,15 @@
 .logoutButton:disabled {
   opacity: 0.6;
 }
-.members {
+.membersRegion {
   width: 100%;
+  min-width: 0;
+  display: grid;
+  place-items: center;
+}
+.members {
+  width: max-content;
+  max-width: 100%;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -649,6 +657,18 @@
     padding: 0;
     clip: rect(0, 0, 0, 0);
   }
+  /* 원본은 보존한다. 파생 이미지의 종이 질감만 두 글머리표 주변에 부드럽게 합성한다.
+     나머지 리본·글자·테두리·장식은 원본 픽셀을 그대로 표시한다. */
+  .teamCard::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: url("/assets/mypage/team-info-card-member-texture.png") center / 100% 100% no-repeat;
+    mask-image:
+      radial-gradient(circle at calc(var(--u) * 84.5) calc(var(--u) * 580.5), #000 calc(var(--u) * 9), transparent calc(var(--u) * 15)),
+      radial-gradient(circle at calc(var(--u) * 84.5) calc(var(--u) * 632.5), #000 calc(var(--u) * 9), transparent calc(var(--u) * 15));
+  }
   .teamName {
     position: absolute;
     left: calc(var(--u) * 35);
@@ -685,9 +705,10 @@
   }
   .qrStatus {
     position: absolute;
-    left: calc(var(--u) * 60);
-    top: calc(var(--u) * 419);
-    width: calc(var(--u) * 290);
+    /* QR 중심 149 + 172 / 2 = 235. 오른쪽 끝은 로그아웃(x350) 앞에서 멈춘다. */
+    left: calc(var(--u) * 125);
+    top: calc(var(--u) * 420);
+    width: calc(var(--u) * 220);
     max-width: none;
     max-height: calc(var(--u) * 26);
     overflow: hidden;
@@ -706,44 +727,62 @@
     padding: 0 calc(var(--u) * 6);
     font-size: max(10px, calc(var(--u) * 15));
   }
-  .members {
+  /* 원화 MEMBERS 하단(y490)과 PERSONAL RANK 상단(y658) 사이의 공통 좌표계 */
+  .membersRegion {
     position: absolute;
-    left: calc(var(--u) * 102);
-    top: calc(var(--u) * 567);
-    width: calc(var(--u) * 300);
+    left: calc(var(--u) * 70);
+    top: calc(var(--u) * 490);
+    width: calc(var(--u) * 330);
+    height: calc(var(--u) * 168);
+    display: grid;
+    place-items: center;
   }
-  /* 카드 그림의 마름모 글머리표 간격(52)과 같은 줄 간격 */
+  .members {
+    width: max-content;
+    max-width: 100%;
+    display: grid;
+    row-gap: calc(var(--u) * 22);
+  }
+  /* 글머리표와 이름을 한 행으로 묶어 회원 수와 무관하게 목록 전체를 중앙 정렬 */
   .members li {
-    height: calc(var(--u) * 52);
-    padding: 0;
+    height: calc(var(--u) * 30);
+    min-width: 0;
+    padding: 0 0 0 calc(var(--u) * 26);
     font-size: calc(var(--u) * 24);
     line-height: calc(var(--u) * 30);
   }
   .members li::before {
-    display: none;
+    display: block;
+    left: calc(var(--u) * 2);
+    width: calc(var(--u) * 9);
+    height: calc(var(--u) * 9);
   }
   /* 카드 그림의 글머리표는 두 줄뿐이라 셋째 팀원부터 접는다 */
   .members:not([data-expanded]) li:nth-child(n + 3) {
     display: none;
   }
-  /* 펼치면 MEMBERS 아래부터 아래 구분선(725) 위까지 종이 판을 띄워 모두 보인다 */
+  /* 펼친 목록도 같은 구간 안에서만 스크롤하여 아래 순위 영역을 가리지 않는다 */
   .members[data-expanded] {
+    position: absolute;
     z-index: 2;
-    left: calc(var(--u) * 56);
-    top: calc(var(--u) * 500);
-    width: calc(var(--u) * 358);
-    max-height: calc(var(--u) * 222);
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-height: 100%;
     padding: calc(var(--u) * 8) calc(var(--u) * 14);
     overflow-y: auto;
     border: calc(var(--u) * 1) solid #b99a66;
     background: #efdcb8;
     box-shadow: 0 calc(var(--u) * 8) calc(var(--u) * 24) rgb(60 40 20 / 28%);
+    row-gap: 0;
   }
   .members[data-expanded] li {
     height: auto;
     padding: calc(var(--u) * 4) 0 calc(var(--u) * 4) calc(var(--u) * 28);
     font-size: calc(var(--u) * 20);
     line-height: calc(var(--u) * 26);
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
   .members[data-expanded] li::before {
     display: block;
@@ -765,15 +804,25 @@
   .personalRank {
     position: absolute;
     left: calc(var(--u) * 70);
-    top: calc(var(--u) * 663);
+    top: calc(var(--u) * 658);
     width: calc(var(--u) * 330);
-    padding: calc(var(--u) * 6) 0 0;
+    padding: calc(var(--u) * 8) 0 0 calc(var(--u) * 32);
     border-top: calc(var(--u) * 1) dashed #b99a66;
   }
   .personalRank h2 {
-    margin: 0 0 calc(var(--u) * 2);
+    display: flex;
+    align-items: baseline;
+    gap: calc(var(--u) * 6);
+    margin: 0 0 calc(var(--u) * 4);
     font-size: max(9px, calc(var(--u) * 12));
-    line-height: calc(var(--u) * 16);
+    line-height: calc(var(--u) * 18);
+    overflow: visible;
+  }
+  .personalRank h2 span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .personalStats {
     flex-wrap: nowrap;
@@ -784,7 +833,7 @@
   }
   .personalStats dd {
     font-size: calc(var(--u) * 22);
-    line-height: calc(var(--u) * 30);
+    line-height: calc(var(--u) * 26);
   }
   .personalStats small {
     font-size: max(9px, calc(var(--u) * 12));
