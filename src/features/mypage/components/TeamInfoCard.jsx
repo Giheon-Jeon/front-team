@@ -65,7 +65,7 @@ function PersonalRank({ memberRanking }) {
 const CARD_MEMBER_ROWS = 2;
 
 // Figma 309:306 — TEAM 리본, 구분선, MEMBERS, MSG CTF는 카드 그림에 그려져 있다
-export default function TeamInfoCard({ profile, memberRanking, qrState, onIssueQr, qrDisabled, onLogout, isLoggingOut }) {
+export default function TeamInfoCard({ profile, memberRanking, qrState, onIssueQr, qrDisabled }) {
   const membersId = useId();
   const [showAllMembers, setShowAllMembers] = useState(false);
   let teamName = profile.data?.teamName || "-";
@@ -79,9 +79,6 @@ export default function TeamInfoCard({ profile, memberRanking, qrState, onIssueQ
       <p className={styles.bakedLabel}>TEAM</p>
       <h1 className={styles.teamName} title={teamName}>{teamName}</h1>
       <QrSlot qrState={qrState} onIssueQr={onIssueQr} qrDisabled={qrDisabled} />
-      <button type="button" className={styles.logoutButton} onClick={onLogout} disabled={isLoggingOut}>
-        로그아웃
-      </button>
       <h2 className={styles.srOnly}>MEMBERS</h2>
       <div className={styles.membersRegion}>
         <ul id={membersId} className={styles.members} data-expanded={showAllMembers || undefined}>
