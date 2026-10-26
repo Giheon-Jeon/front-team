@@ -322,7 +322,6 @@ export default function AdminTeamDetailPage() {
           <section className={ui.card} aria-labelledby="team-board">
             <header className={ui.cardHeader}>
               <h2 id="team-board" className={ui.cardTitle}>보드 강제 개입</h2>
-              <span className={ui.cardMeta}>실행하면 직전 상태가 롤백 지점으로 남습니다</span>
             </header>
             <div className={ui.cardBody}>
               <BoardInterventionForms

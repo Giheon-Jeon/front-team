@@ -41,12 +41,12 @@ export async function performLogout() {
     const refreshToken = localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
     if (refreshToken) {
       const response = await logout({ refreshToken });
-      if (!isSuccess(response?.data)) throw new Error(response?.data?.message || "로그아웃에 실패했습니다");
+      if (!isSuccess(response?.data)) throw Object.assign(new Error(), { serverMessage: response?.data?.message });
     }
     clearStoredTokens();
     window.location.assign("/login");
   } catch (error) {
-    window.alert(error?.response?.data?.message || error?.message || "로그아웃에 실패했습니다 잠시 후 다시 시도해주세요");
+    window.alert(error?.response?.data?.message || error?.serverMessage || "로그아웃에 실패했습니다 잠시 후 다시 시도해주세요");
   } finally {
     logoutPending = false;
   }
