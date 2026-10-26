@@ -2,13 +2,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { StatusSymbol } from "../components/AdminGlyph.jsx";
 import { Link } from "react-router-dom";
 import {
+  activateChallengeRelease,
   adjustMileage,
   forceStopInstance,
   getAdminDashboard,
+  getAdminChallenges,
   getAdminEvents,
   getAdminInstances,
-  getTeamSnapshots,
-  rollbackTeam,
+  getChallengeReleases,
 } from "../../../api/admin.js";
 import { getLeaderboard } from "../../../api/leaderboard.js";
 import { ROUTES } from "../../../routes/routePaths.js";
@@ -29,7 +30,7 @@ import { getAdminRequestError } from "../utils/adminValidation.js";
 import { getAdminEventSeverity, getAdminEventTypeLabel } from "../utils/adminBoard.js";
 import useAdminResource from "../hooks/useAdminResource.js";
 import { ATTENTION_QUERIES, canForceStop, describeAttention, summarizeAttention } from "../utils/adminAttention.js";
-import { RECENT_LIMIT, latestFirst } from "../utils/adminLists.js";
+import { collectPages } from "../utils/adminLists.js";
 import { formatAdminNumber } from "../utils/adminNumber.js";
 import AdminMileageAdjustForm from "../components/AdminMileageAdjustForm.jsx";
 import ui from "../components/AdminWorkspace.module.css";
@@ -134,51 +135,58 @@ function MileageGrantModal({ onClose, onDone }) {
   );
 }
 
-function RollbackModal({ onClose, onDone }) {
-  const teamOptions = useAdminTeamOptions();
-  const teams = teamOptions.data?.teams ?? [];
-  const [teamId, setTeamId] = useState("");
-  const [snapshots, setSnapshots] = useState([]);
-  const [snapshotId, setSnapshotId] = useState("");
+async function loadChallengeOptions(config) {
+  const result = await collectPages(async (page) => {
+    const response = await getAdminChallenges({ page, size: 50, sort: "title" }, config);
+    const envelope = response.data;
+    if (!isSuccess(envelope) || !Array.isArray(envelope.data?.challenges)) throw new Error(envelope?.message || "문제 목록을 불러오지 못했습니다");
+    return { items: envelope.data.challenges, totalCount: envelope.data.total_count };
+  }, { limit: 500, keyOf: (challenge) => challenge.challenge_id });
+  return { data: { code: "SUCCESS", data: { challenges: result.items } } };
+}
+
+function ReleaseRollbackModal({ onClose, onDone }) {
+  const challengeOptions = useAdminResource(loadChallengeOptions, [], "문제 목록을 불러오지 못했습니다");
+  const challenges = challengeOptions.data?.challenges ?? [];
+  const [challengeId, setChallengeId] = useState("");
+  const [releaseId, setReleaseId] = useState("");
   const [reason, setReason] = useState("");
   const pending = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const [snapshotState, setSnapshotState] = useState({ status: "idle", teamId: null });
-  const [snapshotRevision, setSnapshotRevision] = useState(0);
+  const [releaseState, setReleaseState] = useState({ status: "idle", challengeId: null, releases: [], currentId: null });
+  const [releaseRevision, setReleaseRevision] = useState(0);
   useEffect(() => {
-    setSnapshots([]);
-    setSnapshotId("");
-    if (!teamId) { setSnapshotState({ status: "idle", teamId: null }); return; }
+    setReleaseId("");
+    if (!challengeId) { setReleaseState({ status: "idle", challengeId: null, releases: [], currentId: null }); return undefined; }
     const controller = new AbortController();
     let active = true;
-    setSnapshotState({ status: "loading", teamId });
+    setReleaseState({ status: "loading", challengeId, releases: [], currentId: null });
     setError("");
-    getTeamSnapshots(teamId, { signal: controller.signal, timeout: 10000 }).then((response) => {
-      if (!isSuccess(response.data) || !Array.isArray(response.data.data?.snapshots)) throw new Error("롤백 지점을 조회하지 못했습니다");
-      if (active) {
-        setSnapshots(response.data.data.snapshots);
-        setSnapshotState({ status: "success", teamId, total: response.data.data.total_count });
-      }
+    getChallengeReleases(challengeId, { signal: controller.signal, timeout: 10000 }).then((response) => {
+      if (!isSuccess(response.data) || !Array.isArray(response.data.data?.releases)) throw new Error("릴리스 이력을 조회하지 못했습니다");
+      if (active) setReleaseState({ status: "success", challengeId, releases: response.data.data.releases, currentId: response.data.data.current_release_id ?? null });
     }).catch((requestError) => {
-      if (active) { setSnapshotState({ status: "error", teamId }); setError(getAdminRequestError(requestError, "롤백 지점을 조회하지 못했습니다").error); }
+      if (active) { setReleaseState({ status: "error", challengeId, releases: [], currentId: null }); setError(getAdminRequestError(requestError, "릴리스 이력을 조회하지 못했습니다").error); }
     });
     return () => { active = false; controller.abort(); };
-  }, [teamId, snapshotRevision]);
+  }, [challengeId, releaseRevision]);
 
-  // 롤백 지점 API는 쪽 나눔이 없어 최근 것부터 20개만 보인다
-  const recentSnapshots = latestFirst(snapshots, RECENT_LIMIT).items;
-  const snapshotTotal = Math.max(snapshotState.total ?? 0, snapshots.length);
+  const releases = releaseState.challengeId === challengeId ? releaseState.releases : [];
+  const selected = releases.find((release) => release.release_id === releaseId);
+  const current = releases.find((release) => release.release_id === releaseState.currentId || release.is_current);
+  const reasonLength = Array.from(reason.trim()).length;
+  const canSubmit = Boolean(selected && selected.is_deployable && !selected.is_current && reasonLength <= 500);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (pending.current || !teamId || snapshotState.teamId !== teamId || !snapshots.some((item) => item.snapshot_id === snapshotId && !item.is_rolled_back) || !reason.trim() || reason.trim().length > 500) return;
+    if (pending.current || !canSubmit) return;
     pending.current = true;
     setIsSubmitting(true);
     setError("");
     try {
-      const res = await rollbackTeam(teamId, { snapshotId, reason: reason.trim() });
+      const res = await activateChallengeRelease(challengeId, releaseId, reason.trim() ? { reason: reason.trim() } : {});
       if (!isSuccess(res.data)) throw new Error(res.data?.message || "롤백에 실패했습니다");
       onDone();
       onClose();
@@ -192,43 +200,45 @@ function RollbackModal({ onClose, onDone }) {
 
   return (
     <Modal title="롤백 실행" onClose={onClose} busy={isSubmitting}>
-      <AdminStatusMessage status={teamOptions.status} error={teamOptions.error} onRetry={teamOptions.retry}/>
+      <AdminStatusMessage status={challengeOptions.status} error={challengeOptions.error} onRetry={challengeOptions.retry}/>
       <form onSubmit={handleSubmit} className={ui.formStack}>
         <div className={ui.field}>
-          <span className={ui.fieldLabel}>대상 팀</span>
-          <AdminTeamPicker teams={teams} value={teamId} label="롤백할 팀" disabled={isSubmitting} loading={teamOptions.status === "loading"} capped={teamOptions.data?.capped}
-            onChange={(next) => { setTeamId(next); setSnapshotId(""); setSnapshots([]); }} />
+          <label className={ui.fieldLabel} htmlFor="rollback-challenge">대상 문제</label>
+          <select id="rollback-challenge" className={ui.select} value={challengeId} disabled={isSubmitting || challengeOptions.status === "loading"} onChange={(event) => setChallengeId(event.target.value)}>
+            <option value="">문제를 선택하세요</option>
+            {challenges.map((challenge) => <option key={challenge.challenge_id} value={challenge.challenge_id}>{challenge.title}</option>)}
+          </select>
         </div>
-        {teamId && (
+        {challengeId && (
           <div className={ui.field}>
-            <span className={ui.fieldLabel}>롤백 지점</span>
-            {snapshotState.status === "loading" && <p role="status" className={ui.fieldHint}>롤백 지점 조회 중</p>}
-            {snapshotState.status === "error" && <button type="button" className={`${ui.button} ${ui.small}`} onClick={() => setSnapshotRevision((value) => value + 1)}>다시 조회</button>}
-            {snapshotState.status === "success" && snapshots.length === 0 && <p className={ui.fieldHint}>롤백 지점이 없습니다</p>}
-            {snapshots.length > 0 && (
+            <span className={ui.fieldLabel}>전환할 버전</span>
+            {releaseState.status === "loading" && <p role="status" className={ui.fieldHint}>릴리스 이력 조회 중</p>}
+            {releaseState.status === "error" && <button type="button" className={`${ui.button} ${ui.small}`} onClick={() => setReleaseRevision((value) => value + 1)}>다시 조회</button>}
+            {releaseState.status === "success" && releases.length === 0 && <p className={ui.fieldHint}>등록된 릴리스가 없습니다</p>}
+            {releases.length > 0 && (
               <div className={ui.choiceList}>
-                {recentSnapshots.map((snapshot) => (
-                  <label key={snapshot.snapshot_id} className={ui.check} data-disabled={isSubmitting || snapshot.is_rolled_back}>
-                    <input
-                      type="radio"
-                      name="snapshot"
-                      disabled={isSubmitting || snapshot.is_rolled_back}
-                      checked={snapshotId === snapshot.snapshot_id}
-                      onChange={() => setSnapshotId(snapshot.snapshot_id)}
-                    />
-                    <span>{snapshot.reason || "스냅샷"} · {formatAdminTime(snapshot.created_at)}{snapshot.is_rolled_back ? " (복원 완료)" : ""}</span>
-                  </label>
-                ))}
+                {releases.map((release) => {
+                  const blocked = isSubmitting || release.is_current || !release.is_deployable;
+                  return (
+                    <label key={release.release_id} className={ui.check} data-disabled={blocked}>
+                      <input type="radio" name="release" disabled={blocked} checked={releaseId === release.release_id} onChange={() => setReleaseId(release.release_id)} />
+                      <span className={ui.snapshotText}>
+                        <strong>v{release.version}{release.is_current ? " · 사용 중" : ""}{!release.is_deployable ? " · 선택 불가" : ""}</strong>
+                        <span>{release.note || "메모 없음"} · {formatAdminTime(release.created_at)}</span>
+                      </span>
+                    </label>
+                  );
+                })}
               </div>
             )}
-            {snapshotTotal > RECENT_LIMIT && <p className={ui.fieldHint}>최근 {RECENT_LIMIT}개만 표시합니다 · 전체 {formatAdminNumber(snapshotTotal)}개</p>}
+            {selected && current && <p className={ui.fieldHint}>v{current.version} → v{selected.version} · 실행 중인 인스턴스는 그대로이고 새로 만드는 인스턴스부터 적용됩니다</p>}
           </div>
         )}
-        <AdminReasonField label="사유" value={reason} onChange={setReason} presets={REASON_PRESETS.rollback} disabled={isSubmitting} required />
+        <AdminReasonField label="사유 (선택)" value={reason} onChange={setReason} presets={REASON_PRESETS.rollback} disabled={isSubmitting} />
         {error && <p role="alert" className={ui.errorText}>{error}</p>}
         <div className={ui.formActions}>
           <button type="button" onClick={onClose} disabled={isSubmitting} className={ui.button}>취소</button>
-          <button type="submit" disabled={isSubmitting || !teamId || !snapshotId || !reason.trim()} className={ui.dangerSolid}>롤백</button>
+          <button type="submit" disabled={isSubmitting || !canSubmit} className={ui.dangerSolid}>롤백</button>
         </div>
       </form>
     </Modal>
@@ -302,7 +312,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {openModal === "mileage" && <MileageGrantModal onClose={() => setOpenModal(null)} onDone={reloadAll} />}
-      {openModal === "rollback" && <RollbackModal onClose={() => setOpenModal(null)} onDone={reloadAll} />}
+      {openModal === "rollback" && <ReleaseRollbackModal onClose={() => setOpenModal(null)} onDone={reloadAll} />}
     </AdminLayout>
   );
 }

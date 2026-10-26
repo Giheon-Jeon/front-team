@@ -207,19 +207,6 @@ export function adjustMileage(teamId, { amount, reason, idempotencyKey }) {
 }
 
 // ── 팀 강제 개입 (Notion API명세서 2026-09-07 스냅샷 기준 상태 개별 표기) ──
-export function getTeamSnapshots(teamId, config) {
-  // [백엔드: 시작 전] GET /admin/teams/{id}/snapshots - 롤백 지점 목록
-  return apiClient.get(`/admin/teams/${teamId}/snapshots`, config);
-}
-
-export function rollbackTeam(teamId, { snapshotId, reason }) {
-  // [백엔드: 시작 전] POST /admin/teams/{id}/rollback - reason 1~500자
-  return apiClient.post(`/admin/teams/${teamId}/rollback`, {
-    snapshot_id: snapshotId,
-    reason,
-  }, MUTATION_CONFIG);
-}
-
 export function updateBoardCell(teamId, cellIndex, { status, reason }) {
   // [백엔드: 완료(머지)] PATCH .../board/cells/{cell_index} - cell_index 1~36(0번 칸 없음).
   // status: UNVISITED|CONSUMED|OPENED|CLEARED. 점수 미변경.
