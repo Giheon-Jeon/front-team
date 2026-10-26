@@ -66,6 +66,12 @@ export default function MyPageScreen({
             <button type="button" className={styles.refreshButton} disabled={refreshing} onClick={onRefresh}>
               새로고침
             </button>
+            {/* 보드 화면 오른쪽 위에서 쓰는 로그아웃 동전을 그대로 가져왔다 */}
+            <button type="button" className={styles.logoutCoin} onClick={onLogout} disabled={isLoggingOut} aria-label="로그아웃" title="로그아웃">
+              <svg viewBox="69 29 96 94" aria-hidden="true" focusable="false">
+                <image href="/assets/board/nav-logout.webp" width="235" height="157" />
+              </svg>
+            </button>
           </div>
           <TeamInfoCard
             profile={profile}
@@ -73,8 +79,6 @@ export default function MyPageScreen({
             qrState={qrState}
             onIssueQr={onIssueQr}
             qrDisabled={qrDisabled}
-            onLogout={onLogout}
-            isLoggingOut={isLoggingOut}
           />
           <section className={`${styles.metricPanel} ${styles.scorePanel}`} aria-label="팀 점수">
             <PanelTexture />
