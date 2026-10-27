@@ -1,5 +1,6 @@
 import { isSuccess } from "../../../utils/response.js";
 import { getChallengeDeadline } from "../../../utils/time.js";
+import { validScore } from "../../../utils/scoreJson.js";
 
 export const BOARD_CELL_COUNT = 36;
 
@@ -57,6 +58,21 @@ export function adaptBoardDefinition(data) {
   };
 }
 
+function adaptLineMonopolies(rows) {
+  if (!Array.isArray(rows)) return null;
+  const seen = new Set();
+  const result = [];
+  for (const row of rows) {
+    if (!row || !Number.isInteger(row.line_number) || row.line_number < 1 || row.line_number > 6 ||
+        seen.has(row.line_number) || validScore(row.earned_score) === null ||
+        (typeof row.earned_score === "number" && Number.isInteger(row.earned_score) && !Number.isSafeInteger(row.earned_score)) ||
+        typeof row.is_category_bonus !== "boolean") return null;
+    seen.add(row.line_number);
+    result.push({ lineNumber: row.line_number, earnedScore: row.earned_score, isCategoryBonus: row.is_category_bonus });
+  }
+  return result;
+}
+
 export function adaptMyBoard(data) {
   return {
     position: data?.position ?? null,
@@ -67,6 +83,8 @@ export function adaptMyBoard(data) {
     airportMoveUsed: data?.airport_move_used === true,
     hasPassedStart: data?.has_passed_start === true,
     boardCompleted: data?.board_completed === true,
+    // null은 구버전·미확인 응답, []는 지급 기록이 없다는 서버 확인이다
+    lineMonopolies: adaptLineMonopolies(data?.line_monopolies),
     consumedCellIndexes: Array.isArray(data?.consumed_cell_indexes)
       ? data.consumed_cell_indexes
       : [],
