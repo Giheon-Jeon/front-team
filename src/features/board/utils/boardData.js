@@ -75,6 +75,11 @@ function adaptLineMonopolies(rows) {
 
 export function adaptMyBoard(data) {
   return {
+    pendingChanceChoice: data?.pending_chance_choice === undefined
+      ? undefined
+      : data.pending_chance_choice === null
+        ? null
+        : adaptChanceAction(data.pending_chance_choice),
     position: data?.position ?? null,
     type: data?.type ?? null,
     diceRollsLeft: data?.dice_rolls_left ?? 0,
@@ -181,6 +186,7 @@ export function adaptChanceDraw(data) {
 
 export function adaptChanceAction(data) {
   return {
+    teamCardId: data?.team_card_id ?? null,
     cardId: data?.card_id ?? null,
     effect: data?.effect ?? null,
     fromIndex: data?.from_index ?? null,
