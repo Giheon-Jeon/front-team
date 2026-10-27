@@ -13,7 +13,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [main]
+    branches: [main, 'qa/**']
 
 permissions:
   contents: read
@@ -141,7 +141,7 @@ jobs:
   deploy-development:
     name: deploy-development
     needs: supply-chain-build-scan-push
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: false
     permissions:
       contents: read
     uses: MSG-CTF/jm_devsecops/.github/workflows/reusable-vm-ssh-deploy-dev.yml@40d6a567b35955471d2ce2b556340451a6b8e647
