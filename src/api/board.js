@@ -124,6 +124,7 @@ export function useChanceCard(payload, { idempotencyKey } = {}) {
   //  card_move_offset  -> { card_id, offset: -3~3(0 제외) }
   //  card_free_travel  -> { card_id, destination_index }
   //  그 외             -> { card_id }
+  //  보유 카드 UUID 가 있으면 모든 경우에 team_card_id 를 함께 보낸다
   return apiClient.post(
     "/board/chance/use",
     payload,
@@ -140,11 +141,11 @@ export function confirmChanceCard({ choice, idempotencyKey }) {
   );
 }
 
-export function discardChanceCard({ cardId, idempotencyKey }) {
-  // POST /board/chance/discard - 보유 2장일 때 1장 폐기.
+export function discardChanceCard({ cardId, teamCardId, idempotencyKey }) {
+  // POST /board/chance/discard - 보유 2장일 때 1장 폐기. 같은 종류 두 장이면 team_card_id 로 한 장을 고른다.
   return apiClient.post(
     "/board/chance/discard",
-    { card_id: cardId },
+    teamCardId ? { card_id: cardId, team_card_id: teamCardId } : { card_id: cardId },
     idKey("chance-discard", idempotencyKey),
   );
 }

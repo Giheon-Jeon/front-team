@@ -3,6 +3,7 @@ import { openChallengeAccess } from "../utils/openChallengeAccess.js";
 import { presentTrainJourney } from "../utils/trainJourney.js";
 import { createStartRewardRecorder } from "../utils/boardStartReward.js";
 import { scheduleBoardDeadlineRefresh } from "../utils/boardDeadlineRefresh.js";
+import { createRequestSequence } from "../utils/requestSequence.js";
 import { getBoardLineProgress } from "../utils/boardLines.js";
 import { readOpenChallenges } from "../../challenges/utils/openChallengesData.js";
 import { useAuthenticatedUser } from "../../../routes/AuthenticatedRoute.jsx";
@@ -38,6 +39,7 @@ import {
   adaptMovementResult,
   adaptMyBoard,
   adaptRouletteResult,
+  chanceCardKey,
   getBoardError,
   mergeOwnedChanceCards,
   unwrapBoardResponse,
@@ -72,6 +74,10 @@ export default function useBoardController() {
   const [openedChallenges, setOpenedChallenges] = useState([]);
   const [openedChallengesLoading, setOpenedChallengesLoading] = useState(true);
   const [openedChallengesError, setOpenedChallengesError] = useState("");
+  // 보드 조회 응답은 순서가 뒤집혀 도착할 수 있다 가장 나중에 시작한 조회만 상태에 반영하고
+  // 이동·보정 같은 변경이 시작되면 그 전에 시작한 조회는 버린다
+  const progressRequest = useRef(null);
+  if (progressRequest.current === null) progressRequest.current = createRequestSequence();
   const openedRequest = useRef(0);
   const openedController = useRef(null);
   const completedDeadlines = useRef(new Set());
@@ -118,6 +124,7 @@ export default function useBoardController() {
   const reloadOpenedChallenges = requestOpenedChallenges;
 
   const load = useCallback(async () => {
+    const progressSeq = progressRequest.current.begin();
     setIsLoading(true);
     setError(null);
     setDeadlineError(null);
@@ -144,14 +151,18 @@ export default function useBoardController() {
 
       if (!mountedRef.current) return;
       setBoardDefinition(nextBoardDefinition);
-      setMyBoard(nextMyBoard);
-      setDiceStatus(nextDiceStatus);
       setChanceCatalog(nextCatalog);
-      setCurrentCell(nextCurrentCell);
-      setDisplayPosition(nextMyBoard.position);
-      setAwaitingDiscard(false);
-      setPendingRoll(null);
-      setPendingChanceChoice(null);
+      // 더 나중에 시작한 조회나 변경이 있으면 이 늦은 응답의 위치·주사위는 반영하지 않는다
+      if (progressRequest.current.isLatest(progressSeq)) {
+        setMyBoard(nextMyBoard);
+        setDiceStatus(nextDiceStatus);
+        setCurrentCell(nextCurrentCell);
+        setDisplayPosition(nextMyBoard.position);
+        // 새로고침 뒤에도 보유 카드가 2장이면 폐기 안내를 이어서 보인다
+        setAwaitingDiscard(mergeOwnedChanceCards(nextMyBoard.chanceCards, nextCatalog).length >= 2);
+        setPendingRoll(null);
+        setPendingChanceChoice(null);
+      }
       if (pendingDiceRoll.peek()) setError({
         code: "ROLL_RESULT_UNCONFIRMED",
         message: "이전 주사위 결과를 확인하지 못했어요 다시 시도를 눌러주세요",
@@ -196,17 +207,19 @@ export default function useBoardController() {
 
   const syncProgress = useCallback(
     async ({ includeCurrentCell = true, preserveDisplayPosition = false, requestOptions, isCurrent = () => true } = {}) => {
+      const progressSeq = progressRequest.current.begin();
+      const latest = () => progressRequest.current.isLatest(progressSeq) && isCurrent();
       const [myBoardResponse, diceResponse] = await Promise.all([
         getMyBoard(requestOptions),
         getDiceStatus(requestOptions),
       ]);
       const nextMyBoard = adaptMyBoard(unwrapBoardResponse(myBoardResponse));
       const nextDiceStatus = adaptDiceStatus(unwrapBoardResponse(diceResponse));
-      if (!mountedRef.current || !isCurrent()) return;
+      if (!mountedRef.current || !latest()) return;
       await requestOpenedChallenges();
       const nextCurrentCell = includeCurrentCell ? await requestCurrentCell() : null;
 
-      if (!mountedRef.current || !isCurrent()) return;
+      if (!mountedRef.current || !latest()) return;
       setMyBoard(nextMyBoard);
       setDiceStatus(nextDiceStatus);
       if (includeCurrentCell) setCurrentCell(nextCurrentCell);
@@ -233,6 +246,8 @@ export default function useBoardController() {
       }
 
       mutationLockRef.current = true;
+      // 변경이 시작되면 그 전에 보낸 조회 응답은 더 이상 최신이 아니다
+      progressRequest.current.invalidate();
       setIsMutating(true);
       setError(null);
       let idempotencyKey;
@@ -432,15 +447,18 @@ export default function useBoardController() {
   );
 
   const handleUseChanceCard = useCallback(
-    (cardId, options = {}) => {
+    (cardKey, options = {}) => {
       if (awaitingDiscard) return Promise.resolve(null);
       const card = mergeOwnedChanceCards(
         myBoard?.chanceCards ?? [],
         chanceCatalog,
-      ).find((item) => item.cardId === cardId);
+      ).find((item) => chanceCardKey(item) === cardKey);
       if (!card?.usableNow) return Promise.resolve(null);
+      const cardId = card.cardId;
 
+      // 같은 종류 두 장 중 고른 한 장만 처리되도록 보유 카드 UUID 를 함께 보낸다
       const payload = { card_id: cardId };
+      if (card.teamCardId) payload.team_card_id = card.teamCardId;
       if (cardId === "card_move_offset") payload.offset = options.offset;
       if (cardId === "card_free_travel") {
         payload.destination_index = options.destinationIndex;
@@ -509,21 +527,25 @@ export default function useBoardController() {
   );
 
   const handleDiscardChance = useCallback(
-    (cardId) =>
-      runMutation({
-        actionId: `chance-discard:${cardId}`,
+    (cardKey) => {
+      const card = mergeOwnedChanceCards(myBoard?.chanceCards ?? [], chanceCatalog)
+        .find((item) => chanceCardKey(item) === cardKey);
+      if (!card) return Promise.resolve(null);
+      return runMutation({
+        actionId: `chance-discard:${cardKey}`,
         prefix: "chance-discard",
         allowWhileAwaitingDiscard: true,
         request: async (idempotencyKey) => {
           const result = unwrapBoardResponse(
-            await discardChanceCard({ cardId, idempotencyKey }),
+            await discardChanceCard({ cardId: card.cardId, teamCardId: card.teamCardId, idempotencyKey }),
           );
           await syncProgress();
           if (mountedRef.current) setAwaitingDiscard(false);
           return result;
         },
-      }),
-    [runMutation, syncProgress],
+      });
+    },
+    [chanceCatalog, myBoard?.chanceCards, runMutation, syncProgress],
   );
 
   const handleSpinRoulette = useCallback(
