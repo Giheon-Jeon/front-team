@@ -133,11 +133,11 @@ export function useChanceCard(payload, { idempotencyKey } = {}) {
   );
 }
 
-export function confirmChanceCard({ choice, idempotencyKey }) {
+export function confirmChanceCard({ choice, teamCardId, idempotencyKey }) {
   // POST /board/chance/confirm - card_roll_twice_choose 전용. choice: "FIRST" | "SECOND".
   return apiClient.post(
     "/board/chance/confirm",
-    { choice },
+    { choice, ...(teamCardId ? { team_card_id: teamCardId } : {}) },
     idKey("chance-confirm", idempotencyKey),
   );
 }

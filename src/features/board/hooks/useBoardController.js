@@ -161,7 +161,7 @@ export default function useBoardController() {
         // 새로고침 뒤에도 보유 카드가 2장이면 폐기 안내를 이어서 보인다
         setAwaitingDiscard(mergeOwnedChanceCards(nextMyBoard.chanceCards, nextCatalog).length >= 2);
         setPendingRoll(null);
-        setPendingChanceChoice(null);
+        setPendingChanceChoice(nextMyBoard.pendingChanceChoice ?? null);
       }
       if (pendingDiceRoll.peek()) setError({
         code: "ROLL_RESULT_UNCONFIRMED",
@@ -222,6 +222,10 @@ export default function useBoardController() {
       if (!mountedRef.current || !latest()) return;
       setMyBoard(nextMyBoard);
       setDiceStatus(nextDiceStatus);
+      // Older servers omit this field; keep the in-flight use response there.
+      if (nextMyBoard.pendingChanceChoice !== undefined) {
+        setPendingChanceChoice(nextMyBoard.pendingChanceChoice);
+      }
       if (includeCurrentCell) setCurrentCell(nextCurrentCell);
       if (!preserveDisplayPosition) setDisplayPosition(nextMyBoard.position);
       return { myBoard: nextMyBoard, diceStatus: nextDiceStatus };
@@ -506,12 +510,16 @@ export default function useBoardController() {
   const handleConfirmChance = useCallback(
     (choice) =>
       runMutation({
-        actionId: `chance-confirm:${choice}`,
+        actionId: `chance-confirm:${pendingChanceChoice?.teamCardId ?? "legacy"}:${choice}`,
         prefix: "chance-confirm",
         request: async (idempotencyKey) => {
           const result = adaptChanceConfirmation(
             unwrapBoardResponse(
-              await confirmChanceCard({ choice, idempotencyKey }),
+              await confirmChanceCard({
+                choice,
+                teamCardId: pendingChanceChoice?.teamCardId,
+                idempotencyKey,
+              }),
             ),
           );
           if (result.toIndex != null) await animateMovement([result.toIndex]);
@@ -523,7 +531,7 @@ export default function useBoardController() {
           return result;
         },
       }),
-    [animateMovement, runMutation, syncProgress],
+    [animateMovement, pendingChanceChoice?.teamCardId, runMutation, syncProgress],
   );
 
   const handleDiscardChance = useCallback(
