@@ -80,6 +80,8 @@ export function adaptMyBoard(data) {
     chanceCards: Array.isArray(data?.chance_cards)
       ? data.chance_cards.map((card) => ({
           cardId: card.card_id,
+          // 같은 종류 카드를 두 장 가질 수 있어 보유 카드마다 따로 주어지는 UUID 를 보존한다
+          teamCardId: card.team_card_id ?? null,
           used: card.used === true,
           discarded: card.discarded === true,
           usableNow: card.usable_now === true,
@@ -110,7 +112,8 @@ export function adaptDiceStatus(data) {
     pendingConfirmRequestKey: data?.pending_confirm_request_key,
     serverTime: data?.server_time ?? null,
     nextDiceResetAt: data?.next_dice_reset_at ?? null,
-    receivedAt: Date.now(),
+    // 기기 시계를 바꿔도 남은 시간이 흔들리지 않게 단조 시계(performance.now)로 받은 시각을 잰다
+    receivedAt: performance.now(),
   };
 }
 
@@ -230,6 +233,11 @@ export function adaptOpenedChallenges(data) {
     : [];
 }
 
+// 렌더 키·선택·사용/폐기 요청에서 카드 한 장을 가리키는 값 UUID 가 없는 구버전 응답은 종류 id 로 대신한다
+export function chanceCardKey(card) {
+  return card?.teamCardId ?? card?.cardId ?? null;
+}
+
 export function mergeOwnedChanceCards(chanceCards, catalog) {
   return chanceCards
     .filter((card) => !card.used && !card.discarded)
@@ -239,7 +247,7 @@ export function mergeOwnedChanceCards(chanceCards, catalog) {
     }));
 }
 
-export function getRemainingSeconds(targetIso, diceStatus, now = Date.now()) {
+export function getRemainingSeconds(targetIso, diceStatus, now = performance.now()) {
   if (!targetIso || !diceStatus?.serverTime) return null;
 
   const targetAt = Date.parse(targetIso);
